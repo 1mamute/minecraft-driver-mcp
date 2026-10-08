@@ -1,0 +1,63 @@
+# Overrides on top of detekt's default configuration (buildUponDefaultConfig).
+# Thresholds follow docs/code-style.md "Readability limits". Existing findings live in
+# baseline.xml; new code must pass without adding to it.
+
+complexity:
+  CognitiveComplexMethod:
+    active: true
+    # Reported when a function reaches this score (SonarSource cognitive complexity).
+    threshold: 15
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 15
+    ignoreSimpleWhenEntries: true
+  LongMethod:
+    active: true
+    threshold: 60
+  NestedBlockDepth:
+    active: true
+    threshold: 4
+  ComplexCondition:
+    active: true
+    threshold: 4
+  LongParameterList:
+    active: true
+    functionThreshold: 6
+    constructorThreshold: 10
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+    thresholdInObjects: 20
+    ignorePrivate: true
+
+style:
+  MaxLineLength:
+    # ktlint owns line length; keep one tool authoritative.
+    active: false
+  WildcardImport:
+    active: true
+  ReturnCount:
+    active: true
+    max: 4
+    excludeGuardClauses: true
+  MagicNumber:
+    active: true
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreNamedArgument: true
+    ignoreEnums: true
+    excludes: ['**/test/**']
+  ForbiddenComment:
+    # TODO and FIXME are the project's normal work markers.
+    active: false
+  UnusedPrivateMember:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames:
+      - 'Error'
+      - 'Throwable'

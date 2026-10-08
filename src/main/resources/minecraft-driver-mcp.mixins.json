@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "io.github.ummamute.driver.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"WindowMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -1,0 +1,35 @@
+# EditorConfig is awesome: https://EditorConfig.org
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+indent_style = space
+indent_size = 4
+
+[*.{md,mdx,txt}]
+trim_trailing_whitespace = false
+[*.{kt,kts}]
+# ktlint: IntelliJ IDEA style matches the existing code; see docs/code-style.md.
+ktlint_code_style = intellij_idea
+max_line_length = 160
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+ij_kotlin_imports_layout = *,java.**,javax.**,kotlin.**,^
+ij_kotlin_packages_to_use_import_on_demand = unset
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+# Layout rules that fight the existing readable style are off. Rules that keep
+# one statement per line, indentation, spacing and import order stay on.
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_class-signature = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_parameter-list-wrapping = disabled
+ktlint_standard_wrapping = disabled
+ktlint_standard_property-wrapping = disabled

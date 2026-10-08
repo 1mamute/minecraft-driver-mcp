@@ -1,0 +1,20 @@
+{
+	"schemaVersion": 1,
+	"id": "minecraft-driver-mcp",
+	"version": "${version}",
+	"name": "Minecraft Driver MCP",
+	"description": "Lets an AI assistant drive this Minecraft client through an MCP server on localhost. For mod development and testing.",
+	"authors": ["1mamute"],
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["io.github.ummamute.driver.DriverMod"]
+	},
+	"mixins": ["minecraft-driver-mcp.mixins.json"],
+	"depends": {
+		"fabricloader": ">=${loader}",
+		"minecraft": "${minecraft}",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

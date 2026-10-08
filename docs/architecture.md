@@ -1,0 +1,103 @@
+# Architecture
+
+## Layers
+
+```text
+agent ──HTTP──▶ server/McpEndpoint ──▶ tools/*Tools ──▶ client/Client* ──▶ Minecraft
+                  (Ktor + MCP SDK)     (schemas, JSON)    (render thread)
+```
+
+- `server/` knows Ktor, the MCP SDK, ports and the instance registry. It does not know
+  Minecraft.
+- `tools/` defines what the agent sees: names, input schemas, annotations and result
+  JSON. It calls `client/` and does not import `net.minecraft`.
+- `client/` is the only code that touches the game. Each object owns one concern.
+- `DriverBootstrap` reads the system properties, builds the pieces and hooks the client
+  lifecycle. The Java entrypoint `DriverMod` only calls it.
+
+Because of this split, supporting a new Minecraft version means changing `client/` (and
+the mixin), not the tools or the server.
+
+## Lifecycle
+
+`DriverMod.onInitializeClient` calls `DriverBootstrap.start()`, which:
+
+1. registers `MessageLog` so received chat and system messages are recorded;
+2. picks the host and port ([several clients](#several-clients));
+3. starts `McpEndpoint` on a Ktor CIO engine without waiting;
+4. writes the instance file to the registry.
+
+On `CLIENT_STOPPING` the endpoint stops and the instance file is removed. A crashed
+client leaves its file behind; `InstanceRegistry.list` ignores files whose process is
+gone.
+
+## Threading
+
+Ktor handles each request on its own worker. The game only allows screens, the player,
+the level, input and the framebuffer to be used from the render thread, so a tool runs:
+
+```text
+Ktor worker: parse arguments ─▶ RenderThread.call { touch the game } ─▶ encode JSON
+```
+
+`RenderThread.call` suspends the coroutine, queues the block with `Minecraft.execute`
+and resumes with its result or exception. The worker is never blocked, and the game loop
+only runs the short block. Tools that wait for something (a future `wait_for`) must poll
+by suspending between short render-thread reads, never by holding the render thread.
+
+Chat and system messages arrive on the client's network thread and are appended to
+`MessageLog`, a bounded buffer with a sequence number. `mc_read_messages(since)` returns
+only newer ones, so an agent can read a reply that arrives asynchronously.
+
+## Transport
+
+The endpoint is `mcpStatelessStreamableHttp` at `/mcp` on `127.0.0.1`. Stateless means
+each request is independent: restarting the agent or the client needs no session
+handshake. The cost is that the server cannot push notifications or stream progress
+(see [known-issues.md](known-issues.md)).
+
+The MCP SDK enables DNS-rebinding protection by default, so a web page cannot reach the
+local endpoint through a hostile hostname. Keep the bind address on localhost: the tools
+control the player and have no authentication.
+
+## Several clients
+
+Developers test multiplayer with two or more clients, so nothing is global to the
+machine except the registry:
+
+- **Port.** `PortSelector` takes `driver.port` strictly when set (a fixed port a
+  configured agent points at, and it fails if taken), otherwise the first free port from
+  25890, scanning 100 ports.
+- **Name.** `driver.name` (default: the player name) goes into the MCP server name and
+  instructions, so an agent connected to several clients can tell them apart.
+- **Discovery.** `InstanceRegistry` writes `<pid>.json` into
+  `~/.minecraft-driver-mcp/instances` (`driver.registry` overrides it). `mc_list_instances`
+  returns the live ones with their URLs.
+- **Game directories.** Each client needs its own run directory; Minecraft requires it.
+
+## Packaging
+
+Everything ships in one jar and does not depend on Fabric Language Kotlin:
+
+- The `bundled` configuration holds the Kotlin stdlib, the MCP SDK and Ktor. The
+  `afterEvaluate` block in `build.gradle.kts` resolves it and adds each module to Loom's
+  `include`, which nests the jars (jar-in-jar). Fabric Loader loads nested jars itself.
+- slf4j and the JetBrains annotations are not bundled; Minecraft provides them.
+- `implementation` extends `bundled`, so the code compiles against the same libraries.
+
+A new library goes into `bundled`. Check the jar size and that it does not clash with a
+library Minecraft or another mod already provides.
+
+## Build and Minecraft versions
+
+Stonecutter builds one jar per Minecraft version from one source tree.
+
+- `settings.gradle.kts` lists the versions; `stonecutter.gradle.kts` names the active
+  one. Each version has `versions/<mc>/gradle.properties` with its Minecraft, Fabric API
+  and Parchment versions.
+- Shared versions (Loader, Kotlin, Loom, libraries) are in the root `gradle.properties`.
+- Version-specific source is marked with Stonecutter comments (`//? if >=1.21.5 {`).
+  Past a few lines, move the code into one class per version instead.
+- The root project must not apply `java` or `base`; Stonecutter rejects a buildable root.
+
+See [dependencies.md](dependencies.md) for how to move versions forward.
