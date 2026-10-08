@@ -14,7 +14,7 @@ Open questions and risks found while scaffolding. Check them when a related chan
 
 ## Design limits
 
-- **Stateless HTTP.** `mcpStatelessStreamableHttp` keeps no session, so the server cannot push notifications to the agent. Tools such as `wait_for` must block inside one call. Revisit if streaming progress is needed (`mcpStreamableHttp`).
+- **Stateless HTTP.** `mcpStatelessStreamableHttp` keeps no session, so the server cannot push notifications to the agent. `mc_wait_for` blocks inside one call, with a timeout that defaults to 10 s and is capped at 60 s, so keep it below the MCP client's request timeout. Revisit if streaming progress is needed (`mcpStreamableHttp`).
 - **Localhost only, no auth.** The tools control the player. Binding to a non-loopback `driver.host` exposes them to the network. Add an optional token before documenting any remote use.
 - **Single Minecraft version.** Only 1.21.1 exists, so Stonecutter's conditionals are untested. Adding a second version is the real test of the approach.
 
@@ -27,4 +27,4 @@ Open questions and risks found while scaffolding. Check them when a related chan
 
 ## Missing features
 
-`wait_for` (message or screen), screen text and tooltips, inventory and container contents, joining and leaving servers, client log tail, optional auth token, extension points for other mods.
+Screen text and tooltips, inventory and container contents, joining and leaving servers, client log tail, optional auth token, extension points for other mods.

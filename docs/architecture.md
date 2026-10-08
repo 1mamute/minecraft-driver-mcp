@@ -42,7 +42,7 @@ Ktor worker: parse arguments ─▶ RenderThread.call { touch the game } ─▶ 
 
 `RenderThread.call` suspends the coroutine, queues the block with `Minecraft.execute`
 and resumes with its result or exception. The worker is never blocked, and the game loop
-only runs the short block. Tools that wait for something (a future `wait_for`) must poll
+only runs the short block. Tools that wait for something (`mc_wait_for`) must poll
 by suspending between short render-thread reads, never by holding the render thread.
 
 Chat and system messages arrive on the client's network thread and are appended to

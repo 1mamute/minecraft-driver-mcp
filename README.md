@@ -33,6 +33,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_use` | Right click what is under the crosshair |
 | `mc_send_chat` | Send chat or a `/command` as the player |
 | `mc_read_messages` | Chat and system messages received since a sequence number |
+| `mc_wait_for` | Block until a message or screen appears, or time out |
 | `mc_list_entities` | Entities within 64 blocks |
 | `mc_screenshot` | PNG of the game framebuffer |
 | `mc_list_instances` | Every running client with this mod, to find the others |
@@ -80,4 +81,4 @@ Supported: Minecraft 1.21.1. Contributors: see [AGENTS.md](AGENTS.md) and the [d
 
 ## Status
 
-Early scaffold. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md). Planned: screen text and tooltips, inventory and container contents, a `wait_for` call, joining and leaving servers, log tail, and extension points for other mods.
+Early scaffold. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md). Planned: screen text and tooltips, inventory and container contents, joining and leaving servers, log tail, and extension points for other mods.
