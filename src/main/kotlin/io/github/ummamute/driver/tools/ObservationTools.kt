@@ -4,6 +4,7 @@ import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientState
 import io.github.ummamute.driver.client.MessageLog
 import io.github.ummamute.driver.client.RenderThread
+import io.github.ummamute.driver.client.ScreenText
 import io.github.ummamute.driver.client.Screenshots
 import io.github.ummamute.driver.tools.ToolSupport.jsonResult
 import io.github.ummamute.driver.tools.ToolSupport.long
@@ -25,6 +26,7 @@ internal object ObservationTools {
     fun register(server: Server) {
         registerState(server)
         registerScreen(server)
+        registerScreenText(server)
         registerMessages(server)
         registerWaitFor(server)
         registerEntities(server)
@@ -45,6 +47,15 @@ internal object ObservationTools {
             description = "List the clickable widgets of the open screen with index, label and bounds. Use the index or label with mc_click.",
             toolAnnotations = readOnly,
         ) { _ -> onRenderThread(ClientScreens::describe) { jsonResult(it) } }
+    }
+
+    private fun registerScreenText(server: Server) {
+        server.addTool(
+            name = "mc_read_screen_text",
+            description = "Read the text the open screen drew in its last frame: the title, labels, body text and any tooltip showing, " +
+                "with coordinates. Includes text that mc_list_widgets cannot see. A tooltip appears only while the cursor hovers its target.",
+            toolAnnotations = readOnly,
+        ) { _ -> onRenderThread(ScreenText::snapshot) { jsonResult(it) } }
     }
 
     private fun registerMessages(server: Server) {

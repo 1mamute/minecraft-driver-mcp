@@ -26,6 +26,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | --- | --- |
 | `mc_get_state` | Open screen, connection, window focus, player position |
 | `mc_list_widgets` | Widgets of the open screen with index, label and bounds |
+| `mc_read_screen_text` | Text the open screen drew (title, labels, body, tooltip) with coordinates |
 | `mc_click` | Click a widget by label or index, or a point |
 | `mc_close_screen` | Close the open screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak |
@@ -81,4 +82,4 @@ Supported: Minecraft 1.21.1. Contributors: see [AGENTS.md](AGENTS.md) and the [d
 
 ## Status
 
-Early scaffold. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md). Planned: screen text and tooltips, inventory and container contents, joining and leaving servers, log tail, and extension points for other mods.
+Early scaffold. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md). Planned: inventory and container contents, joining and leaving servers, log tail, and extension points for other mods.

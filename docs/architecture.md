@@ -15,6 +15,11 @@ agent ──HTTP──▶ server/McpEndpoint ──▶ tools/*Tools ──▶ cl
 - `DriverBootstrap` reads the system properties, builds the pieces and hooks the client
   lifecycle. The Java entrypoint `DriverMod` only calls it.
 
+Three mixins in `mixin/` capture screen text for `client/ScreenText`: `ScreenMixin` marks the
+start and end of `Screen.renderWithTooltip`, `GuiGraphicsMixin` records the two
+`GuiGraphics.drawString` sinks, and `ClientTextTooltipMixin` records tooltip lines. The pure
+collector `TextFrame` turns one frame's text into the data `mc_read_screen_text` returns.
+
 Because of this split, supporting a new Minecraft version means changing `client/` (and
 the mixin), not the tools or the server.
 
