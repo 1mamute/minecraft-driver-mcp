@@ -68,6 +68,7 @@ Run this check when you touch ports, the registry or names.
   separately when it can.
 - **Replies are asynchronous.** A command's chat reply arrives after the command returns.
   Send with `mc_send_chat`, then poll `mc_read_messages` with the last `latest` as `since`.
+  `mc_wait_for` with `message` and `since` set to the last `latest` replaces that manual polling.
 - **Confirmation dialogs.** Actions such as forfeiting open a second screen; click its
   confirm button after it appears.
 - **Screenshots** come from the game's framebuffer, never from the desktop, so they work

@@ -31,4 +31,8 @@ object MessageLog {
 
     @Synchronized
     fun since(seq: Long): MessagePage = MessagePage(entries.filter { it.seq > seq }, lastSeq)
+
+    /** Sequence number of the newest message, or 0 when none arrived yet. */
+    @Synchronized
+    fun latest(): Long = lastSeq
 }
