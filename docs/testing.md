@@ -19,6 +19,11 @@ PR when it was not done.
 `-Ddriver.unfocused=true`. The log prints the endpoint, normally
 `http://127.0.0.1:25890/mcp`.
 
+To check that the window does not take focus, sample `GetForegroundWindow` (via P/Invoke in PowerShell)
+every 100 ms from before the launch. Without the flag the Minecraft window becomes foreground about 25 s
+in; with it the foreground stays on the previous window. Then confirm `mc_get_state` and `mc_screenshot`
+still answer with the window behind.
+
 Then call the endpoint. With the MCP Inspector (`npx @modelcontextprotocol/inspector`) or
 any HTTP client:
 
@@ -46,7 +51,7 @@ while its window is not in front.
 
 Run this check when you touch ports, the registry or names.
 
-1. Give each client its own run directory and a distinct account name.
+1. Give each client its own run directory and a distinct account name. Loom ignores the `runClient` `workingDir`, so pass `--gameDir <dir>` and `--username <name>` in the run's program arguments.
 2. Start the clients one after the other. Two Gradle builds at once can corrupt the Kotlin
    cache, so wait until the first client's window is open.
 3. Check that they listen on `25890` and `25891`, that each `mc_list_instances` shows both,

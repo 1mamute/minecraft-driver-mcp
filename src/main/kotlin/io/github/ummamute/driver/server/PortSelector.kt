@@ -15,8 +15,13 @@ object PortSelector {
     private const val SCAN_RANGE = 100
 
     fun choose(requested: Int?, host: String): Int {
-        if (requested != null) return requested
         val address = InetAddress.getByName(host)
+        if (requested != null) {
+            check(isFree(address, requested)) {
+                "Port $requested is already in use. Free it or set -Ddriver.port to another port (omit it to pick a free port automatically)"
+            }
+            return requested
+        }
         return (DEFAULT_PORT until DEFAULT_PORT + SCAN_RANGE).firstOrNull { isFree(address, it) }
             ?: error("No free port in $DEFAULT_PORT..${DEFAULT_PORT + SCAN_RANGE - 1}. Set -Ddriver.port to a free port")
     }
