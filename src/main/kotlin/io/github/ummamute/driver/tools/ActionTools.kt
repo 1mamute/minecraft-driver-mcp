@@ -114,8 +114,8 @@ internal object ActionTools {
             inputSchema = ToolSupport.schema(Property("text", "string", "Chat text or /command"), required = listOf("text")),
             toolAnnotations = action.copy(destructiveHint = true, openWorldHint = true),
         ) { request ->
-            val text = arguments(request).requireString("text")
-            onRenderThread({ ClientChat.send(text) }) { jsonResult(mapOf("sent" to text)) }
+            val args = arguments(request)
+            onRenderThread({ args.requireString("text").also(ClientChat::send) }) { jsonResult(mapOf("sent" to it)) }
         }
     }
 }
