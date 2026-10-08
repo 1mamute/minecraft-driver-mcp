@@ -56,6 +56,12 @@ Chat and system messages arrive on the client's network thread and are appended 
 `MessageLog`, a bounded buffer with a sequence number. `mc_read_messages(since)` returns
 only newer ones, so an agent can read a reply that arrives asynchronously.
 
+The game's own log goes the same way: `LogCapture` attaches a Log4j2 appender to the root logger at start
+and detaches it on shutdown. Lines land in `LogBuffer` (1000 lines, messages cut at 2000 characters), and
+`mc_read_log` filters by `since`, minimum level and text. The appender runs on whichever thread logs, only
+copies strings under a short lock and ignores events it causes itself. Capture is per process, so two
+clients never see each other's lines even though they share `logs/latest.log`.
+
 ## Transport
 
 The endpoint is `mcpStatelessStreamableHttp` at `/mcp` on `127.0.0.1`. Stateless means

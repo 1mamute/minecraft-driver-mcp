@@ -69,6 +69,7 @@ Run this check when you touch ports, the registry or names.
 - **Replies are asynchronous.** A command's chat reply arrives after the command returns.
   Send with `mc_send_chat`, then poll `mc_read_messages` with the last `latest` as `since`.
   `mc_wait_for` with `message` and `since` set to the last `latest` replaces that manual polling.
+- **Log lines.** `mc_read_log` shows what the game logs from the moment the mod starts (earlier lines are only in `logs/latest.log`). Provoke a line (a chat command with a bad argument, or a world load) and read with `min_level` `WARN` and `contains`. It defaults to `INFO` and up; pass `since` with the last `latest` to read only new lines.
 - **Confirmation dialogs.** Actions such as forfeiting open a second screen; click its
   confirm button after it appears.
 - **Screenshots** come from the game's framebuffer, never from the desktop, so they work
