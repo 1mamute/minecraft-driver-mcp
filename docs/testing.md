@@ -73,6 +73,9 @@ Run this check when you touch ports, the registry or names.
   confirm button after it appears.
 - **Screenshots** come from the game's framebuffer, never from the desktop, so they work
   with the window behind other windows.
+- **Screen text** is captured while the screen renders, so call `mc_read_screen_text` after the
+  screen has been open for a frame. A tooltip shows only while the real
+  cursor hovers its target, so the tool cannot reach one the agent cannot hover.
 
 ## Debugging
 
