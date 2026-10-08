@@ -27,6 +27,8 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_get_state` | Open screen, connection, window focus, player position |
 | `mc_list_widgets` | Widgets of the open screen with index, label and bounds |
 | `mc_read_screen_text` | Text the open screen drew (title, labels, body, tooltip) with coordinates |
+| `mc_read_inventory` | The player's hotbar, main, armor and offhand slots with item id, name, count, durability and enchantments, plus the cursor stack |
+| `mc_read_container` | The open container screen (chest, furnace, crafting table, villager trades) with every slot and, for merchants, the offers |
 | `mc_click` | Click a widget by label or index, or a point |
 | `mc_close_screen` | Close the open screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak |
