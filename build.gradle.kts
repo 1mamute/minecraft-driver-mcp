@@ -33,6 +33,7 @@ val bundled = configurations.create("bundled")
 val providedByMinecraft = setOf("org.slf4j", "org.jetbrains:annotations")
 
 configurations.named("implementation") { extendsFrom(bundled) }
+bundled.exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
