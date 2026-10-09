@@ -18,7 +18,7 @@ import kotlin.math.sqrt
 
 /** Movement, aiming and interaction, applied through the player and game mode. Call on the render thread. */
 object ClientInput {
-    /** Keys that stay down until released, then `inventory`, which is a single press that opens the inventory, or closes it when a container screen is open. */
+    /** Keys that stay held until released (while no screen is open), then `inventory`, which is a single press that opens the inventory, or closes it when a container screen is open. */
     val keyNames = listOf("forward", "back", "left", "right", "jump", "sneak", INVENTORY_KEY)
 
     private const val INVENTORY_KEY = "inventory"
@@ -29,24 +29,26 @@ object ClientInput {
     private val heldKeys = mutableSetOf<String>()
 
     /**
-     * Re-applies the held keys at the end of every client tick. Opening a screen releases every key
-     * (`Minecraft.setScreen` calls `KeyMapping.releaseAll`) and grabbing the mouse resets them to the physical state,
-     * so without this the player stops while the agent still thinks the key is down.
+     * Applies the held keys at the end of every client tick: down while no screen is open, up while one is. Vanilla sends
+     * the keyboard to an open screen and releases every key (`Minecraft.setScreen` calls `KeyMapping.releaseAll`), and
+     * grabbing the mouse again restores the physical state. Re-applying them after a screen closes makes a held key resume
+     * the way a physically held key does.
      */
     fun register() {
-        ClientTickEvents.END_CLIENT_TICK.register { reapplyHeldKeys() }
+        ClientTickEvents.END_CLIENT_TICK.register { applyHeldKeys() }
     }
 
     fun setKey(name: String, down: Boolean): Boolean {
         if (name == INVENTORY_KEY) return pressInventory(down)
         val binding = keyBinding(name)
         if (down) heldKeys.add(name) else heldKeys.remove(name)
-        binding.setDown(down)
-        return binding.isDown
+        binding.setDown(down && mc.screen == null)
+        return down
     }
 
-    private fun reapplyHeldKeys() {
-        heldKeys.forEach { keyBinding(it).setDown(true) }
+    private fun applyHeldKeys() {
+        val active = mc.screen == null
+        heldKeys.forEach { keyBinding(it).setDown(active) }
     }
 
     /**

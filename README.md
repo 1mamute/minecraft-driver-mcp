@@ -37,7 +37,7 @@ Do not add it with `modLocalRuntime(files(...))`: Loom drops the jar's list of b
 | `mc_join_server` | Connect to a multiplayer server by `host` or `host:port` (opens the connect screen; login finishes later) |
 | `mc_join_world` | Load a singleplayer world by its save folder name |
 | `mc_disconnect` | Leave the current world or server and return to the title screen |
-| `mc_set_key` | Hold or release forward, back, left, right, jump, sneak (held across screens until released); press `inventory` to open or close the inventory |
+| `mc_set_key` | Hold or release forward, back, left, right, jump, sneak (held until released; paused while a screen is open, as in vanilla); press `inventory` to open or close the inventory |
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair, then the held item (either hand) |
 | `mc_send_chat` | Send chat or a `/command` as the player; returns the text sent after trimming and collapsing whitespace (256 characters max) |

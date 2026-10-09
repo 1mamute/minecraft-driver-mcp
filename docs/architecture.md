@@ -55,8 +55,9 @@ hanging it; only a `VirtualMachineError` is rethrown). The worker is never block
 only runs the short block. Tools that wait for something (`mc_wait_for`) must poll
 by suspending between short render-thread reads, never by holding the render thread.
 
-Held movement keys live in `ClientInput`, which re-applies them at the end of every client tick: opening a
-screen releases all keys and grabbing the mouse resets them, so a key set with `mc_set_key` stays held until released.
+Held movement keys live in `ClientInput`, which applies them at the end of every client tick. As in vanilla, an
+open screen takes the keyboard and releases all keys, so a key set with `mc_set_key` is up while a screen is open and
+resumes when it closes, like a physically held key.
 
 Chat and system messages arrive on the client's network thread and are appended to
 `MessageLog`, a bounded buffer with a sequence number. `mc_read_messages(since)` returns
