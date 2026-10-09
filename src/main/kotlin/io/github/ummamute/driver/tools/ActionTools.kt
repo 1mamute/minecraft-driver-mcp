@@ -3,7 +3,10 @@ package io.github.ummamute.driver.tools
 import io.github.ummamute.driver.client.ClientChat
 import io.github.ummamute.driver.client.ClientInput
 import io.github.ummamute.driver.client.ClientScreens
+import io.github.ummamute.driver.client.ClientSlots
 import io.github.ummamute.driver.client.ClientState
+import io.github.ummamute.driver.client.SlotClickArgs
+import io.github.ummamute.driver.client.SlotClickPlanner
 import io.github.ummamute.driver.tools.ToolSupport.arguments
 import io.github.ummamute.driver.tools.ToolSupport.boolean
 import io.github.ummamute.driver.tools.ToolSupport.double
@@ -22,6 +25,7 @@ internal object ActionTools {
 
     fun register(server: Server) {
         registerClick(server)
+        registerClickSlot(server)
         registerCloseScreen(server)
         registerKey(server)
         registerLookAt(server)
@@ -50,6 +54,35 @@ internal object ActionTools {
             val y = args.double("y")
             val button = args.int("button") ?: 0
             onRenderThread({ ClientScreens.click(index, label, x, y, button) }) { jsonResult(it) }
+        }
+    }
+
+    private fun registerClickSlot(server: Server) {
+        server.addTool(
+            name = "mc_click_slot",
+            description = "Click a slot of the open container screen to move items. `slot` is the menu index from mc_read_container. " +
+                "Actions: pick_up (button 0 left, 1 right; also puts the cursor stack down), quick_move (shift-click), " +
+                "swap (with `hotbar` 0-8, or 40 for the offhand), throw (button 0 one item, 1 the whole stack), clone (creative), " +
+                "pick_up_all (gather matching items). `outside` true with pick_up drops the cursor stack. " +
+                "Returns the slot and cursor stack as the client predicts them; the server confirms later.",
+            inputSchema = ToolSupport.schema(
+                Property("slot", "integer", "Menu slot index from mc_read_container"),
+                Property("action", "string", "Click type, default pick_up", allowed = SlotClickPlanner.actionNames),
+                Property("button", "integer", "0 left (default) or 1 right, for pick_up and throw"),
+                Property("hotbar", "integer", "Hotbar key 0-8, or 40 for the offhand, for swap"),
+                Property("outside", "boolean", "Click outside the window to drop the cursor stack, instead of slot"),
+            ),
+            toolAnnotations = action.copy(destructiveHint = true),
+        ) { request ->
+            val args = arguments(request)
+            val click = SlotClickArgs(
+                action = args.string("action"),
+                slot = args.int("slot"),
+                outside = args.boolean("outside") ?: false,
+                button = args.int("button"),
+                hotbar = args.int("hotbar"),
+            )
+            onRenderThread({ ClientSlots.click(click) }) { jsonResult(it) }
         }
     }
 

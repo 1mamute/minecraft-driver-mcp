@@ -75,6 +75,7 @@ Run this check when you touch ports, the registry or names.
 - **Screenshots** come from the game's framebuffer, never from the desktop, so they work
   with the window behind other windows.
 - **Inventory and containers.** Switch a creative world to survival with `mc_send_chat` (`/gamemode survival`), fill slots with `/give` and `/item replace`, then call `mc_read_inventory`. For a container, place a chest with `/setblock`, aim with `mc_look_at` and open it with `mc_use`; a villager (`/summon villager ... {NoAI:1b}`) works the same way and fills `offers`. Slot numbers in `mc_read_container` are menu indexes, so the player's hotbar is not 0-8 there; `mc_read_inventory` uses inventory indexes. The world list needs a click on the entry (a point click) before `Play Selected World` is enabled.
+- **Clicking slots.** `mc_click_slot` takes the menu indexes `mc_read_container` shows (a chest is 0-26, then main 27-53 and hotbar 54-62; a merchant is 0-1 payment, 2 result, 3-29 main, 30-38 hotbar). A merchant needs its trade selected first: `mc_click` the trade button by `index` from `mc_list_widgets`, then `quick_move` slot 2 takes the result. The returned state is the client prediction; call `mc_read_container` to see what the server kept.
 - **Screen text** is captured while the screen renders, so call `mc_read_screen_text` after the
   screen has been open for a frame. A tooltip shows only while the real
   cursor hovers its target, so the tool cannot reach one the agent cannot hover.

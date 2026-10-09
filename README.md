@@ -30,6 +30,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_read_inventory` | The player's hotbar, main, armor and offhand slots with item id, name, count, durability and enchantments, plus the cursor stack |
 | `mc_read_container` | The open container screen (chest, furnace, crafting table, villager trades) with every slot and, for merchants, the offers |
 | `mc_click` | Click a widget by label or index, or a point |
+| `mc_click_slot` | Click a slot of the open container: pick up, quick move, swap with a hotbar key, throw, clone, gather, or drop the cursor stack |
 | `mc_close_screen` | Close the open screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak |
 | `mc_look_at` | Face a world position |
