@@ -10,7 +10,7 @@ package io.github.ummamute.driver.api
  * ```
  *
  * The API in this package is Minecraft-free and may change between 0.x releases.
- * See `docs/extending.md` for the naming rules and an example.
+ * See `docs/extension-api.md` for the naming rules and an example.
  */
 fun interface DriverExtension {
     /**

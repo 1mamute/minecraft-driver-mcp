@@ -1,4 +1,4 @@
-// Kotlin lint checks. See docs/code-style.md "Linting" for the rules and how to fix findings.
+// Kotlin lint checks. See docs/contributing/code-style.md "Linting" for the rules and how to fix findings.
 //
 // ktlint and detekt run as their command-line tools in separate classpaths, so
 // they do not depend on the Kotlin Gradle plugin version used by the mod.

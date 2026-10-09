@@ -11,7 +11,7 @@ the entrypoint from `src/main/resources/fabric.mod.json`.
   `src/main/java/io/github/ummamute/driver/mixin/`.
 - Packages: `client/` talks to Minecraft (one object per concern, all on the render thread), `tools/` defines MCP
   tools and calls `client/`, `server/` is the Ktor + MCP SDK endpoint, port choice and instance registry.
-- `DriverBootstrap` wires everything at client start. [docs/architecture.md](docs/architecture.md) explains the
+- `DriverBootstrap` wires everything at client start. [docs/contributing/architecture.md](docs/contributing/architecture.md) explains the
   layers, threading, several-client support and packaging.
 - Build: Stonecutter (`stonecutter.gradle.kts`, `settings.gradle.kts`), Fabric Loom, official Mojang mappings
   layered with Parchment. Translate Yarn-named examples against the resolved Minecraft sources before using them.
@@ -34,7 +34,7 @@ the entrypoint from `src/main/resources/fabric.mod.json`.
 
 ## Code style
 
-Write **readable** Kotlin. Read [the code style guide](docs/code-style.md) before writing or reviewing code; it
+Write **readable** Kotlin. Read [the code style guide](docs/contributing/code-style.md) before writing or reviewing code; it
 covers naming, packages, threading, tools, limits and tests. In short: one statement per line, one job per
 function, guard clauses, constructor injection, `object` for stateless helpers, parameterized logging, KDoc on
 public types, backtick test names that describe behavior. `./gradlew lint` (ktlint and detekt) enforces the limits
@@ -43,11 +43,16 @@ function into named steps; do not add baseline entries or `@Suppress` without th
 
 ## Documentation
 
-`docs/` describes the project as it is on `main`; [docs/README.md](docs/README.md) indexes it. Every change to
-tools, system properties, packaging, ports or the build updates the matching doc (and the tool table or property
-table in `README.md`) in the same PR, and new docs are added to the index. Write for contributors and users: what
-it does, how to use it, why a choice was made; leave out what the code already states. Unverified behavior and
-risks go in [docs/known-issues.md](docs/known-issues.md).
+Three audiences, one source of truth each. `docs/` is user-facing (installation, usage, [tool reference](docs/tools.md),
+configuration, [known issues](docs/known-issues.md)); `docs/contributing/` is developer-facing (architecture, extending,
+testing, code style); [llms.txt](llms.txt) is the self-contained brief for LLM agents. [docs/README.md](docs/README.md)
+indexes them, and a public wiki is generated from them. Every change to tools, system properties, packaging, ports or the
+build updates the matching doc, the tool and property tables in `README.md` and `docs/`, and `llms.txt` in the same PR;
+new docs are added to the index. Public documents are impersonal: no names, machines, paths or launchers from a
+maintainer's own setup. Write for readers: what it does, how to use it, why a choice was made; leave out what the code
+already states. Unverified behavior and risks go in
+[docs/contributing/known-issues.md](docs/contributing/known-issues.md); limits a user can hit go in
+[docs/known-issues.md](docs/known-issues.md).
 
 ## Dependency questions
 
@@ -104,7 +109,7 @@ edits do not bump the version. The jar version is `<mod_version>+<minecraft_vers
 ## Validation
 
 Use JDK 21 and the Gradle wrapper. `./gradlew build` runs the tests and lint with the jar packaging. For changes to
-tools, `client/`, the mixin or packaging, also run the runtime check in [docs/testing.md](docs/testing.md)
+tools, `client/`, the mixin or packaging, also run the runtime check in [docs/contributing/testing.md](docs/contributing/testing.md)
 (`./gradlew :1.21.1:runClient`, then `initialize`, `tools/list` and the changed tool); report when that check was not
 done. Test with two clients when touching ports or the registry. Documentation-only changes need link checks rather
 than a build.

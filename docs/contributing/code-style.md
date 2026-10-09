@@ -129,7 +129,7 @@ above.
   It also logs an `Error` such as a `LinkageError` and returns it as `isError`, which the SDK (catching only `Exception`) would let fail
   the request. Cancellation and `VirtualMachineError` pass through.
 - Keep tool descriptions to what the agent needs to decide to call it and how.
-- Adding or changing a tool updates the table in `README.md`.
+- Adding or changing a tool updates the tool tables in `README.md` and [../tools.md](../tools.md), and `llms.txt`.
 
 ## Types and data
 

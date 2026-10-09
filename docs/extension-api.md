@@ -1,6 +1,6 @@
-# Extending the driver from another mod
+# Extension API
 
-A Fabric mod can add its own MCP tools to the endpoint of the running client, for example a tool that reads the state of the mod's own screen. The API lives in `io.github.ummamute.driver.api`. It has no Minecraft types, and it is the only package a mod should depend on.
+A Fabric mod can add its own MCP tools to the endpoint of the running client, for example a tool that reads the state of the mod's own screen. An assistant sees those tools next to the [built-in ones](tools.md). The API lives in `io.github.ummamute.driver.api`. It has no Minecraft types, and it is the only package a mod should depend on.
 
 **Stability.** The project is at 0.x. The API can change in any MINOR release; a change is flagged in the release notes and the commit body.
 
@@ -14,7 +14,7 @@ dependencies {
 }
 ```
 
-To run with the driver, copy the same jar into `run/mods/`. Do not add it with `modLocalRuntime(files(...))`: Loom drops the bundled Kotlin and MCP libraries from a remapped file dependency, and the client crashes at startup (see [known issues](known-issues.md)).
+To run with the driver, copy the same jar into `run/mods/`. Do not add it with `modLocalRuntime(files(...))`: Loom drops the bundled Kotlin and MCP libraries from a remapped file dependency, and the client crashes at startup (see [known issues](known-issues.md#modlocalruntime-crashes-the-client)).
 
 Do not list the driver in `depends`: your mod keeps working without it, and the entrypoint is simply never called.
 

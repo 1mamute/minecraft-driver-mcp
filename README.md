@@ -1,99 +1,135 @@
-# minecraft-driver-mcp
+# Minecraft Driver MCP
 
-Let AI drive. A Fabric **client** mod that starts an [MCP](https://modelcontextprotocol.io) server inside a real, rendering Minecraft client, so an AI assistant can look at screens, click buttons, move, chat and take screenshots while you develop a mod.
+**Let an AI assistant drive a real Minecraft client, so it can test and debug your Fabric mod.**
 
-Unlike a protocol bot (mineflayer), this is the actual modded client: it sees your mod's screens, HUD and rendering, and joins modded servers without handshake tricks. It is a development tool, not a gameplay bot.
+Minecraft Driver MCP is a Fabric client mod that starts a [Model Context Protocol](https://modelcontextprotocol.io)
+server inside the running game. An assistant connects to it and can read the open screen, click buttons, type, walk,
+chat, open chests, read the game log and take screenshots, all through the game's own APIs.
 
-## Use
+## Why it exists
 
-1. Put the jar for your Minecraft version in the client's `mods/` folder (or add it to your dev run, see below). It needs Fabric API; Kotlin and the MCP server libraries are bundled in the jar.
-2. Start the client. The log prints the endpoint: `Minecraft Driver MCP "Player123" listening on http://127.0.0.1:25890/mcp`.
-3. Point your assistant at it:
+Debugging a mod is a loop of editing, launching, clicking through menus to the feature, reading what happened and
+digging through the log. An AI assistant can edit code and run builds, but it cannot see or touch the game, so the loop
+stalls at the point where a person has to describe the screen.
+
+This mod removes that step. The assistant can start a client, join a world, open the screen under development, read its
+text and widgets, trigger the action, and read the exception that followed in the log. It runs inside the real client,
+so it sees the screens, HUD and rendering of your mod, and it joins modded servers like any player. That is the
+difference from a protocol bot such as Mineflayer, which has no client to render or run client-side mod code.
+
+It is a development tool, not a gameplay bot.
+
+## What it can do
+
+- Name the open screen, list its widgets, and read the text it drew, with coordinates.
+- Click widgets by label, index or point; type text; press keys; hold movement keys; face a position; use items.
+- Read the player's inventory and any open container, including villager trades, and click slots.
+- Send chat and commands and read the replies; wait for a message or screen instead of polling.
+- Read the game's log with level, logger and exception frames, filtered by level and text.
+- Join a world or a server, leave it, list nearby entities, take a screenshot.
+- Run several clients at once, each with its own port, for multiplayer tests.
+- Let other mods add their own tools.
+
+Everything runs on the render thread through screen and player APIs. The operating system's mouse and keyboard are never
+used, so the window can stay behind other windows. The server binds to `127.0.0.1` only.
+
+## Quick start
+
+1. Put the jar for your Minecraft version in the client's `mods/` folder, next to Fabric API. Kotlin and the server
+   libraries are bundled. Requires Fabric Loader 0.19.5+ and Java 21+.
+2. Start the client. The log prints the endpoint:
+
+   ```text
+   Minecraft Driver MCP "Player123" listening on http://127.0.0.1:25890/mcp
+   ```
+
+3. Point an MCP client at it:
 
    ```bash
    claude mcp add --transport http minecraft http://127.0.0.1:25890/mcp
    ```
 
-A fresh game directory opens Minecraft's accessibility onboarding screen first. Close it once (`mc_click` it away) or set `onboardAccessibility:false` in `options.txt`; this repo's `runClient` does that for you.
+4. Ask the assistant to call `mc_get_state`, then describe what to test.
 
-### In a mod's dev environment
-
-Copy the jar into your project's `run/mods/` folder and run `gradlew runClient`. Fabric Loader remaps it to your mappings (Yarn or Mojang) at launch.
-
-Do not add it with `modLocalRuntime(files(...))`: Loom drops the jar's list of bundled libraries when it remaps a file dependency, and the game crashes with `NoClassDefFoundError: kotlin/...`. See [known issues](docs/known-issues.md).
+For a mod's development environment, copy the jar into `run/mods/` and run `gradlew runClient`. Do not add it with
+`modLocalRuntime(files(...))`: the client crashes with `NoClassDefFoundError: kotlin/...`. A fresh game directory opens
+the accessibility screen first; close it once with `mc_click` or set `onboardAccessibility:false` in `options.txt`.
+See [Installation](docs/installation.md) and [Getting started](docs/getting-started.md).
 
 ## Tools
 
 | Tool | Does |
 | --- | --- |
 | `mc_get_state` | Open screen, connection, window focus, player position |
-| `mc_list_widgets` | Widgets of the open screen with index, type (`Button`, `EditBox`, `Slider`, ...; another mod's widget keeps its class name), label and bounds |
-| `mc_read_screen_text` | Text the open screen drew (title, labels, body, tooltip) with coordinates |
-| `mc_read_inventory` | The player's hotbar, main, armor and offhand slots with item id, name, count, durability, enchantments and lore, plus the cursor stack |
-| `mc_read_container` | The open container screen (chest, furnace, crafting table, villager trades) with every slot and, for merchants, the offers |
+| `mc_list_widgets` | Widgets of the open screen with index, type, label and bounds |
+| `mc_read_screen_text` | Text the open screen drew, with coordinates |
+| `mc_read_inventory` | The player's slots with item id, name, count, durability, enchantments and lore, plus the cursor stack |
+| `mc_read_container` | The open container screen with every slot and, for merchants, the offers |
 | `mc_click` | Click a widget by label or index, or a point |
-| `mc_click_slot` | Click a slot of the open container: pick up, quick move, swap with a hotbar key, throw, clone, gather, or drop the cursor stack |
-| `mc_close_screen` | Close the open screen as Escape does (a sub-screen returns to its parent) |
-| `mc_join_server` | Connect to a multiplayer server by `host` or `host:port` (opens the connect screen; login finishes later) |
-| `mc_join_world` | Load a singleplayer world by its save folder name |
-| `mc_disconnect` | Leave the current world or server and return to the title screen |
-| `mc_set_key` | Hold or release forward, back, left, right, jump, sneak (held until released; paused while a screen is open, as in vanilla); press `inventory` to open or close the inventory |
+| `mc_click_slot` | Click a container slot: pick up, quick move, swap, throw, clone, gather, or drop the cursor stack |
+| `mc_close_screen` | Close the open screen as Escape does |
+| `mc_join_server` | Connect to a multiplayer server |
+| `mc_join_world` | Load a singleplayer world by save folder name |
+| `mc_disconnect` | Leave the current world or server |
+| `mc_set_key` | Hold or release a movement key; press `inventory` |
 | `mc_look_at` | Face a world position |
-| `mc_use` | Right click what is under the crosshair, then the held item (either hand); `hold_ticks` keeps the key down to finish eating, drinking or drawing a bow |
-| `mc_send_chat` | Send chat or a `/command` as the player; returns the text sent after trimming and collapsing whitespace (256 characters max) |
-| `mc_type_text` | Type text into the focused widget of the open screen (server address, world name, anvil, search box, sign, command block); returns how many characters it accepted |
-| `mc_press_key` | Press enter, escape, tab, backspace, delete, arrows, home, end or page up/down on the open screen, `times` repeats; escape in a world opens the pause screen |
-| `mc_read_messages` | Chat and system messages received since a sequence number (action-bar text excluded; `truncated` flags dropped messages) |
-| `mc_read_log` | The game's log lines (level, logger, thread, message, throwable) since a sequence number, filtered by level and text |
+| `mc_use` | Right click what is under the crosshair, then the held item; `hold_ticks` finishes eating, drinking or drawing a bow |
+| `mc_send_chat` | Send chat or a `/command` as the player |
+| `mc_type_text` | Type into the focused widget |
+| `mc_press_key` | Press enter, escape, tab, backspace, arrows and similar on the open screen |
+| `mc_read_messages` | Chat and system messages since a sequence number |
+| `mc_read_log` | The game's log lines since a sequence number, filtered by level and text |
 | `mc_wait_for` | Block until a message or screen appears, or time out |
-| `mc_list_entities` | Entities within 64 blocks, nearest first (at most 100), with registry type, feet position and distance |
+| `mc_list_entities` | Entities within 64 blocks, nearest first |
 | `mc_screenshot` | PNG of the game framebuffer |
-| `mc_list_instances` | Every running client with this mod, to find the others |
+| `mc_list_instances` | Every running client with this mod |
 
-Other mods can add their own tools with a `minecraft-driver-mcp` Fabric entrypoint; see [docs/extending.md](docs/extending.md). Their tools are named `<modid>_<verb>_<noun>`.
+Arguments and results are in the [tool reference](docs/tools.md). Other mods add tools named
+`<modid>_<verb>_<noun>` through the [extension API](docs/extension-api.md).
 
-Everything runs on the render thread through the game's own screen and player APIs. The operating system's mouse and keyboard are never used.
+## Several clients
 
-## Several clients at once
+A client takes the first free port from 25890, so two clients get 25890 and 25891. Fix a port with `-Ddriver.port`, name
+an instance with `-Ddriver.name`, and find the others with `mc_list_instances`. See
+[Running several clients](docs/multiple-clients.md).
 
-Testing multiplayer needs two or more clients. Each one starts its own server, so ports must not collide:
-
-- **Default:** a client takes the first free port from `25890`. Start two clients and they get `25890` and `25891`, even when both start at the same moment.
-- **Fixed port:** `-Ddriver.port=25901` uses exactly that port and logs an error and leaves the driver off if it is taken (the game still starts), because your MCP config points at it.
-- **Names:** `-Ddriver.name=Alice` labels the instance (default: the player name). The name appears in the MCP server name and instructions, so an assistant connected to several clients can tell them apart.
-- **Discovery:** each running client writes `~/.minecraft-driver-mcp/instances/<pid>.json` and removes it on exit. `mc_list_instances` (or the directory) lists the live ones with their URLs; files of crashed clients are ignored.
-- **Game directories:** give each client its own run directory, as Minecraft requires.
-
-For stable setups, fix the ports and register each client once:
-
-```bash
-claude mcp add --transport http alice http://127.0.0.1:25901/mcp
-claude mcp add --transport http bob   http://127.0.0.1:25902/mcp
-```
-
-## Properties
+## Configuration
 
 | Property | Default | Meaning |
 | --- | --- | --- |
 | `driver.port` | first free from 25890 | Fixed port |
-| `driver.host` | `127.0.0.1` | Bind address. Keep it on localhost: the tools control the player. A specific address is also accepted as the request's `Host`; a wildcard (`0.0.0.0`) accepts only localhost names |
+| `driver.host` | `127.0.0.1` | Bind address. Keep it on localhost: the tools control the player |
 | `driver.name` | player name | Instance name |
-| `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>`; others get 401 and no tool runs. The token is never logged or written to the registry, which only records `authRequired` |
+| `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>` |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
-| `driver.unfocused` | `false` (`true` in this repo's `runClient`) | Create the window without taking focus, and keep the game running while the window is not in front. Vanilla opens the pause menu then, which would undo `mc_close_screen`; the "pause on lost focus" option in `options.txt` is not changed |
+| `driver.unfocused` | `false` | Create the window without focus and keep the game running while it is behind other windows |
+
+Details are in [Configuration](docs/configuration.md).
+
+## Documentation
+
+- [User documentation](docs/README.md): installation, usage, [debugging mods with an assistant](docs/debugging-mods.md),
+  tool reference, configuration, [known issues](docs/known-issues.md).
+- [Contributor guide](docs/contributing/README.md): architecture, extending the mod, testing, code style.
+- [llms.txt](llms.txt): a single self-contained brief for LLM agents.
 
 ## Build
 
-JDK 21 and the Gradle wrapper. [Stonecutter](https://stonecutter.kikugie.dev) builds one jar per Minecraft version from one source tree; version-specific code is marked with Stonecutter comments.
+JDK 21 and the Gradle wrapper. [Stonecutter](https://stonecutter.kikugie.dev) builds one jar per Minecraft version from
+one source tree.
 
 ```bash
 ./gradlew build          # jars in versions/<mc>/build/libs
-./gradlew lint           # ktlint + detekt
+./gradlew lint           # ktlint and detekt
 ./gradlew :1.21.1:runClient
 ```
 
-Supported: Minecraft 1.21.1. Contributors: see [AGENTS.md](AGENTS.md) and the [documentation](docs/README.md).
-
 ## Status
 
-Pre-release (0.1.0) for Minecraft 1.21.1. The tools in the table above work in a dev environment and are checked against a running client before each change merges (see [docs/testing.md](docs/testing.md)). Other Minecraft versions and installs outside a dev environment have not been tested. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md).
+Pre-release (0.1.0) for Minecraft 1.21.1. The tools above work in a development environment and are checked against a
+running client before each change merges. Other Minecraft versions have not been tested, and tool names and schemas can
+change between minor versions. Limits and unverified areas are listed in [Known issues](docs/known-issues.md).
+
+## License
+
+MIT

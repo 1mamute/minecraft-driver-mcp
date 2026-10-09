@@ -1,44 +1,96 @@
-# Known issues and watch list
+# Known issues
 
-Open questions and risks found while scaffolding. Check them when a related change lands, and remove an entry when it is resolved.
+Limits a user can run into, with workarounds. Internal verification notes are in
+[Verification status](contributing/known-issues.md).
 
-## Unverified
+## Supported scope
 
-| Item | What we know | How to close it |
-| --- | --- | --- |
-| Two clients at once | Verified on 1.21.1 with two real clients: AlphaBot on 25890 and BravoBot on 25891 both answered `initialize`, `tools/list` and `mc_get_state`, both appeared in `mc_list_instances`, and closing one removed only its registry file. A fixed `-Ddriver.port` that is already taken logs an error at startup (the driver stays off, the game still starts) with `Port 25890 is already in use. Free it or set -Ddriver.port to another port ...` (re-verified with a second client in its own `--gameDir`; the first kept answering). The message reaches the console and the crash report in the new game directory, but not `logs/latest.log`: in the dev environment both clients share `versions/1.21.1/run/logs/latest.log`, which the second one cannot open (see separate run directories). | Two clients launched directly from the Loom command line in the same instant (separate `--gameDir`, `-Ddriver.registry`) got distinct ports (25890, 25891) and registry files, and each listed both in `mc_list_instances`; they happened to pick different ports. Three more simultaneous `runClient` starts also got distinct ports, so the `EndpointBinder` retry after a lost race is still unit-tested only: the window between probing a port and binding it is a few milliseconds. Confirm the message also appears in `logs/latest.log` with a launcher that gives each instance its own game directory. Note that a force-killed client leaves its registry file behind. |
-| `windowFocused` in `mc_get_state` | Measured on 1.21.1 (Windows 11) with a Win32 foreground sampler: without `-Ddriver.unfocused=true` Minecraft took the foreground about 25 s after launch; with the flag, three consecutive launches never did, and the game rendered and answered `mc_get_state` and `mc_screenshot` while behind other windows. `windowFocused` (`mc.isWindowActive`) still reports `true` at launch in both cases, so it does not reflect OS foreground state. It turns `false` only after the window had focus and lost it. Vanilla then pauses the game (the pause screen opens every frame) unless `pauseOnLostFocus` is off in `options.txt` or the client runs with `-Ddriver.unfocused=true`, which `GameRendererMixin` uses to ignore that option. Verified on 1.21.1 (Windows 11) with `pauseOnLostFocus:true`: with the flag a closed screen stays closed behind other windows (dev run); without it the pause screen returns (Prism install). Not verified: the flag in a production install (passing `-D` arguments through Prism did not take effect), macOS and Linux. | Compare `mc_get_state` with `GetForegroundWindow` during a launch on macOS and Linux, which the sampler does not cover. |
-| Separate run directories | Loom ignores the `workingDir` override on `runClient`. Minecraft kept `versions/1.21.1/run` as its game directory until `--gameDir` was passed in the program arguments. With `--gameDir`, the crash report, `options.txt` and saves go to the new directory, but the log4j file appenders in Loom's generated config still write `logs/latest.log` and `debug.log` under `versions/1.21.1/run`, so two dev clients share them and the second one logs file-lock errors and writes no file lines (its output still reaches the console). `mc_read_log` is unaffected because each client captures its own process. | Find a way to point the log file at the game directory (a custom log4j config), or document that the log is shared in development. |
-| Bundled library clashes | Ktor, kotlinx and Kotlin ship as jar-in-jar. Another mod bundling different versions of the same libraries may conflict. Tested with Fabric Language Kotlin added as a runtime-only dependency on 1.21.1: FLK 1.14.1+kotlin.2.4.20 (same Kotlin as the bundled stdlib) and FLK 1.10.20+kotlin.1.9.24 (older Kotlin). Both clients loaded with the mod, answered `initialize`, `tools/list` and `mc_get_state`, and logged no duplicate-class, `LinkageError`, `NoClassDefFoundError`, `NoSuchMethodError` or `IncompatibleClassChangeError`. | Run next to other mods that bundle Kotlin or Ktor; watch for `NoSuchMethodError` or duplicate-class warnings. Still untested: Ktor or kotlinx bundled by other mods. |
-| Inventory and container tools | Verified on 1.21.1: `mc_read_inventory` (custom name, sharpness 3, durability, lore, helmet at index 39, offhand at 40, `include_empty` gives 41 slots), `mc_read_container` on a chest (9x3, `include_empty` gives 63 slots, enchanted book with stored mending), a librarian (`minecraft:merchant`, two offers), a furnace (`input`, `fuel`, `output`), a brewing stand (`bottle` 0-2, `ingredient`, `fuel`), a crafting table (`result`, `grid`), the creative item grid (`ItemPickerMenu`, group `creative`, empty title) and the creative inventory tab (player menu labels, `trash`), and the error results on the title screen and with no container open. Not verified: anvil, enchanting table, smithing, stonecutter, grindstone and modded menus (their slot names come from a table in `MenuSlotGroups`, unchecked against the game; unknown menus read `container`), the creative item grid's tab name (the title is empty), offers before the server sends them, item tooltips on screen, and components other than damage, enchantments and lore (potion contents, trims, custom data). | Open each remaining menu in a world and compare with the screen. |
-| `mc_click_slot` | Verified on 1.21.1 in a survival world: pick up and put down (left and right button), quick move in both directions, swap with a hotbar key, throw one item and a stack, pick up all, drop the cursor stack outside the window, a librarian trade, and the error results. Verified in a creative world after the click moved to the screen's `slotClicked`: chest quick move and pick up, furnace quick move of fuel and of a smeltable (raw iron became an ingot in the output slot), brewing stand quick move, crafting table grid fill and result quick move (two planks became four sticks), and in creative the item grid (pick up, place in the hotbar, quick move gives a full stack, clone with an empty cursor gives a full stack) and the inventory tab (quick move). Found and fixed: the old route sent the creative menu indexes to the server unchanged, so a grid click was rolled back and a hotbar click hit the wrong slot. Not verified: quick craft (drag), slots in modded menus, and whether the server rejects a click the client predicted. In creative, `outside` with a cursor stack drops one item per click, not the whole stack. | Click in a modded menu; compare with `mc_read_container` after a second. |
-| Screen text capture | Hooks `GuiGraphics.drawString` (String and FormattedCharSequence variants), `ClientTextTooltip.renderText` and `Screen.renderWithTooltip` on 1.21.1. Text drawn by other paths (direct `Font.drawInBatch`, entity or in-world text) is not captured. Title, options and crafting screens verified on 1.21.1, including item counts (`6`, `12`, `8`, `4` in a crafting table); a tooltip on the Video Settings Graphics button was captured with the real cursor placed over it (the window must be in front of other windows to receive the cursor). Inventory item tooltips are untested: they need the real cursor over a slot, which the tools cannot move. | Hover an item with the real cursor and call `mc_read_screen_text`; check a mod screen that draws text with `Font.drawInBatch` directly. |
-| Log capture | `mc_read_log` captures through a Log4j2 appender on the root logger, so it sees what Log4j2 routes through the root logger, at the levels the game's configuration allows (normally INFO and up, so `DEBUG` lines never arrive). Lines logged before the mod started, and output written straight to `System.out` or `System.err`, are not captured. Verified on 1.21.1 on the title screen and in a world: WARN lines from the sound engine and shaders, the INFO chat line for a failed command, ERROR lines from the game (`Not a string: 3` from a sign, `Tried to load invalid item`), WARN lines from a spawner, `min_level`, `contains`, `since`, the bounded buffer, the error for an unknown level. A unit test (`LogCaptureTest`) logs a line with a throwable through the real Log4j2 and checks the `throwable` text, and that nothing is captured after `uninstall`. A clean shutdown through `mc_click` on Quit Game ended with `Stopping!`, no errors and the registry file removed. Reading the log logs a few MCP SDK INFO lines itself. Not verified: a throwable from the running game (the errors we provoked carried none), and running next to a mod that reconfigures Log4j2. | Check a mixin failure or a mod exception reaches the buffer, and run next to a mod that reconfigures Log4j2. |
-| Joining and leaving | `mc_disconnect` and `mc_join_world` verified on 1.21.1 with a singleplayer world, `mc_join_server` verified up to the connect screen and the failure path (`127.0.0.1:1` ends on the disconnect screen "Failed to connect to the server"), plus the error results (bad port, missing address, unknown save folder, already in a world). Not verified: a successful login to a real server (dedicated or LAN), joining servers with a resource pack prompt or an unsupported protocol, `mc_disconnect` on a remote server, and `mc_join_world` for saves that need an upgrade or experimental-settings confirmation (those open a vanilla confirmation screen). | Join a dedicated server and a LAN world from a second client; disconnect from each. |
-| Extension API | Verified on 1.21.1 with a throwaway extension (not committed) declared in this mod's own `fabric.mod.json`: tools appeared in `tools/list` with their schema and annotations, a handler ran on the `Render thread`, a missing argument and a throwing handler came back as `isError` results, a duplicate name and a name without the mod id prefix were ignored with a warning, and an extension that threw in `registerTools` was logged without stopping the endpoint or the next extension. The API (`io.github.ummamute.driver.api`) is 0.x and may change in any MINOR release. Not verified: an extension in a separate mod jar (class loading across mods, `modCompileOnly` against the jar), a Kotlin extension, a handler with `onRenderThread(false)`, and extension tools next to a mod that bundles another Kotlin runtime. Tools are collected once at startup, so a mod that registers late is not seen. | Build a small separate mod against the jar and call its tools; try one Java and one Kotlin extension. |
-| `mc_use` held items | Verified on 1.21.1: looking at the sky with snowballs thrown one (4 to 3), and with hunger and steak it returned `CONSUME` (use started). `mc_use` is one press of the use key, so items that need the key held (eating, drinking, drawing a bow, a raised shield) are started but the game releases them on the next tick; `hold_ticks` keeps the key down for that many ticks to finish them. Verified on 1.21.1: bread with `hold_ticks` 40 took about 2 s and ate (4 to 3, food 0 to 5), a bow with 25 used an arrow, bad values return errors, and a screen opened mid-hold released the key (the call still waits out the remaining ticks). | Check a shield and a potion. Off-hand food while hungry returned `CONSUME`; aimed at a stone block with full hunger it returned `PASS` without an error. Hungry (food 0) with bread aimed at stone it returned `CONSUME`, and the bread count stayed at 4. |
-| Auth token | Verified on 1.21.1 (single client, fixed port): without `-Ddriver.token` `initialize`, `tools/list`, `mc_get_state` and `mc_list_instances` work; with it, a request with no header, a wrong token, a token one character short and a plain GET return 401 with `WWW-Authenticate: Bearer`, and the correct header gets 200 for `initialize`, `tools/list` and `mc_get_state`. The token is absent from the registry file and `latest.log`; the file has `authRequired: true`. Claude Code (`claude -p --mcp-config`, http transport) completed a session and called `mc_get_state` against a production Prism install with no token. Not verified: a real MCP client completing a session with the token (Claude Code `--header "Authorization: Bearer ..."`, Inspector; a Prism attempt failed because the `-Ddriver.token` JVM argument never reached the game, so the endpoint stayed open), deferred past 0.1, two clients with different tokens, timing side channels beyond the SHA-256 plus `MessageDigest.isEqual` comparison (unit-tested for correctness only), and that the token is hidden from the process list (a `-D` flag is visible to other local users). | Connect Claude Code with the header and call a tool. |
-| `mc_set_key` held keys | Verified on 1.21.1: `forward` held moves the player, keeps moving until a screen opens (this changed, see below), and a release on a flat platform stops the player within about a second. Held keys now follow vanilla: they are released while any screen is open and resume when it closes (before, `jump` and `left` kept acting behind the survival inventory). | Verified on 1.21.1: `forward`, `left` and `jump` stop with the inventory open and resume when it closes; `sneak` returns no error. |
-| `mc_set_key` `inventory` | Verified on 1.21.1 in a survival world: it opens the inventory, a second press closes it and it stays closed, and it closes a chest screen. With the title screen open it returns `A TitleScreen is open, not an inventory. Call mc_close_screen first, then press inventory again`. In creative it opens `CreativeModeInventoryScreen`, which `mc_close_screen` closes. With the pause screen open it returns the same message (verified in a production Fabric install). When the window is not in front and the client lacks `-Ddriver.unfocused=true`, vanilla reopens the pause screen every frame, and the message adds a hint to focus the window or use the flag. | Nothing open. |
-| Errors on the render thread | Verified on 1.21.1 with a throwaway extension (not committed): a `NoSuchMethodError` and an `AssertionError` thrown inside `RenderThread.call` came back as `isError` results in about 15 ms, and the client kept running. Not verified: the same through `ToolSupport.onRenderThread`, which built-in tools use (covered by reading the code and the normal-path smoke test), and the old behavior on `main` (read from the code, not observed). | Throw from a built-in tool's action with a debugger and confirm the `isError` result. |
-| Jar size | About 9.0 MB. `kotlin-reflect` (3.6 MB, pulled in by `ktor-server-core`) is excluded from `bundled`; the title-screen smoke test of all 12 tools and their error paths passed, and the tools also passed inside a freshly created world (`mc_list_entities`, `mc_look_at`, `mc_use` on a cow, `mc_set_key`, `mc_send_chat`, `mc_read_messages`, `mc_screenshot`, `mc_close_screen`), with no `LinkageError` or reflection failure in the log. `mc_click` on a widget and by point was exercised on menus, container screens and the creative tabs. `config` still comes in transitively. | Try excluding `config` and re-run the smoke test. If a Ktor or MCP SDK upgrade needs reflection, remove the exclude in `build.gradle.kts`. |
-| Names outside the dev environment | Screen names (`mc_get_state`, `mc_wait_for`, `mc_list_widgets`, `mc_read_screen_text`) come from `ClassNames`, a table of vanilla classes with their official simple names (the build remaps the class literals), because reflection on `javaClass.name` returns intermediary names in a normal install. Screens not in the table (other vanilla screens, other mods) report the runtime class name, so on a normal install a vanilla one reads `class_NNNN`. Widget `type` values in `mc_list_widgets` use a second, ordered table: a vanilla widget takes the name of the first listed class it extends (`Button`, `SpriteIconButton`, `Slider`, `EditBox`, `StringWidget`, ...), `Component` when none matches, and a widget from another mod keeps its own class name. Verified in a production Fabric install (Prism, Fabric Loader 0.19.5, Cobblemon, Sodium and Fabric API): screen names on the title, options, pause and creative inventory screens and widget types on the same screens show no `class_NNNN`. Logger names in `mc_read_log` are still intermediary there (`net.minecraft.class_7766`) and cannot be fixed with a table; see [#39](https://github.com/1mamute/minecraft-driver-mcp/issues/39) for the alternatives, deferred past 0.1. Widget labels outside `AbstractWidget` come from the narrated title (`NarratableEntry`), and `mc_click` sets the hover flag through `AbstractWidgetAccessor`. | Add a widget to the table when `mc_list_widgets` shows `Component` for a vanilla widget that matters. |
+- Only Minecraft **1.21.1** is built and tested. Other versions need a new build.
+- The mod is a client mod for development and testing. It is not meant for gameplay automation on public servers.
+- The project is at 0.x. Tool names, schemas and the extension API can change in any minor version.
 
-## Design limits
+## modLocalRuntime crashes the client
 
-- **Stateless HTTP.** `mcpStatelessStreamableHttp` keeps no session, so the server cannot push notifications to the agent. `mc_wait_for` blocks inside one call, with a timeout that defaults to 10 s and is capped at 60 s, so keep it below the MCP client's request timeout. Revisit if streaming progress is needed (`mcpStreamableHttp`).
-- **Localhost by default, optional token only.** The tools control the player. `-Ddriver.token` adds a shared bearer token, but there are no users, scopes or TLS: over a non-loopback `driver.host` the token travels in clear text and anyone who sees it controls the player. Do not document remote use until TLS or a tunnel is part of the setup. The SDK's DNS-rebinding guard accepts only the localhost names and a specific `driver.host` address in the `Host` header (`HostAllowLists`); with a wildcard bind (`0.0.0.0`, `::`) a request to the machine's LAN address gets 403 `Invalid Host`.
-- **Single Minecraft version.** Only 1.21.1 exists, so Stonecutter's conditionals are untested. Adding a second version is the real test of the approach.
+Adding the jar to a mod's development run with `modLocalRuntime(files(...))` crashes the client with
+`NoClassDefFoundError: kotlin/collections/ArrayDeque`. Loom removes the list of bundled libraries from the remapped
+copy. **Workaround:** copy the jar into the project's `run/mods/` folder; Fabric Loader remaps it at launch.
 
-- **No `modLocalRuntime` in a consumer's dev run.** Verified with a Yarn-mapped Loom 1.17.21 project on 1.21.1: `modLocalRuntime(files(<driver jar>))` crashes the client entrypoint with `NoClassDefFoundError: kotlin/collections/ArrayDeque`. Loom's remapped copy keeps `META-INF/jars/` but removes the `jars` list from `fabric.mod.json`, because it expects nested libraries to come from a Maven POM, which a file dependency lacks. The same jar copied into `run/mods/` loads, and Fabric Loader remaps it to Yarn. Publishing the jar to a Maven repository with a POM listing the bundled libraries would make `modLocalRuntime` work.
+## Launchers and JVM arguments
 
-## Tooling
+Some launchers do not pass `-D` system properties to the game. The properties in [Configuration](configuration.md)
+(`driver.port`, `driver.token`, `driver.unfocused`) then have no effect, and the endpoint stays on its defaults and open
+to local processes. Check the log line printed at startup, and set `pauseOnLostFocus:false` in `options.txt` instead of
+`driver.unfocused`.
 
-- **Fabric Loom 1.18 needs JDK 25.** The project pins Loom 1.17.21 to stay on JDK 21. Moving to Loom 1.18 means moving the build JDK; watch for the first Minecraft version that requires it.
-- **Deprecation warning** in `build.gradle.kts` for `RunConfigSettings.property` (Loom). Switch to the replacement API when Loom documents one.
-- **Stonecutter 0.9.x** is maintained mainly by one developer. Pin the version and read its changelog before upgrading.
-- **Upstream SDK.** `io.modelcontextprotocol:kotlin-sdk` is pre-1.0 (0.15.0), so its API can change between minor versions. Upgrade deliberately and re-run the smoke test (`initialize`, `tools/list`, one tool call).
+## Remote access
 
-## Missing features
+The server is for the local machine. The access token is a shared secret without TLS, users or scopes. Over a
+non-loopback address it travels in clear text. A wildcard bind accepts only localhost host names, so a request to the
+machine's LAN address is answered with `403 Invalid Host`.
 
-None at the moment.
+## Stateless HTTP
+
+The server keeps no session, so it cannot push notifications to the assistant. `mc_wait_for` blocks inside a single
+call, with a default timeout of 10 seconds and a cap of 60 seconds. Keep it below the MCP client's request timeout.
+
+## Screens and widgets
+
+- **Tooltips need a hovering cursor.** The tools do not move the real cursor, so a tooltip appears only if the real
+  cursor is over its target. Item tooltips in containers cannot be read this way; `mc_read_inventory` and
+  `mc_read_container` give the item data instead.
+- **Text drawn directly by a mod.** `mc_read_screen_text` captures text drawn through the standard `GuiGraphics` and
+  tooltip paths. Text drawn by calling `Font.drawInBatch` directly, or text drawn in the world, is not captured.
+  `mc_screenshot` is the fallback.
+- **Custom tiles.** A screen that draws its own clickable tiles without registering widgets shows nothing in
+  `mc_list_widgets`. Click by point.
+- **Class names outside a development environment.** Vanilla screen and widget names are mapped to readable names
+  through built-in tables. A vanilla screen that is not in the table reads `class_NNNN` in a normal install. A mod's
+  own screens keep their class names.
+- **Modifier keys.** Shift and control cannot be sent; shortcuts such as select-all do not work.
+- **First launch.** A fresh game directory opens the accessibility onboarding screen. Close it once with `mc_click`
+  or set `onboardAccessibility:false`.
+
+## Window focus
+
+`windowFocused` in `mc_get_state` reports `true` at launch whatever the operating system's foreground window is, and
+turns `false` only after the window had focus and lost it. Without `-Ddriver.unfocused=true`, vanilla pauses the game
+when the window is inactive and "pause on lost focus" is on, so `mc_close_screen` can be undone at once. The flag was
+checked on Windows; macOS and Linux were not checked.
+
+## Log capture
+
+`mc_read_log` captures through a Log4j2 appender on the root logger. It sees what Log4j2 routes there at the levels the
+game's configuration allows (normally `INFO` and up), so `DEBUG` lines never arrive. Lines logged before the mod started
+and output written straight to `System.out` or `System.err` are not captured. Logger names in a normal install are
+intermediary names such as `net.minecraft.class_7766`. A mod that reconfigures Log4j2 may change what is captured.
+
+## Shared log file in development
+
+In a Gradle development environment, two clients write to the same `logs/latest.log` even with separate game
+directories. The second client cannot open it and logs file-lock errors, but its console output and `mc_read_log` work.
+
+## Inventories and containers
+
+- Slot groups for menus other than the player's inventory, chests, furnaces, brewing stands, crafting tables, merchants
+  and the creative screens come from a table and may be wrong; unknown menus read `container`.
+- Item data includes damage, enchantments, lore and the name. Other components such as potion contents, trims and
+  custom data are not reported.
+- `mc_click_slot` does not support dragging (quick craft). In creative mode, `outside` with a cursor stack drops one
+  item per click.
+- The returned slot state is the client's prediction. Read the container again to see what the server kept.
+
+## Joining and leaving
+
+A successful login to a real dedicated server, servers that prompt for a resource pack, and saves that need an upgrade
+have not been checked. `mc_join_world` and `mc_join_server` return at once; follow them with `mc_wait_for`.
+
+## Compatibility with other mods
+
+Kotlin and the HTTP libraries are bundled as nested jars. Another mod that bundles different versions of the same
+libraries could conflict. Loading next to Fabric Language Kotlin (two versions) caused no problems, but bundled Ktor or
+kotlinx from other mods has not been checked. Report conflicts, with the log, as issues.
+
+## Reporting a problem
+
+Include the Minecraft and mod versions, the other mods installed, the failing call and its result, and the relevant
+`mc_read_log` output or `logs/latest.log`.
