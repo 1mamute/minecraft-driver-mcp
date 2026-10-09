@@ -32,6 +32,7 @@ io.github.ummamute.driver/
         ActionTools.kt      # tools that change the game
         InstanceTools.kt    # discovery of other running clients
     server/                 # Ktor + MCP SDK endpoint, port choice, instance registry
+    api/                    # public, Minecraft-free API for other mods (see extending.md); keep it stable
 ```
 
 | Role | Name | Example |

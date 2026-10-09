@@ -22,6 +22,8 @@ collector `TextFrame` turns one frame's text into the data `mc_read_screen_text`
 
 `ClientInventory` maps the player's `Inventory`, the open `AbstractContainerMenu` and merchant offers into the data classes of `InventoryModel.kt`; `SlotLabels` (no Minecraft types) decides each inventory slot's group (hotbar, main, armor, offhand). `mc_read_inventory` and `mc_read_container` return them. Item stacks are sprites, so `mc_read_screen_text` never sees them. `ClientSlots` sends a slot click through `MultiPlayerGameMode.handleInventoryMouseClick` for `mc_click_slot`; `SlotClickPlanner` (no Minecraft types) validates the arguments.
 
+Other mods add tools through the `minecraft-driver-mcp` Fabric entrypoint ([extending.md](extending.md)). `api/` is the public, Minecraft-free surface (`DriverExtension`, `ToolRegistrar`, `ToolDefinition`, `ToolArguments`, `ToolResult`). `ExtensionLoader` calls each extension once in `DriverBootstrap.start`, catching failures per extension; `ExtensionRegistry` validates names with `ToolNames` and rejects duplicates with a warning; `ExtensionTools` adds the accepted tools to each per-request `Server`, runs handlers on the render thread by default and turns any exception into an error result.
+
 Because of this split, supporting a new Minecraft version means changing `client/` (and
 the mixin), not the tools or the server.
 
@@ -71,7 +73,18 @@ handshake. The cost is that the server cannot push notifications or stream progr
 
 The MCP SDK enables DNS-rebinding protection by default, so a web page cannot reach the
 local endpoint through a hostile hostname. Keep the bind address on localhost: the tools
-control the player and have no authentication.
+control the player.
+
+`-Ddriver.token=<value>` turns on a shared bearer token. `TokenAuthenticator` (pure, in `server/`)
+hashes the configured token with SHA-256 and compares the hash of the presented
+`Authorization: Bearer ...` value with `MessageDigest.isEqual`, so the comparison takes the same
+time for any input length. `McpEndpoint` installs it as a Ktor pipeline interceptor ahead of the
+MCP routes: a missing or wrong header gets `401` with `WWW-Authenticate: Bearer` and the request
+ends there, so no tool runs. An unset or empty property keeps the endpoint open. The token is
+never logged. The instance registry records only `authRequired` (default `false`; files without
+the field still read as open), so `mc_list_instances` shows which clients need a token without
+exposing it. Configure the agent with the header, for example
+`claude mcp add --transport http alice http://127.0.0.1:25901/mcp --header "Authorization: Bearer <token>"`.
 
 ## Several clients
 

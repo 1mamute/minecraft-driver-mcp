@@ -31,6 +31,15 @@ class InstanceRegistryTest {
     }
 
     @Test
+    fun `files without authRequired read as open and the flag round-trips`() {
+        val self = ProcessHandle.current().pid()
+        directory.resolve("old.json").writeText("""{"name":"old","pid":$self,"url":"u","port":25890,"minecraftVersion":"1.21.1","gameDirectory":"g"}""")
+        registry.register(instance("locked", self, 25891).copy(authRequired = true))
+
+        assertEquals(mapOf("old" to false, "locked" to true), registry.list().associate { it.name to it.authRequired })
+    }
+
+    @Test
     fun `unregistered client disappears`() {
         val self = ProcessHandle.current().pid()
         registry.register(instance("gone", self, 25890))

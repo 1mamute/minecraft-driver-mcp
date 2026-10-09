@@ -1,12 +1,20 @@
 package io.github.ummamute.driver.server
 
+import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.tools.ActionTools
 import io.github.ummamute.driver.tools.ConnectionTools
+import io.github.ummamute.driver.tools.ExtensionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.response.respond
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcpStatelessStreamableHttp
@@ -14,11 +22,19 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 
 /** The MCP server on localhost. Stateless Streamable HTTP: every request is independent, so restarting the agent needs no session. */
-class McpEndpoint(private val host: String, private val port: Int, private val version: String, private val instanceName: String) {
+class McpEndpoint(
+    private val host: String,
+    private val port: Int,
+    private val version: String,
+    private val instanceName: String,
+    private val extensionTools: List<ToolDefinition> = emptyList(),
+    private val authenticator: TokenAuthenticator = TokenAuthenticator(null),
+) {
     private var engine: EmbeddedServer<*, *>? = null
 
     fun start() {
         val started = embeddedServer(CIO, host = host, port = port) {
+            requireToken()
             mcpStatelessStreamableHttp(path = PATH) { buildServer() }
         }
         started.start(wait = false)
@@ -28,6 +44,17 @@ class McpEndpoint(private val host: String, private val port: Int, private val v
     fun stop() {
         engine?.stop(gracePeriodMillis = 0, timeoutMillis = STOP_TIMEOUT_MILLIS)
         engine = null
+    }
+
+    /** Answers 401 before routing when a token is configured and the request does not carry it, so no tool runs. */
+    private fun Application.requireToken() {
+        if (!authenticator.isRequired) return
+        intercept(ApplicationCallPipeline.Plugins) {
+            if (authenticator.isAllowed(call.request.headers[HttpHeaders.Authorization])) return@intercept
+            call.response.headers.append(HttpHeaders.WWWAuthenticate, "Bearer")
+            call.respond(HttpStatusCode.Unauthorized, "Missing or wrong bearer token. Send Authorization: Bearer <driver.token>.")
+            finish()
+        }
     }
 
     private fun buildServer(): Server {
@@ -40,6 +67,7 @@ class McpEndpoint(private val host: String, private val port: Int, private val v
         ObservationTools.register(server)
         ActionTools.register(server)
         ConnectionTools.register(server)
+        ExtensionTools.register(server, extensionTools)
         return server
     }
 

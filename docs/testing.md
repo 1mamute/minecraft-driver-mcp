@@ -32,6 +32,17 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+### Auth token
+
+Run this when you touch `McpEndpoint`, `TokenAuthenticator` or the registry format. Start the client twice
+(use your own `--gameDir`, `--username`, `-Ddriver.port` and `-Ddriver.registry`):
+
+1. Without `-Ddriver.token`: `initialize`, `tools/list` and `mc_get_state` work with no header.
+2. With `-Ddriver.token=<value>`: no `Authorization` header, a wrong token and a plain GET return `401`
+   (with `WWW-Authenticate: Bearer`); `Authorization: Bearer <value>` returns `200` for `initialize`,
+   `tools/list` and `mc_get_state`.
+3. The registry file has `"authRequired": true` and no token, and `logs/latest.log` does not contain the token.
+
 ### Options a driven client needs
 
 A fresh game directory has defaults that block an agent or annoy the developer. Put these
