@@ -1,6 +1,8 @@
 package io.github.ummamute.driver.server
 
+import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.tools.ActionTools
+import io.github.ummamute.driver.tools.ExtensionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
 import io.ktor.http.HttpHeaders
@@ -24,6 +26,7 @@ class McpEndpoint(
     private val port: Int,
     private val version: String,
     private val instanceName: String,
+    private val extensionTools: List<ToolDefinition> = emptyList(),
     private val authenticator: TokenAuthenticator = TokenAuthenticator(null),
 ) {
     private var engine: EmbeddedServer<*, *>? = null
@@ -62,6 +65,7 @@ class McpEndpoint(
         InstanceTools.register(server)
         ObservationTools.register(server)
         ActionTools.register(server)
+        ExtensionTools.register(server, extensionTools)
         return server
     }
 

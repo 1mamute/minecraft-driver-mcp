@@ -43,6 +43,8 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_screenshot` | PNG of the game framebuffer |
 | `mc_list_instances` | Every running client with this mod, to find the others |
 
+Other mods can add their own tools with a `minecraft-driver-mcp` Fabric entrypoint; see [docs/extending.md](docs/extending.md). Their tools are named `<modid>_<verb>_<noun>`.
+
 Everything runs on the render thread through the game's own screen and player APIs. The operating system's mouse and keyboard are never used.
 
 ## Several clients at once
