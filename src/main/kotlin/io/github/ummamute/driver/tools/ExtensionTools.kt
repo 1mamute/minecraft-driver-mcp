@@ -4,6 +4,7 @@ import io.github.ummamute.driver.api.ToolArguments
 import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.api.ToolResult
 import io.github.ummamute.driver.client.RenderThread
+import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations
@@ -32,7 +33,7 @@ internal object ExtensionTools {
             idempotentHint = tool.idempotent,
             openWorldHint = tool.openWorld,
         )
-        server.addTool(name = tool.name, description = tool.description, inputSchema = schemaOf(tool), toolAnnotations = annotations) { request ->
+        server.addGuardedTool(name = tool.name, description = tool.description, inputSchema = schemaOf(tool), toolAnnotations = annotations) { request ->
             run(tool, ToolArguments(toPlainMap(ToolSupport.arguments(request))))
         }
     }

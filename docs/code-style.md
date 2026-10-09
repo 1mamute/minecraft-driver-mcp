@@ -124,6 +124,8 @@ above.
   ("No screen is open; call mc_get_state"), not an exception message.
 - Read arguments with the `ToolSupport` helpers (`string`, `int`, `long`, `double`, `boolean`): a missing argument and a JSON `null`
   are both absent, and a present value of the wrong type fails with a message naming the argument and the expected type.
+- Register tools with `server.addGuardedTool` (from `ToolSupport`), not `server.addTool`: it turns an `IllegalArgumentException` or
+  `IllegalStateException` into a plain `isError` result, where the SDK would add an `Error executing tool` prefix and log a stack trace.
 - Keep tool descriptions to what the agent needs to decide to call it and how.
 - Adding or changing a tool updates the table in `README.md`.
 

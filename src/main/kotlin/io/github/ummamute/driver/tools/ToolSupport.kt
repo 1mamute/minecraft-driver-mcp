@@ -4,7 +4,9 @@ import io.github.ummamute.driver.client.RenderThread
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.ContentBlock
+import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -42,6 +44,31 @@ internal object ToolSupport {
     }
 
     fun text(text: String): CallToolResult = CallToolResult(content = listOf<ContentBlock>(TextContent(text = text)))
+
+    /**
+     * Registers a tool whose bad-input failures (`IllegalArgumentException`, `IllegalStateException`) become plain `isError` results.
+     * Without it the SDK reports them as `Error executing tool <name>: ...` and logs them at ERROR with a stack trace,
+     * although they are mistakes in the call and not faults in the driver.
+     */
+    fun Server.addGuardedTool(
+        name: String,
+        description: String,
+        inputSchema: ToolSchema = ToolSchema(),
+        toolAnnotations: ToolAnnotations? = null,
+        handler: suspend (CallToolRequest) -> CallToolResult,
+    ) {
+        addTool(name = name, description = description, inputSchema = inputSchema, toolAnnotations = toolAnnotations) { request ->
+            callGuarded(handler, request)
+        }
+    }
+
+    private suspend fun callGuarded(handler: suspend (CallToolRequest) -> CallToolResult, request: CallToolRequest): CallToolResult = try {
+        handler(request)
+    } catch (exception: IllegalArgumentException) {
+        failure(exception.message ?: exception.toString())
+    } catch (exception: IllegalStateException) {
+        failure(exception.message ?: exception.toString())
+    }
 
     fun failure(message: String): CallToolResult = CallToolResult(content = listOf<ContentBlock>(TextContent(text = message)), isError = true)
 

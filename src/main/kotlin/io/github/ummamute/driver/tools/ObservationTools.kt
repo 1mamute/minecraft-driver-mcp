@@ -10,6 +10,7 @@ import io.github.ummamute.driver.client.MessageLog
 import io.github.ummamute.driver.client.RenderThread
 import io.github.ummamute.driver.client.ScreenText
 import io.github.ummamute.driver.client.Screenshots
+import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
 import io.github.ummamute.driver.tools.ToolSupport.boolean
 import io.github.ummamute.driver.tools.ToolSupport.int
 import io.github.ummamute.driver.tools.ToolSupport.jsonResult
@@ -46,7 +47,7 @@ internal object ObservationTools {
     }
 
     private fun registerState(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_get_state",
             description = "Get the open screen class, whether the client is connected to a server, window focus and the player position and rotation.",
             toolAnnotations = readOnly,
@@ -54,7 +55,7 @@ internal object ObservationTools {
     }
 
     private fun registerScreen(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_list_widgets",
             description = "List the clickable widgets of the open screen with index, label and bounds. Use the index or label with mc_click.",
             toolAnnotations = readOnly,
@@ -62,7 +63,7 @@ internal object ObservationTools {
     }
 
     private fun registerScreenText(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_read_screen_text",
             description = "Read the text the open screen drew in its last frame: the title, labels, body text and any tooltip showing, " +
                 "with coordinates. Includes text that mc_list_widgets cannot see. A tooltip appears only while the cursor hovers its target.",
@@ -71,7 +72,7 @@ internal object ObservationTools {
     }
 
     private fun registerInventory(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_read_inventory",
             description = "Read the player's inventory as text: hotbar, main, armor and offhand slots with item id, name, count, durability and " +
                 "enchantments, the selected hotbar slot and the stack on the cursor. Empty slots are left out unless `include_empty` is true. " +
@@ -85,7 +86,7 @@ internal object ObservationTools {
     }
 
     private fun registerContainer(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_read_container",
             description = "Read the open container screen (chest, furnace, crafting table, villager trades, the inventory screen) as text: menu type, " +
                 "title, every slot with its menu index, group and item, the cursor stack and, for merchants, the trade offers. " +
@@ -99,7 +100,7 @@ internal object ObservationTools {
     }
 
     private fun registerMessages(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_read_messages",
             description = "Read chat and system messages the client received after sequence number `since`. " +
                 "Pass the returned `latest` as `since` next time to read only new messages. `truncated` is true when older messages were dropped " +
@@ -110,7 +111,7 @@ internal object ObservationTools {
     }
 
     private fun registerLog(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_read_log",
             description = "Read the game's own log output (exceptions, mixin failures, warnings) captured since the mod started, " +
                 "with level, logger, thread, message and the throwable's first frames. Returns the newest matching lines, oldest first. " +
@@ -126,7 +127,7 @@ internal object ObservationTools {
             val args = ToolSupport.arguments(request)
             val level = args.string("min_level")
             if (level != null && !LogBuffer.isLevel(level)) {
-                return@addTool ToolSupport.failure("Unknown min_level \"$level\". Use one of ${LogBuffer.LEVELS.joinToString()}")
+                return@addGuardedTool ToolSupport.failure("Unknown min_level \"$level\". Use one of ${LogBuffer.LEVELS.joinToString()}")
             }
             val query = LogQuery(
                 since = args.long("since") ?: 0L,
@@ -139,7 +140,7 @@ internal object ObservationTools {
     }
 
     private fun registerWaitFor(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_wait_for",
             description = "Block until a chat or system message contains `message`, or the open screen's class name contains `screen` " +
                 "(use `none` to wait for no screen), whichever happens first. Returns `matched` false with reason `timeout` when `timeout_ms` passes. " +
@@ -157,7 +158,7 @@ internal object ObservationTools {
             val message = args.string("message")
             val screen = args.string("screen")
             if (message == null && screen == null) {
-                return@addTool ToolSupport.failure("Give `message`, `screen` or both. Example: {\"message\": \"Teleported\"} or {\"screen\": \"none\"}")
+                return@addGuardedTool ToolSupport.failure("Give `message`, `screen` or both. Example: {\"message\": \"Teleported\"} or {\"screen\": \"none\"}")
             }
             val since = args.long("since") ?: MessageLog.latest()
             val timeout = (args.long("timeout_ms") ?: DEFAULT_WAIT_MILLIS).coerceIn(1L, MAX_WAIT_MILLIS)
@@ -167,7 +168,7 @@ internal object ObservationTools {
     }
 
     private fun registerEntities(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_list_entities",
             description = "List entities within 64 blocks of the player, with id, type, name and position.",
             toolAnnotations = readOnly,
@@ -175,7 +176,7 @@ internal object ObservationTools {
     }
 
     private fun registerScreenshot(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_screenshot",
             description = "Take a screenshot of the game framebuffer (not the desktop) and return it as a PNG image.",
             toolAnnotations = readOnly,
