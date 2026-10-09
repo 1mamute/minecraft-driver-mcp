@@ -69,6 +69,7 @@ claude mcp add --transport http bob   http://127.0.0.1:25902/mcp
 | `driver.port` | first free from 25890 | Fixed port |
 | `driver.host` | `127.0.0.1` | Bind address. Keep it on localhost: the tools control the player |
 | `driver.name` | player name | Instance name |
+| `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>`; others get 401 and no tool runs. The token is never logged or written to the registry, which only records `authRequired` |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
 | `driver.unfocused` | `false` (`true` in this repo's `runClient`) | Create the window without taking focus |
 
