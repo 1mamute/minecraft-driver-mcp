@@ -32,10 +32,14 @@ class McpEndpoint(
 ) {
     private var engine: EmbeddedServer<*, *>? = null
 
+    // One server for every request: the stateless transport opens a session per request and closes it afterwards,
+    // so the tool registrations and their schemas are built once instead of on each call.
+    private val server: Server by lazy(::buildServer)
+
     fun start() {
         val started = embeddedServer(CIO, host = host, port = port) {
             requireToken()
-            mcpStatelessStreamableHttp(path = PATH) { buildServer() }
+            mcpStatelessStreamableHttp(path = PATH) { server }
         }
         try {
             started.start(wait = false)

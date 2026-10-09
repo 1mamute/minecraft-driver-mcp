@@ -75,7 +75,9 @@ clients never see each other's lines even though they share `logs/latest.log`.
 The endpoint is `mcpStatelessStreamableHttp` at `/mcp` on `127.0.0.1`. Stateless means
 each request is independent: restarting the agent or the client needs no session
 handshake. The cost is that the server cannot push notifications or stream progress
-(see [known-issues.md](known-issues.md)).
+(see [known-issues.md](known-issues.md)). `McpEndpoint` builds one MCP `Server` with all
+tools at the first request and reuses it; the SDK opens a session for each request and
+closes it when the response is sent.
 
 The MCP SDK enables DNS-rebinding protection by default, so a web page cannot reach the
 local endpoint through a hostile hostname. Keep the bind address on localhost: the tools
