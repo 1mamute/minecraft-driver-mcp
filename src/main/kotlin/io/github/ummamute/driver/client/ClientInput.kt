@@ -65,7 +65,7 @@ object ClientInput {
     }
 
     fun lookAt(x: Double, y: Double, z: Double) {
-        val player = mc.player ?: error("Not in a world")
+        val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
         val delta = Vec3(x, y, z).subtract(player.eyePosition)
         val horizontal = sqrt(delta.x * delta.x + delta.z * delta.z)
         player.yRot = Math.toDegrees(atan2(-delta.x, delta.z)).toFloat()
@@ -77,8 +77,8 @@ object ClientInput {
      * Mirrors `Minecraft.startUseItem`, so food, potions, bows, pearls and shields work while aiming at the sky or at stone.
      */
     fun use(): String {
-        val player = mc.player ?: error("Not in a world")
-        val gameMode = mc.gameMode ?: error("No game mode")
+        val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
+        val gameMode = mc.gameMode ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
         if (player.isHandsBusy) error("The player's hands are busy (using an item or riding). Wait, then call mc_use again")
         val hit = mc.hitResult
         var lastResult = InteractionResult.PASS

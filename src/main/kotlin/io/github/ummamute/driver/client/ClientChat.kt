@@ -13,7 +13,7 @@ object ClientChat {
         val illegal = message.firstOrNull { !StringUtil.isAllowedChatCharacter(it) }
         require(illegal == null) { "Chat text contains a character the server rejects (code ${illegal?.code}); remove it and send again" }
         val minecraft = Minecraft.getInstance()
-        val connection = minecraft.connection ?: error("Not connected to a server")
+        val connection = minecraft.connection ?: error("Not connected to a world or server. Join one with mc_join_world or mc_join_server, then send again")
         minecraft.gui.chat.addRecentChat(message)
         if (message.startsWith("/")) connection.sendCommand(message.removePrefix("/")) else connection.sendChat(message)
         return message

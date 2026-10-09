@@ -50,8 +50,8 @@ object ClientState {
 
     /** Entities within [ENTITY_RANGE] blocks, nearest first, at most [ENTITY_LIMIT]. */
     fun entitiesNearby(): List<EntitySummary> {
-        val player = mc.player ?: error("Not in a world")
-        val level = mc.level ?: error("Not in a world")
+        val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
+        val level = mc.level ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
         return level.entitiesForRendering()
             .filter { it !== player }
             .map { summarize(it, it.distanceTo(player).toDouble()) }
