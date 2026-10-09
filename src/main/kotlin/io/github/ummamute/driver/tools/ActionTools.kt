@@ -2,6 +2,7 @@ package io.github.ummamute.driver.tools
 
 import io.github.ummamute.driver.client.ClientChat
 import io.github.ummamute.driver.client.ClientInput
+import io.github.ummamute.driver.client.ClientKeyboard
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientSlots
 import io.github.ummamute.driver.client.ClientState
@@ -36,6 +37,8 @@ internal object ActionTools {
         registerLookAt(server)
         registerUse(server)
         registerChat(server)
+        registerTypeText(server)
+        registerPressKey(server)
     }
 
     private fun registerClick(server: Server) {
@@ -174,6 +177,43 @@ internal object ActionTools {
         ) { request ->
             val args = arguments(request)
             onRenderThread({ ClientChat.send(args.requireString("text")) }) { jsonResult(mapOf("sent" to it)) }
+        }
+    }
+
+    private fun registerTypeText(server: Server) {
+        server.addGuardedTool(
+            name = "mc_type_text",
+            description = "Type text into the focused widget of the open screen, such as the server address, a world name, an anvil rename box, " +
+                "a search box, a sign or a command block. Focus a text field first with mc_click. For chat use mc_send_chat. " +
+                "Returns how many characters the widget accepted; read the result with mc_read_screen_text.",
+            inputSchema = ToolSupport.schema(
+                Property("text", "string", "Characters to type, at most ${ClientKeyboard.MAX_TYPED_CHARS}"),
+                required = listOf("text"),
+            ),
+            toolAnnotations = action,
+        ) { request ->
+            val text = arguments(request).requireString("text")
+            onRenderThread({ ClientKeyboard.typeText(text) }) { jsonResult(it) }
+        }
+    }
+
+    private fun registerPressKey(server: Server) {
+        server.addGuardedTool(
+            name = "mc_press_key",
+            description = "Press and release one keyboard key on the open screen, for example enter to confirm, tab to move focus, " +
+                "or backspace with `times` to empty a text field. Returns how many presses were handled. " +
+                "With no screen open, escape opens the pause screen (mc_close_screen closes it). For movement use mc_set_key.",
+            inputSchema = ToolSupport.schema(
+                Property("name", "string", "The key", allowed = ClientKeyboard.keyNames),
+                Property("times", "integer", "Presses, 1 to ${ClientKeyboard.MAX_PRESSES}; default 1"),
+                required = listOf("name"),
+            ),
+            toolAnnotations = action,
+        ) { request ->
+            val args = arguments(request)
+            val name = args.requireString("name")
+            val times = args.int("times") ?: 1
+            onRenderThread({ ClientKeyboard.pressKey(name, times) }) { jsonResult(it) }
         }
     }
 }
