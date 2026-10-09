@@ -259,6 +259,7 @@ contracts: tool names and schemas, system properties, the instance registry form
 - Configuration: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/configuration.md
 - Known issues: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/known-issues.md
 - Extension API: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/extension-api.md
+- Release notes: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/release-notes.md
 - Contributor guide: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/README.md
 - Architecture: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/architecture.md
 - Testing: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/testing.md

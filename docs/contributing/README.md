@@ -78,8 +78,21 @@ The `Documentation` workflow builds the site on every pull request that touches 
 
 Commit subjects follow Conventional Commits without scopes: `feat: add wait_for tool`, `fix: close the registry file on
 shutdown`. Types are lowercase: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`. Describe a
-breaking change in the commit body. Branches are `<type>/<short-description>` in lowercase kebab case.
+breaking change in the commit body, starting a line with `BREAKING CHANGE:`. Branches are `<type>/<short-description>` in lowercase kebab case.
 
 `mod_version` in `gradle.properties` follows Semantic Versioning, and for `0.x` a breaking change advances the minor
 version. Supported contracts are tool names and schemas, system properties, the instance registry format and the endpoint
 path. Ordinary changes do not bump the version. The jar version is `<mod_version>+<minecraft_version>`.
+
+### Release notes
+
+[Release notes](../release-notes.md) are generated from the commit subjects, so a clear subject is the changelog entry.
+`scripts/changelog.mjs` groups commits by type and links pull requests. Commits after the newest `v*` tag form the
+"Unreleased" section (or the section of `mod_version` once it is bumped); a tagged commit forms the section of that version. Only the text between the `changelog` markers is
+replaced, so the intro and known limits stay hand-written.
+
+- `npm run changelog` updates `docs/release-notes.md`; `node scripts/changelog.mjs --check` fails when it is stale.
+- The `Release` workflow does not commit to `main`. On every push to `main` it refreshes a draft release tagged
+  `unreleased` with the same notes. Pushing a `v<mod_version>` tag builds the jar and publishes a release with those
+  notes and the jar attached, then deletes the draft.
+- To release: bump `mod_version` in a pull request, run `npm run changelog`, review the file, merge, then tag `main`.

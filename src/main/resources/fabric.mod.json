@@ -6,6 +6,12 @@
 	"description": "Lets an AI assistant drive this Minecraft client through an MCP server on localhost. For mod development and testing.",
 	"authors": ["1mamute"],
 	"license": "MIT",
+	"icon": "assets/minecraft-driver-mcp/icon.png",
+	"contact": {
+		"homepage": "https://github.com/1mamute/minecraft-driver-mcp",
+		"sources": "https://github.com/1mamute/minecraft-driver-mcp",
+		"issues": "https://github.com/1mamute/minecraft-driver-mcp/issues"
+	},
 	"environment": "client",
 	"entrypoints": {
 		"client": ["io.github.ummamute.driver.DriverMod"]
