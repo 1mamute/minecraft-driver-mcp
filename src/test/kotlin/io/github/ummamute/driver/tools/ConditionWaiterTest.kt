@@ -14,9 +14,13 @@ class ConditionWaiterTest {
     @Volatile
     private var screen: String? = null
     private val messages = mutableListOf<LoggedMessage>()
+    private var stateReads = 0
 
     private val waiter = ConditionWaiter(
-        readState = { ClientStateSnapshot(screen = screen, connected = true, windowFocused = true, player = null) },
+        readState = {
+            stateReads++
+            ClientStateSnapshot(screen = screen, connected = true, windowFocused = true, player = null)
+        },
         readMessages = { since -> MessagePage(messages.filter { it.seq > since }, messages.lastOrNull()?.seq ?: 0L, truncated = false) },
         pollMillis = 5L,
     )
@@ -67,6 +71,14 @@ class ConditionWaiterTest {
 
         assertTrue(result.matched)
         assertNull(result.state?.screen)
+    }
+
+    @Test
+    fun `reads the state only once at timeout when waiting for a message alone`() = runBlocking {
+        val result = waiter.await(WaitCondition(messageContains = "never"), timeoutMillis = 50)
+
+        assertFalse(result.matched)
+        assertEquals(1, stateReads)
     }
 
     @Test

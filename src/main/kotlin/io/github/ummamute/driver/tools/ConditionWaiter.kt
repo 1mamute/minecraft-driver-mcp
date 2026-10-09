@@ -55,13 +55,14 @@ internal class ConditionWaiter(
         val page = readMessages(condition.sinceSeq)
         val message = condition.messageContains?.let { text -> page.messages.firstOrNull { it.text.contains(text, ignoreCase = true) } }
         if (message != null) return WaitResult(matched = true, reason = REASON_MESSAGE, message = message, latest = page.latest)
+        // Reading the state holds the render thread, so skip it when no screen is awaited.
+        if (condition.screenContains == null) return null
         val state = readState()
         if (!screenMatches(condition.screenContains, state.screen)) return null
         return WaitResult(matched = true, reason = REASON_SCREEN, latest = page.latest, state = state)
     }
 
-    private fun screenMatches(expected: String?, actual: String?): Boolean = when {
-        expected == null -> false
+    private fun screenMatches(expected: String, actual: String?): Boolean = when {
         expected == WaitCondition.NO_SCREEN -> actual == null
         else -> actual?.contains(expected, ignoreCase = true) == true
     }
