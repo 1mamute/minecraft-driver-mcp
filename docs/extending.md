@@ -11,9 +11,10 @@ Compile against the driver jar and keep it out of your own jar. In a Loom projec
 ```kotlin
 dependencies {
     modCompileOnly(files("libs/minecraft-driver-mcp-0.1.0+1.21.1.jar"))
-    modLocalRuntime(files("libs/minecraft-driver-mcp-0.1.0+1.21.1.jar"))
 }
 ```
+
+To run with the driver, copy the same jar into `run/mods/`. Do not add it with `modLocalRuntime(files(...))`: Loom drops the bundled Kotlin and MCP libraries from a remapped file dependency, and the client crashes at startup (see [known issues](known-issues.md)).
 
 Do not list the driver in `depends`: your mod keeps working without it, and the entrypoint is simply never called.
 
