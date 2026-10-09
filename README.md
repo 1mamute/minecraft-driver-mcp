@@ -94,4 +94,4 @@ Supported: Minecraft 1.21.1. Contributors: see [AGENTS.md](AGENTS.md) and the [d
 
 ## Status
 
-Early scaffold. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md). Planned: inventory and container contents, joining and leaving servers, log tail, and extension points for other mods.
+Pre-release (0.1.0) for Minecraft 1.21.1. The tools in the table above work in a dev environment and are checked against a running client before each change merges (see [docs/testing.md](docs/testing.md)). Other Minecraft versions and installs outside a dev environment have not been tested. Open risks and unverified behavior are tracked in [docs/known-issues.md](docs/known-issues.md).
