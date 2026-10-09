@@ -29,6 +29,8 @@ Open questions and risks found while scaffolding. Check them when a related chan
 - **Localhost by default, optional token only.** The tools control the player. `-Ddriver.token` adds a shared bearer token, but there are no users, scopes or TLS: over a non-loopback `driver.host` the token travels in clear text and anyone who sees it controls the player. Do not document remote use until TLS or a tunnel is part of the setup.
 - **Single Minecraft version.** Only 1.21.1 exists, so Stonecutter's conditionals are untested. Adding a second version is the real test of the approach.
 
+- **No `modLocalRuntime` in a consumer's dev run.** Verified with a Yarn-mapped Loom 1.17.21 project on 1.21.1: `modLocalRuntime(files(<driver jar>))` crashes the client entrypoint with `NoClassDefFoundError: kotlin/collections/ArrayDeque`. Loom's remapped copy keeps `META-INF/jars/` but removes the `jars` list from `fabric.mod.json`, because it expects nested libraries to come from a Maven POM, which a file dependency lacks. The same jar copied into `run/mods/` loads, and Fabric Loader remaps it to Yarn. Publishing the jar to a Maven repository with a POM listing the bundled libraries would make `modLocalRuntime` work.
+
 ## Tooling
 
 - **Fabric Loom 1.18 needs JDK 25.** The project pins Loom 1.17.21 to stay on JDK 21. Moving to Loom 1.18 means moving the build JDK; watch for the first Minecraft version that requires it.

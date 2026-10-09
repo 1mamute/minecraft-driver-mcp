@@ -18,7 +18,9 @@ A fresh game directory opens Minecraft's accessibility onboarding screen first. 
 
 ### In a mod's dev environment
 
-Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft-driver-mcp-0.1.0+1.21.1.jar"))`, and run `gradlew runClient`.
+Copy the jar into your project's `run/mods/` folder and run `gradlew runClient`. Fabric Loader remaps it to your mappings (Yarn or Mojang) at launch.
+
+Do not add it with `modLocalRuntime(files(...))`: Loom drops the jar's list of bundled libraries when it remaps a file dependency, and the game crashes with `NoClassDefFoundError: kotlin/...`. See [known issues](docs/known-issues.md).
 
 ## Tools
 
