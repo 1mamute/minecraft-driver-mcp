@@ -3,6 +3,7 @@ package io.github.ummamute.driver.client
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -43,30 +44,53 @@ object ClientInput {
         player.xRot = Math.toDegrees(-atan2(delta.y, horizontal)).toFloat()
     }
 
-    /** Uses what is under the crosshair, like the use key. */
+    /**
+     * Uses what is under the crosshair, like the use key: each hand in turn tries the entity or block under the crosshair, then its item.
+     * Mirrors `Minecraft.startUseItem`, so food, potions, bows, pearls and shields work while aiming at the sky or at stone.
+     */
     fun use(): String {
         val player = mc.player ?: error("Not in a world")
-        val result = when (val hit = mc.hitResult) {
-            is EntityHitResult -> interactWithEntity(player, hit)
-            is BlockHitResult -> useOnBlock(player, hit)
-            else -> error("Nothing under the crosshair")
+        val gameMode = mc.gameMode ?: error("No game mode")
+        if (player.isHandsBusy) error("The player's hands are busy (using an item or riding). Wait, then call mc_use again")
+        val hit = mc.hitResult
+        var lastResult = InteractionResult.PASS
+        for (hand in InteractionHand.values()) {
+            val result = useHand(player, gameMode, hand, hit)
+            if (result.consumesAction()) return result.toString()
+            lastResult = result
+            if (result == InteractionResult.FAIL) break
         }
-        return result.toString()
+        if (isNothingTargeted(hit)) {
+            error("Nothing was used: no target under the crosshair, and neither hand holds an item that can be used now (food needs hunger). Aim with mc_look_at, within reach, or change the held item")
+        }
+        return lastResult.toString()
     }
 
-    /** A block hit result also exists for a miss, which the game reports as a block hit of type MISS; treat it as nothing there. */
-    private fun useOnBlock(player: LocalPlayer, hit: BlockHitResult): InteractionResult {
-        if (hit.type == HitResult.Type.MISS) error("Nothing under the crosshair. Aim with mc_look_at, within reach, and check the block is not behind another")
-        val gameMode = mc.gameMode ?: error("No game mode")
-        return gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
+    private fun isNothingTargeted(hit: HitResult?): Boolean = hit == null || hit.type == HitResult.Type.MISS
+
+    /** One iteration of the vanilla use flow: the targeted entity or block first, then the item in [hand]. */
+    private fun useHand(player: LocalPlayer, gameMode: MultiPlayerGameMode, hand: InteractionHand, hit: HitResult?): InteractionResult {
+        val targetResult = when {
+            hit is EntityHitResult -> interactWithEntity(player, gameMode, hit, hand)
+            hit is BlockHitResult && hit.type != HitResult.Type.MISS -> gameMode.useItemOn(player, hand, hit)
+            else -> InteractionResult.PASS
+        }
+        if (targetResult.consumesAction() || targetResult == InteractionResult.FAIL) return swingIfNeeded(player, hand, targetResult)
+        if (player.getItemInHand(hand).isEmpty) return targetResult
+        val itemResult = gameMode.useItem(player, hand)
+        return if (itemResult.consumesAction()) swingIfNeeded(player, hand, itemResult) else targetResult
+    }
+
+    private fun swingIfNeeded(player: LocalPlayer, hand: InteractionHand, result: InteractionResult): InteractionResult {
+        if (result.consumesAction() && result.shouldSwing()) player.swing(hand)
+        return result
     }
 
     /** Mirrors the vanilla use-key flow: interact-at first, then a plain interact when it did not consume. */
-    private fun interactWithEntity(player: LocalPlayer, hit: EntityHitResult): InteractionResult {
-        val gameMode = mc.gameMode ?: error("No game mode")
-        val atResult = gameMode.interactAt(player, hit.entity, hit, InteractionHand.MAIN_HAND)
+    private fun interactWithEntity(player: LocalPlayer, gameMode: MultiPlayerGameMode, hit: EntityHitResult, hand: InteractionHand): InteractionResult {
+        val atResult = gameMode.interactAt(player, hit.entity, hit, hand)
         if (atResult.consumesAction()) return atResult
-        return gameMode.interact(player, hit.entity, InteractionHand.MAIN_HAND)
+        return gameMode.interact(player, hit.entity, hand)
     }
 
     private fun keyBinding(name: String): KeyMapping = when (name) {

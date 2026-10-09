@@ -135,7 +135,9 @@ internal object ActionTools {
     private fun registerUse(server: Server) {
         server.addTool(
             name = "mc_use",
-            description = "Use what is under the crosshair (right click), for example open a block or interact with an entity. Aim first with mc_look_at.",
+            description = "Use what is under the crosshair (right click), for example open a block or interact with an entity. " +
+                "When that does nothing, uses the held item (main hand, then off hand), so eating, drinking, throwing and raising a shield work too. " +
+                "Aim first with mc_look_at.",
             toolAnnotations = action,
         ) { _ -> onRenderThread(ClientInput::use) { jsonResult(mapOf("result" to it)) } }
     }
