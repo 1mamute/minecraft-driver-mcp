@@ -145,13 +145,13 @@ internal object ActionTools {
     private fun registerChat(server: Server) {
         server.addTool(
             name = "mc_send_chat",
-            description = "Send a chat message, or a command when the text starts with `/`, as the player. " +
-                "Replies arrive later; read them with mc_read_messages.",
+            description = "Send a chat message, or a command when the text starts with `/`, as the player; the text is " +
+                "trimmed, collapsed to single spaces and cut to 256 characters. Replies arrive later; read them with mc_read_messages.",
             inputSchema = ToolSupport.schema(Property("text", "string", "Chat text or /command"), required = listOf("text")),
             toolAnnotations = action.copy(destructiveHint = true, openWorldHint = true),
         ) { request ->
             val args = arguments(request)
-            onRenderThread({ args.requireString("text").also(ClientChat::send) }) { jsonResult(mapOf("sent" to it)) }
+            onRenderThread({ ClientChat.send(args.requireString("text")) }) { jsonResult(mapOf("sent" to it)) }
         }
     }
 }

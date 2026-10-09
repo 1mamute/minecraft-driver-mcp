@@ -33,3 +33,6 @@ run/
 *.iml
 out/
 !gradle/wrapper/gradle-wrapper.jar
+
+# Runtime output of the dev client
+versions/*/logs/
