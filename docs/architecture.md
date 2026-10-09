@@ -22,6 +22,8 @@ collector `TextFrame` turns one frame's text into the data `mc_read_screen_text`
 
 `ClientInventory` maps the player's `Inventory`, the open `AbstractContainerMenu` and merchant offers into the data classes of `InventoryModel.kt`; `SlotLabels` (no Minecraft types) decides each inventory slot's group (hotbar, main, armor, offhand). `mc_read_inventory` and `mc_read_container` return them. Item stacks are sprites, so `mc_read_screen_text` never sees them. `ClientSlots` sends a slot click through `MultiPlayerGameMode.handleInventoryMouseClick` for `mc_click_slot`; `SlotClickPlanner` (no Minecraft types) validates the arguments.
 
+Other mods add tools through the `minecraft-driver-mcp` Fabric entrypoint ([extending.md](extending.md)). `api/` is the public, Minecraft-free surface (`DriverExtension`, `ToolRegistrar`, `ToolDefinition`, `ToolArguments`, `ToolResult`). `ExtensionLoader` calls each extension once in `DriverBootstrap.start`, catching failures per extension; `ExtensionRegistry` validates names with `ToolNames` and rejects duplicates with a warning; `ExtensionTools` adds the accepted tools to each per-request `Server`, runs handlers on the render thread by default and turns any exception into an error result.
+
 Because of this split, supporting a new Minecraft version means changing `client/` (and
 the mixin), not the tools or the server.
 

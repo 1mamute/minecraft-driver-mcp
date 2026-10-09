@@ -1,6 +1,8 @@
 package io.github.ummamute.driver.server
 
+import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.tools.ActionTools
+import io.github.ummamute.driver.tools.ExtensionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
 import io.ktor.server.cio.CIO
@@ -13,7 +15,13 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 
 /** The MCP server on localhost. Stateless Streamable HTTP: every request is independent, so restarting the agent needs no session. */
-class McpEndpoint(private val host: String, private val port: Int, private val version: String, private val instanceName: String) {
+class McpEndpoint(
+    private val host: String,
+    private val port: Int,
+    private val version: String,
+    private val instanceName: String,
+    private val extensionTools: List<ToolDefinition> = emptyList(),
+) {
     private var engine: EmbeddedServer<*, *>? = null
 
     fun start() {
@@ -38,6 +46,7 @@ class McpEndpoint(private val host: String, private val port: Int, private val v
         InstanceTools.register(server)
         ObservationTools.register(server)
         ActionTools.register(server)
+        ExtensionTools.register(server, extensionTools)
         return server
     }
 

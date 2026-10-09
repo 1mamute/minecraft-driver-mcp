@@ -41,7 +41,7 @@ object DriverBootstrap {
         )
         val registry = InstanceRegistry(registryDirectory())
         InstanceTools.registry = registry
-        val endpoint = McpEndpoint(host, port, modVersion(), instance.name)
+        val endpoint = McpEndpoint(host, port, modVersion(), instance.name, ExtensionLoader.load())
         endpoint.start()
         registry.register(instance)
         ClientLifecycleEvents.CLIENT_STOPPING.register {
