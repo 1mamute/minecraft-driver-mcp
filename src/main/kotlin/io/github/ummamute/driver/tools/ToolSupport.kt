@@ -45,11 +45,12 @@ internal object ToolSupport {
 
     fun failure(message: String): CallToolResult = CallToolResult(content = listOf<ContentBlock>(TextContent(text = message)), isError = true)
 
-    /** Runs a game call on the render thread and turns an exception into an error result the agent can read. */
-    suspend fun <T> onRenderThread(action: () -> T, toResult: (T) -> CallToolResult): CallToolResult = try {
-        toResult(RenderThread.call(action))
-    } catch (@Suppress("TooGenericExceptionCaught") exception: Exception) {
-        failure(exception.message ?: exception.toString())
+    /** Runs a game call on the render thread and turns an exception or error into a result the agent can read. */
+    suspend fun <T> onRenderThread(action: () -> T, toResult: (T) -> CallToolResult): CallToolResult {
+        val outcome = runCatching { toResult(RenderThread.call(action)) }
+        val problem = outcome.exceptionOrNull() ?: return outcome.getOrThrow()
+        if (problem is VirtualMachineError) throw problem
+        return failure(problem.message ?: problem.toString())
     }
 
     inline fun <reified T> jsonResult(value: T): CallToolResult = text(json.encodeToString(serializer<T>(), value))
