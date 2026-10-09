@@ -74,7 +74,7 @@ claude mcp add --transport http bob   http://127.0.0.1:25902/mcp
 | Property | Default | Meaning |
 | --- | --- | --- |
 | `driver.port` | first free from 25890 | Fixed port |
-| `driver.host` | `127.0.0.1` | Bind address. Keep it on localhost: the tools control the player |
+| `driver.host` | `127.0.0.1` | Bind address. Keep it on localhost: the tools control the player. A specific address is also accepted as the request's `Host`; a wildcard (`0.0.0.0`) accepts only localhost names |
 | `driver.name` | player name | Instance name |
 | `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>`; others get 401 and no tool runs. The token is never logged or written to the registry, which only records `authRequired` |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
