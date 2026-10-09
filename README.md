@@ -41,6 +41,8 @@ Do not add it with `modLocalRuntime(files(...))`: Loom drops the jar's list of b
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair, then the held item (either hand); `hold_ticks` keeps the key down to finish eating, drinking or drawing a bow |
 | `mc_send_chat` | Send chat or a `/command` as the player; returns the text sent after trimming and collapsing whitespace (256 characters max) |
+| `mc_type_text` | Type text into the focused widget of the open screen (server address, world name, anvil, search box, sign, command block); returns how many characters it accepted |
+| `mc_press_key` | Press enter, escape, tab, backspace, delete, arrows, home, end or page up/down on the open screen, `times` repeats; escape in a world opens the pause screen |
 | `mc_read_messages` | Chat and system messages received since a sequence number (action-bar text excluded; `truncated` flags dropped messages) |
 | `mc_read_log` | The game's log lines (level, logger, thread, message, throwable) since a sequence number, filtered by level and text |
 | `mc_wait_for` | Block until a message or screen appears, or time out |
