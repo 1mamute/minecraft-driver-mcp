@@ -57,7 +57,7 @@ internal object ObservationTools {
     private fun registerScreen(server: Server) {
         server.addGuardedTool(
             name = "mc_list_widgets",
-            description = "List the clickable widgets of the open screen with index, label and bounds. Use the index or label with mc_click.",
+            description = "List the clickable widgets of the open screen with index, type, label and bounds. Use the index or label with mc_click.",
             toolAnnotations = readOnly,
         ) { _ -> onRenderThread(ClientScreens::describe) { jsonResult(it) } }
     }

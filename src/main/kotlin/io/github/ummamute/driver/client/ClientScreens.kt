@@ -79,7 +79,7 @@ object ClientScreens {
         val widget = child as? AbstractWidget
         return WidgetSummary(
             index = index,
-            type = ClassNames.of(child),
+            type = ClassNames.widget(child),
             label = labelOf(child),
             x = rectangle.left(),
             y = rectangle.top(),

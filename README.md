@@ -27,7 +27,7 @@ Do not add it with `modLocalRuntime(files(...))`: Loom drops the jar's list of b
 | Tool | Does |
 | --- | --- |
 | `mc_get_state` | Open screen, connection, window focus, player position |
-| `mc_list_widgets` | Widgets of the open screen with index, label and bounds |
+| `mc_list_widgets` | Widgets of the open screen with index, type (`Button`, `EditBox`, `Slider`, ...; another mod's widget keeps its class name), label and bounds |
 | `mc_read_screen_text` | Text the open screen drew (title, labels, body, tooltip) with coordinates |
 | `mc_read_inventory` | The player's hotbar, main, armor and offhand slots with item id, name, count, durability, enchantments and lore, plus the cursor stack |
 | `mc_read_container` | The open container screen (chest, furnace, crafting table, villager trades) with every slot and, for merchants, the offers |
