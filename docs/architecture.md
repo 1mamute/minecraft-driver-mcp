@@ -98,7 +98,9 @@ machine except the registry:
   instructions, so an agent connected to several clients can tell them apart.
 - **Discovery.** `InstanceRegistry` writes `<pid>.json` into
   `~/.minecraft-driver-mcp/instances` (`driver.registry` overrides it). `mc_list_instances`
-  returns the live ones with their URLs.
+  returns the live ones with their URLs. Files are written to a temporary file and moved
+  into place atomically, and only files that parse with a dead pid are deleted, so clients
+  starting together never remove each other's registration. Unreadable files are skipped.
 - **Game directories.** Each client needs its own run directory; Minecraft requires it.
 
 ## Packaging

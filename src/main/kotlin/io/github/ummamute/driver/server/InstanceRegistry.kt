@@ -4,8 +4,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import java.io.IOException
+import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.extension
 import kotlin.io.path.listDirectoryEntries
@@ -28,6 +31,7 @@ data class DriverInstance(
 /**
  * Directory of running clients, one `<pid>.json` file each, so an agent (or a person) can find every client
  * without knowing which port it got. Files of crashed clients are ignored by [list] and removed on the next write.
+ * A file that cannot be parsed may be another client's write in progress, so it is left alone.
  */
 class InstanceRegistry(private val directory: Path) {
     private val logger = LoggerFactory.getLogger(InstanceRegistry::class.java)
@@ -39,7 +43,20 @@ class InstanceRegistry(private val directory: Path) {
     fun register(instance: DriverInstance) {
         Files.createDirectories(directory)
         removeStale()
-        fileOf(instance.pid).writeText(json.encodeToString(DriverInstance.serializer(), instance))
+        write(instance)
+    }
+
+    /** Writes to a temporary file first so a reader never sees a half-written `<pid>.json`. */
+    private fun write(instance: DriverInstance) {
+        val target = fileOf(instance.pid)
+        val temporary = directory.resolve("${instance.pid}.json.tmp")
+        temporary.writeText(json.encodeToString(DriverInstance.serializer(), instance))
+        try {
+            Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } catch (exception: AtomicMoveNotSupportedException) {
+            logger.debug("Atomic move not supported, replacing {} directly", target, exception)
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+        }
     }
 
     fun unregister(pid: Long) {
@@ -55,16 +72,24 @@ class InstanceRegistry(private val directory: Path) {
     private fun removeStale() {
         files().forEach { file ->
             val instance = read(file)
-            if (instance == null || !isAlive(instance.pid)) file.deleteIfExists()
+            if (instance != null && !isAlive(instance.pid)) file.deleteIfExists()
         }
     }
 
-    private fun files(): List<Path> = directory.listDirectoryEntries("*.json").filter { it.extension == "json" }
+    private fun files(): List<Path> = try {
+        directory.listDirectoryEntries("*.json").filter { it.extension == "json" }
+    } catch (exception: IOException) {
+        logger.debug("Cannot list instance directory {}", directory, exception)
+        emptyList()
+    }
 
     private fun read(file: Path): DriverInstance? = try {
         json.decodeFromString(DriverInstance.serializer(), file.readText())
     } catch (exception: SerializationException) {
         logger.debug("Ignoring unreadable instance file {}", file, exception)
+        null
+    } catch (exception: IOException) {
+        logger.debug("Ignoring instance file {} that vanished or cannot be read", file, exception)
         null
     }
 

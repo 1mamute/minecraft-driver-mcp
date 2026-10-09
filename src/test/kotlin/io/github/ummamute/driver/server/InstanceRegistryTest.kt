@@ -1,9 +1,12 @@
 package io.github.ummamute.driver.server
 
 import java.nio.file.Files
+import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class InstanceRegistryTest {
     private val directory = Files.createTempDirectory("driver-registry")
@@ -46,5 +49,43 @@ class InstanceRegistryTest {
         registry.unregister(self)
 
         assertEquals(emptyList(), registry.list())
+    }
+
+    @Test
+    fun `keeps a file it cannot parse`() {
+        val partial = directory.resolve("4321.json")
+        partial.writeText("""{"name":"half""")
+        registry.register(instance("alive", ProcessHandle.current().pid(), 25890))
+
+        assertTrue(partial.exists())
+        assertEquals(listOf("alive"), registry.list().map { it.name })
+    }
+
+    @Test
+    fun `removes a parseable file whose process is gone on register`() {
+        val dead = directory.resolve("dead.json")
+        dead.writeText("""{"name":"dead","pid":999999999,"url":"u","port":25891,"minecraftVersion":"1.21.1","gameDirectory":"g"}""")
+        registry.register(instance("alive", ProcessHandle.current().pid(), 25890))
+
+        assertFalse(dead.exists())
+    }
+
+    @Test
+    fun `tolerates a missing directory and a directory named like an instance file`() {
+        Files.createDirectory(directory.resolve("folder.json"))
+
+        assertEquals(emptyList(), registry.list())
+        registry.register(instance("alive", ProcessHandle.current().pid(), 25890))
+        assertEquals(listOf("alive"), registry.list().map { it.name })
+    }
+
+    @Test
+    fun `register leaves no temporary file and replaces an earlier registration`() {
+        val self = ProcessHandle.current().pid()
+        registry.register(instance("first", self, 25890))
+        registry.register(instance("second", self, 25891))
+
+        assertEquals(listOf("second"), registry.list().map { it.name })
+        assertEquals(listOf("$self.json"), Files.list(directory).use { stream -> stream.map { it.fileName.toString() }.toList() })
     }
 }
