@@ -80,7 +80,7 @@ claude mcp add --transport http bob   http://127.0.0.1:25902/mcp
 | `driver.name` | player name | Instance name |
 | `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>`; others get 401 and no tool runs. The token is never logged or written to the registry, which only records `authRequired` |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
-| `driver.unfocused` | `false` (`true` in this repo's `runClient`) | Create the window without taking focus |
+| `driver.unfocused` | `false` (`true` in this repo's `runClient`) | Create the window without taking focus, and keep the game running while the window is not in front. Vanilla opens the pause menu then, which would undo `mc_close_screen`; the "pause on lost focus" option in `options.txt` is not changed |
 
 ## Build
 

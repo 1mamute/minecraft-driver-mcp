@@ -56,7 +56,14 @@ soundCategory_master:0.0
 
 `onboardAccessibility:false` skips the accessibility screen that opens on first launch
 and would otherwise eat the first click. `pauseOnLostFocus:false` keeps the game running
-while its window is not in front.
+while its window is not in front. `-Ddriver.unfocused=true` does the same without touching
+`options.txt` (`GameRendererMixin`), so `runClient` works in a fresh game directory too.
+
+To check that, run a client with a game directory whose `options.txt` has `pauseOnLostFocus:true`
+and `-Ddriver.unfocused=true`, join a world, give the window focus (`WScript.Shell.AppActivate`), then
+start Notepad so the window loses it (`mc_get_state` shows `windowFocused: false`). `mc_close_screen`
+and `mc_set_key` `inventory` must keep working. Without the flag the pause screen comes back after
+every `mc_close_screen`, and `inventory` fails with a message about the window.
 
 ## Two clients
 
