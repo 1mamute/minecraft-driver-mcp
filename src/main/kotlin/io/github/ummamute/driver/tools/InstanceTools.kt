@@ -1,6 +1,7 @@
 package io.github.ummamute.driver.tools
 
 import io.github.ummamute.driver.server.InstanceRegistry
+import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
 import io.github.ummamute.driver.tools.ToolSupport.jsonResult
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations
@@ -11,7 +12,7 @@ internal object InstanceTools {
     lateinit var registry: InstanceRegistry
 
     fun register(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_list_instances",
             description = "List every running Minecraft client with this mod on this machine: name, MCP url, port, Minecraft version and game directory. " +
                 "Use it to find the other clients when testing with more than one.",
