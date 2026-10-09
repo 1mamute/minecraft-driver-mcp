@@ -1,0 +1,16 @@
+{
+  "name": "minecraft-driver-mcp-docs",
+  "private": true,
+  "type": "module",
+  "description": "Documentation site for Minecraft Driver MCP, built from docs/ with VitePress",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "@fontsource-variable/fira-code": "5.3.0",
+    "@fontsource-variable/public-sans": "5.3.0",
+    "vitepress": "1.6.4"
+  }
+}

@@ -36,3 +36,8 @@ out/
 
 # Runtime output of the dev client
 versions/*/logs/
+
+# Documentation site
+node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/

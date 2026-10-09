@@ -52,6 +52,28 @@ Then connect an MCP client to the endpoint printed in the log and call `tools/li
 - Changes to tools, system properties, packaging, ports or the build update the matching documentation, the tables in
   `README.md`, and `llms.txt`, in the same change.
 
+## Documentation site
+
+The pages under `docs/` are also published as a site on GitHub Pages, built with [VitePress](https://vitepress.dev).
+The Markdown files stay the single source: GitHub renders them as they are, and the site renders the same files. Its
+home page is the repository `README.md` (`docs/index.md` includes the parts between its `site-top` and `site-bottom`
+region comments), and `docs/README.md` is left out because the sidebar replaces it.
+
+Keep writing ordinary relative links. When building the site, links to other pages under `docs/` become site links and
+links to anything else in the repository become GitHub links. The sidebar is in `docs/.vitepress/config.mts`, so a new
+page is added there as well as to `docs/README.md`.
+
+Preview the site with Node.js 22 or later:
+
+```bash
+npm ci
+npm run docs:dev      # live preview
+npm run docs:build    # what CI runs; fails on a dead link
+```
+
+The `Documentation` workflow builds the site on every pull request that touches the docs and deploys it when they reach
+`main`.
+
 ## Commits and releases
 
 Commit subjects follow Conventional Commits without scopes: `feat: add wait_for tool`, `fix: close the registry file on
