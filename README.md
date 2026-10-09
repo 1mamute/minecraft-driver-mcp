@@ -37,7 +37,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_disconnect` | Leave the current world or server and return to the title screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak; press `inventory` to open the inventory screen |
 | `mc_look_at` | Face a world position |
-| `mc_use` | Right click what is under the crosshair |
+| `mc_use` | Right click what is under the crosshair, then the held item (either hand) |
 | `mc_send_chat` | Send chat or a `/command` as the player |
 | `mc_read_messages` | Chat and system messages received since a sequence number |
 | `mc_read_log` | The game's log lines (level, logger, thread, message, throwable) since a sequence number, filtered by level and text |
