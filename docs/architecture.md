@@ -71,7 +71,18 @@ handshake. The cost is that the server cannot push notifications or stream progr
 
 The MCP SDK enables DNS-rebinding protection by default, so a web page cannot reach the
 local endpoint through a hostile hostname. Keep the bind address on localhost: the tools
-control the player and have no authentication.
+control the player.
+
+`-Ddriver.token=<value>` turns on a shared bearer token. `TokenAuthenticator` (pure, in `server/`)
+hashes the configured token with SHA-256 and compares the hash of the presented
+`Authorization: Bearer ...` value with `MessageDigest.isEqual`, so the comparison takes the same
+time for any input length. `McpEndpoint` installs it as a Ktor pipeline interceptor ahead of the
+MCP routes: a missing or wrong header gets `401` with `WWW-Authenticate: Bearer` and the request
+ends there, so no tool runs. An unset or empty property keeps the endpoint open. The token is
+never logged. The instance registry records only `authRequired` (default `false`; files without
+the field still read as open), so `mc_list_instances` shows which clients need a token without
+exposing it. Configure the agent with the header, for example
+`claude mcp add --transport http alice http://127.0.0.1:25901/mcp --header "Authorization: Bearer <token>"`.
 
 ## Several clients
 
