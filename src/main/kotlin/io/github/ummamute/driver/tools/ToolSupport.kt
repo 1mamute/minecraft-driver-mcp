@@ -25,7 +25,10 @@ internal object ToolSupport {
     val json = Json { encodeDefaults = true }
 
     /** Builds an object schema. Each property is a name with its JSON type and description. */
-    fun schema(vararg properties: Property, required: List<String> = emptyList()): ToolSchema {
+    fun schema(vararg properties: Property, required: List<String> = emptyList()): ToolSchema = schema(properties.toList(), required)
+
+    /** Builds an object schema from a list of properties. */
+    fun schema(properties: List<Property>, required: List<String>): ToolSchema {
         val body = buildJsonObject {
             properties.forEach { property ->
                 putJsonObject(property.name) {

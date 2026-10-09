@@ -32,6 +32,17 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+### Auth token
+
+Run this when you touch `McpEndpoint`, `TokenAuthenticator` or the registry format. Start the client twice
+(use your own `--gameDir`, `--username`, `-Ddriver.port` and `-Ddriver.registry`):
+
+1. Without `-Ddriver.token`: `initialize`, `tools/list` and `mc_get_state` work with no header.
+2. With `-Ddriver.token=<value>`: no `Authorization` header, a wrong token and a plain GET return `401`
+   (with `WWW-Authenticate: Bearer`); `Authorization: Bearer <value>` returns `200` for `initialize`,
+   `tools/list` and `mc_get_state`.
+3. The registry file has `"authRequired": true` and no token, and `logs/latest.log` does not contain the token.
+
 ### Options a driven client needs
 
 A fresh game directory has defaults that block an agent or annoy the developer. Put these
@@ -77,6 +88,7 @@ Run this check when you touch ports, the registry or names.
 - **Inventory and containers.** Switch a creative world to survival with `mc_send_chat` (`/gamemode survival`), fill slots with `/give` and `/item replace`, then call `mc_read_inventory`. For a container, place a chest with `/setblock`, aim with `mc_look_at` and open it with `mc_use`; a villager (`/summon villager ... {NoAI:1b}`) works the same way and fills `offers`. Slot numbers in `mc_read_container` are menu indexes, so the player's hotbar is not 0-8 there; `mc_read_inventory` uses inventory indexes. The world list needs a click on the entry (a point click) before `Play Selected World` is enabled.
 - **Opening the inventory.** `mc_set_key` with `name` `inventory` opens (and, on a second press, closes) the player's inventory, which is the creative item screen in creative mode. Its tabs are not widgets: click one with a point click (`x`, `y` in GUI units). In the creative item grid slots 0-44 are the visible items (group `creative`) and 45-53 the hotbar; on the inventory tab the slots follow the player menu (crafting, armor, main, hotbar, offhand) and the last one is the trash.
 - **Clicking slots.** `mc_click_slot` takes the menu indexes `mc_read_container` shows (a chest is 0-26, then main 27-53 and hotbar 54-62; a merchant is 0-1 payment, 2 result, 3-29 main, 30-38 hotbar). A merchant needs its trade selected first: `mc_click` the trade button by `index` from `mc_list_widgets`, then `quick_move` slot 2 takes the result. The returned state is the client prediction; call `mc_read_container` to see what the server kept.
+- **Joining and leaving.** `mc_disconnect` closes the level's connection before `Minecraft.disconnect`, as the pause screen does; calling `disconnect` alone leaves the integrated server running and hangs the render thread. The call blocks while a singleplayer world saves. `mc_join_server` and `mc_join_world` return at once; follow with `mc_wait_for` or `mc_get_state`. A failed server connection leaves a disconnect screen that `mc_read_screen_text` can read.
 - **Screen text** is captured while the screen renders, so call `mc_read_screen_text` after the
   screen has been open for a frame. A tooltip shows only while the real
   cursor hovers its target, so the tool cannot reach one the agent cannot hover.

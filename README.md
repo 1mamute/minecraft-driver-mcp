@@ -32,6 +32,9 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_click` | Click a widget by label or index, or a point |
 | `mc_click_slot` | Click a slot of the open container: pick up, quick move, swap with a hotbar key, throw, clone, gather, or drop the cursor stack |
 | `mc_close_screen` | Close the open screen |
+| `mc_join_server` | Connect to a multiplayer server by `host` or `host:port` (opens the connect screen; login finishes later) |
+| `mc_join_world` | Load a singleplayer world by its save folder name |
+| `mc_disconnect` | Leave the current world or server and return to the title screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak; press `inventory` to open the inventory screen |
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair |
@@ -42,6 +45,8 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_list_entities` | Entities within 64 blocks |
 | `mc_screenshot` | PNG of the game framebuffer |
 | `mc_list_instances` | Every running client with this mod, to find the others |
+
+Other mods can add their own tools with a `minecraft-driver-mcp` Fabric entrypoint; see [docs/extending.md](docs/extending.md). Their tools are named `<modid>_<verb>_<noun>`.
 
 Everything runs on the render thread through the game's own screen and player APIs. The operating system's mouse and keyboard are never used.
 
@@ -69,6 +74,7 @@ claude mcp add --transport http bob   http://127.0.0.1:25902/mcp
 | `driver.port` | first free from 25890 | Fixed port |
 | `driver.host` | `127.0.0.1` | Bind address. Keep it on localhost: the tools control the player |
 | `driver.name` | player name | Instance name |
+| `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>`; others get 401 and no tool runs. The token is never logged or written to the registry, which only records `authRequired` |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
 | `driver.unfocused` | `false` (`true` in this repo's `runClient`) | Create the window without taking focus |
 
