@@ -21,6 +21,8 @@ data class DriverInstance(
     val port: Int,
     val minecraftVersion: String,
     val gameDirectory: String,
+    /** True when the endpoint needs `Authorization: Bearer <token>`. The token itself is never stored. */
+    val authRequired: Boolean = false,
 )
 
 /**

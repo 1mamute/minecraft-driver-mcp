@@ -6,6 +6,7 @@ import io.github.ummamute.driver.server.DriverInstance
 import io.github.ummamute.driver.server.InstanceRegistry
 import io.github.ummamute.driver.server.McpEndpoint
 import io.github.ummamute.driver.server.PortSelector
+import io.github.ummamute.driver.server.TokenAuthenticator
 import io.github.ummamute.driver.tools.InstanceTools
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.loader.api.FabricLoader
@@ -20,6 +21,7 @@ import java.nio.file.Path
  * - `driver.port`: fixed port. Default: the first free port from 25890.
  * - `driver.host`: bind address. Default `127.0.0.1`; keep it on localhost.
  * - `driver.name`: instance name shown to the agent. Default: the player name.
+ * - `driver.token`: when set, requests need `Authorization: Bearer <token>`. Default: no authentication.
  * - `driver.registry`: directory of running instances. Default `~/.minecraft-driver-mcp/instances`.
  */
 object DriverBootstrap {
@@ -31,6 +33,7 @@ object DriverBootstrap {
         LogCapture.install()
         val host = System.getProperty("driver.host", "127.0.0.1")
         val port = PortSelector.choose(Integer.getInteger("driver.port"), host)
+        val authenticator = TokenAuthenticator(System.getProperty("driver.token"))
         val instance = DriverInstance(
             name = System.getProperty("driver.name") ?: Minecraft.getInstance().user.name,
             pid = ProcessHandle.current().pid(),
@@ -38,10 +41,11 @@ object DriverBootstrap {
             port = port,
             minecraftVersion = FabricLoader.getInstance().getModContainer("minecraft").get().metadata.version.friendlyString,
             gameDirectory = FabricLoader.getInstance().gameDir.toAbsolutePath().toString(),
+            authRequired = authenticator.isRequired,
         )
         val registry = InstanceRegistry(registryDirectory())
         InstanceTools.registry = registry
-        val endpoint = McpEndpoint(host, port, modVersion(), instance.name, ExtensionLoader.load())
+        val endpoint = McpEndpoint(host, port, modVersion(), instance.name, ExtensionLoader.load(), authenticator)
         endpoint.start()
         registry.register(instance)
         ClientLifecycleEvents.CLIENT_STOPPING.register {
@@ -49,7 +53,8 @@ object DriverBootstrap {
             registry.unregister(instance.pid)
             LogCapture.uninstall()
         }
-        logger.info("Minecraft Driver MCP \"{}\" listening on {}", instance.name, instance.url)
+        val authentication = if (authenticator.isRequired) "required" else "off"
+        logger.info("Minecraft Driver MCP \"{}\" listening on {} (authentication {})", instance.name, instance.url, authentication)
     }
 
     private fun modVersion(): String =
