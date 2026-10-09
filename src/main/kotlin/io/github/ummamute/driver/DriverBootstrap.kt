@@ -1,5 +1,6 @@
 package io.github.ummamute.driver
 
+import io.github.ummamute.driver.client.LogCapture
 import io.github.ummamute.driver.client.MessageLog
 import io.github.ummamute.driver.server.DriverInstance
 import io.github.ummamute.driver.server.InstanceRegistry
@@ -27,6 +28,7 @@ object DriverBootstrap {
 
     fun start() {
         MessageLog.register()
+        LogCapture.install()
         val host = System.getProperty("driver.host", "127.0.0.1")
         val port = PortSelector.choose(Integer.getInteger("driver.port"), host)
         val instance = DriverInstance(
@@ -45,6 +47,7 @@ object DriverBootstrap {
         ClientLifecycleEvents.CLIENT_STOPPING.register {
             endpoint.stop()
             registry.unregister(instance.pid)
+            LogCapture.uninstall()
         }
         logger.info("Minecraft Driver MCP \"{}\" listening on {}", instance.name, instance.url)
     }
