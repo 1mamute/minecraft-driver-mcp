@@ -4,6 +4,7 @@
 	"package": "io.github.ummamute.driver.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
+		"AbstractContainerScreenAccessor",
 		"ClientTextTooltipMixin",
 		"GuiGraphicsMixin",
 		"ScreenMixin",

@@ -27,7 +27,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_get_state` | Open screen, connection, window focus, player position |
 | `mc_list_widgets` | Widgets of the open screen with index, label and bounds |
 | `mc_read_screen_text` | Text the open screen drew (title, labels, body, tooltip) with coordinates |
-| `mc_read_inventory` | The player's hotbar, main, armor and offhand slots with item id, name, count, durability and enchantments, plus the cursor stack |
+| `mc_read_inventory` | The player's hotbar, main, armor and offhand slots with item id, name, count, durability, enchantments and lore, plus the cursor stack |
 | `mc_read_container` | The open container screen (chest, furnace, crafting table, villager trades) with every slot and, for merchants, the offers |
 | `mc_click` | Click a widget by label or index, or a point |
 | `mc_click_slot` | Click a slot of the open container: pick up, quick move, swap with a hotbar key, throw, clone, gather, or drop the cursor stack |
@@ -35,7 +35,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_join_server` | Connect to a multiplayer server by `host` or `host:port` (opens the connect screen; login finishes later) |
 | `mc_join_world` | Load a singleplayer world by its save folder name |
 | `mc_disconnect` | Leave the current world or server and return to the title screen |
-| `mc_set_key` | Hold or release forward, back, left, right, jump, sneak |
+| `mc_set_key` | Hold or release forward, back, left, right, jump, sneak; press `inventory` to open the inventory screen |
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair |
 | `mc_send_chat` | Send chat or a `/command` as the player |

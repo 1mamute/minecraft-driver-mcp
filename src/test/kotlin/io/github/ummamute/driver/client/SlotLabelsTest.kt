@@ -15,6 +15,18 @@ class SlotLabelsTest {
     }
 
     @Test
+    fun `labels the player menu index boundaries`() {
+        assertEquals(SlotLabel("result", null), SlotLabels.forPlayerMenuIndex(0))
+        assertEquals(SlotLabel("grid", null), SlotLabels.forPlayerMenuIndex(4))
+        assertEquals(SlotLabel("armor", "helmet"), SlotLabels.forPlayerMenuIndex(5))
+        assertEquals(SlotLabel("armor", "boots"), SlotLabels.forPlayerMenuIndex(8))
+        assertEquals(SlotLabel("main", null), SlotLabels.forPlayerMenuIndex(9))
+        assertEquals(SlotLabel("hotbar", null), SlotLabels.forPlayerMenuIndex(36))
+        assertEquals(SlotLabel("hotbar", null), SlotLabels.forPlayerMenuIndex(44))
+        assertEquals(SlotLabel("offhand", null), SlotLabels.forPlayerMenuIndex(45))
+    }
+
+    @Test
     fun `drops empty slots unless asked to keep them`() {
         val slots = listOf(SlotInfo("main", 9, null, null), SlotInfo("main", 10, null, ItemStackInfo("minecraft:stone", "Stone", 1)))
 

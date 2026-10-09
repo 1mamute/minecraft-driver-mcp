@@ -2,6 +2,7 @@ package io.github.ummamute.driver.client
 
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.player.Inventory
@@ -30,9 +31,11 @@ object ClientInventory {
         val screen = mc.screen as? AbstractContainerScreen<*>
             ?: error("No container is open. Open one in game, or call mc_read_inventory for the player's own items")
         val menu = screen.menu
-        val slots = menu.slots.map { slotInfo(it, player.inventory) }
+        val type = menuType(menu)
+        val view = MenuView(type, player.inventory, (screen as? CreativeModeInventoryScreen)?.isInventoryOpen() == true)
+        val slots = menu.slots.mapIndexed { position, slot -> slotInfo(slot, position, view, position == menu.slots.lastIndex) }
         return ContainerSnapshot(
-            menuType = menuType(menu),
+            menuType = type,
             title = screen.title.string,
             containerId = menu.containerId,
             carried = stackInfo(menu.carried),
@@ -41,11 +44,20 @@ object ClientInventory {
         )
     }
 
-    private fun slotInfo(slot: Slot, inventory: Inventory): SlotInfo {
-        val item = stackInfo(slot.item)
-        if (slot.container !== inventory) return SlotInfo("container", slot.index, null, item)
-        val label = SlotLabels.forInventoryIndex(slot.containerSlot)
-        return SlotInfo(label.group, slot.index, label.part, item)
+    /** What decides a slot's label: the menu, the player's inventory, and whether the creative screen shows its inventory tab. */
+    private class MenuView(val menuType: String, val inventory: Inventory, val creativeInventoryTab: Boolean)
+
+    /** [position] is the slot's place in the menu's slot list, which is what `mc_click_slot` takes; a wrapped slot's own `index` is not reliable. */
+    private fun slotInfo(slot: Slot, position: Int, view: MenuView, isLast: Boolean): SlotInfo {
+        val label = slotLabel(slot, position, view, isLast)
+        return SlotInfo(label.group, position, label.part, stackInfo(slot.item))
+    }
+
+    private fun slotLabel(slot: Slot, position: Int, view: MenuView, isLast: Boolean): SlotLabel = when {
+        // The creative inventory tab wraps the player menu's slots, numbering them by menu index, and ends with the trash slot.
+        view.creativeInventoryTab -> if (isLast) SlotLabel("trash", null) else SlotLabels.forPlayerMenuIndex(slot.containerSlot)
+        slot.container === view.inventory -> SlotLabels.forInventoryIndex(slot.containerSlot)
+        else -> SlotLabel(MenuSlotGroups.forMenuSlot(view.menuType, position), null)
     }
 
     private fun menuType(menu: AbstractContainerMenu): String {
@@ -71,6 +83,7 @@ object ClientInventory {
             damage = stack.damageValue.takeIf { stack.isDamageableItem },
             maxDamage = stack.maxDamage.takeIf { stack.isDamageableItem },
             enchantments = enchantments(stack),
+            lore = stack.get(DataComponents.LORE)?.lines()?.map { it.string }.orEmpty(),
         )
     }
 
