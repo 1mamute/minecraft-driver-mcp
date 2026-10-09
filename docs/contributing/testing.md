@@ -6,6 +6,13 @@
 Minecraft: port selection, the instance registry, and anything else in `server/` and
 `tools/` that can run on its own. Code in `client/` needs the running game.
 
+## Continuous integration
+
+The `Build` workflow (`.github/workflows/build.yml`) runs `./gradlew build` on Linux and
+Windows for every pull request and every push to `main`, and uploads the mod jar as an
+artifact of the Linux job. It does not launch the game, so it does not replace the runtime
+check below.
+
 ## Runtime check
 
 Run it for any change to `tools/`, `client/`, the mixin or the packaging, and say in the

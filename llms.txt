@@ -235,6 +235,8 @@ release.
 
 - JDK 21 and the Gradle wrapper. `./gradlew build` = compile + unit tests + lint + jar in `versions/<mc>/build/libs`.
 - `./gradlew lint`, `./gradlew ktlintFormat`, `./gradlew detekt`.
+- CI (`.github/workflows/build.yml`) runs `./gradlew build` on Linux and Windows for pull requests and `main`; it does not
+  run the runtime check.
 - Runtime check (required for changes to `tools/`, `client/`, mixins or packaging): `./gradlew :1.21.1:runClient`, read the
   endpoint from the log, then `initialize`, `tools/list`, the changed tool on the title screen and in a world, and its
   error path. Test with two clients when touching ports or the registry. Say in the change when the runtime check was

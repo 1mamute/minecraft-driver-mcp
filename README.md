@@ -1,6 +1,8 @@
 <!-- #region site-top -->
 # Minecraft Driver MCP
 
+[![Build](https://github.com/1mamute/minecraft-driver-mcp/actions/workflows/build.yml/badge.svg)](https://github.com/1mamute/minecraft-driver-mcp/actions/workflows/build.yml)
+
 **Let an AI assistant drive a real Minecraft client, so it can test and debug your Fabric mod.**
 
 Minecraft Driver MCP is a Fabric client mod that starts a [Model Context Protocol](https://modelcontextprotocol.io)
