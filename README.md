@@ -135,9 +135,10 @@ one source tree.
 
 ## Status
 
-Pre-release (0.1.0) for Minecraft 1.21.1. The tools above work in a development environment and are checked against a
-running client before each change merges. Other Minecraft versions have not been tested, and tool names and schemas can
-change between minor versions. Limits and unverified areas are listed in [Known issues](docs/known-issues.md).
+Pre-release (0.1.0) for Minecraft 1.21.1. The tools above are checked against a running client, both in a development
+environment and in a regular launcher-managed install with other mods, before each change merges. Other Minecraft
+versions and operating systems other than Windows have not been tested, and tool names and schemas can change between
+minor versions. Limits and unverified areas are listed in [Known issues](docs/known-issues.md).
 
 ## License
 
