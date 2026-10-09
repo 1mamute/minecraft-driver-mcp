@@ -54,8 +54,8 @@ Everything runs on the render thread through the game's own screen and player AP
 
 Testing multiplayer needs two or more clients. Each one starts its own server, so ports must not collide:
 
-- **Default:** a client takes the first free port from `25890`. Start two clients and they get `25890` and `25891`.
-- **Fixed port:** `-Ddriver.port=25901` uses exactly that port and fails loudly if it is taken, because your MCP config points at it.
+- **Default:** a client takes the first free port from `25890`. Start two clients and they get `25890` and `25891`, even when both start at the same moment.
+- **Fixed port:** `-Ddriver.port=25901` uses exactly that port and logs an error and leaves the driver off if it is taken (the game still starts), because your MCP config points at it.
 - **Names:** `-Ddriver.name=Alice` labels the instance (default: the player name). The name appears in the MCP server name and instructions, so an assistant connected to several clients can tell them apart.
 - **Discovery:** each running client writes `~/.minecraft-driver-mcp/instances/<pid>.json` and removes it on exit. `mc_list_instances` (or the directory) lists the live ones with their URLs; files of crashed clients are ignored.
 - **Game directories:** give each client its own run directory, as Minecraft requires.
