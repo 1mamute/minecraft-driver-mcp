@@ -7,6 +7,7 @@ import io.github.ummamute.driver.client.ClientSlots
 import io.github.ummamute.driver.client.ClientState
 import io.github.ummamute.driver.client.SlotClickArgs
 import io.github.ummamute.driver.client.SlotClickPlanner
+import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
 import io.github.ummamute.driver.tools.ToolSupport.arguments
 import io.github.ummamute.driver.tools.ToolSupport.boolean
 import io.github.ummamute.driver.tools.ToolSupport.double
@@ -34,7 +35,7 @@ internal object ActionTools {
     }
 
     private fun registerClick(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_click",
             description = "Click a widget of the open screen by `label` (case-insensitive substring) or `index` from mc_list_widgets, " +
                 "or a point with `x` and `y`. Runs through the screen click handlers; the real cursor is untouched.",
@@ -58,7 +59,7 @@ internal object ActionTools {
     }
 
     private fun registerClickSlot(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_click_slot",
             description = "Click a slot of the open container screen to move items. `slot` is the menu index from mc_read_container. " +
                 "Actions: pick_up (button 0 left, 1 right; also puts the cursor stack down), quick_move (shift-click), " +
@@ -87,7 +88,7 @@ internal object ActionTools {
     }
 
     private fun registerCloseScreen(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_close_screen",
             description = "Close the open screen and return to the game.",
             toolAnnotations = action.copy(idempotentHint = true),
@@ -97,7 +98,7 @@ internal object ActionTools {
     }
 
     private fun registerKey(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_set_key",
             description = "Hold or release a movement key. The key stays in that state until it is set again, so release it when done. " +
                 "A held key stays down across screens that open, such as the pause screen, until released. " +
@@ -115,7 +116,7 @@ internal object ActionTools {
     }
 
     private fun registerLookAt(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_look_at",
             description = "Turn the player to face a world position.",
             inputSchema = ToolSupport.schema(
@@ -134,7 +135,7 @@ internal object ActionTools {
     }
 
     private fun registerUse(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_use",
             description = "Use what is under the crosshair (right click), for example open a block or interact with an entity. " +
                 "When that does nothing, uses the held item (main hand, then off hand), so eating, drinking, throwing and raising a shield work too. " +
@@ -144,7 +145,7 @@ internal object ActionTools {
     }
 
     private fun registerChat(server: Server) {
-        server.addTool(
+        server.addGuardedTool(
             name = "mc_send_chat",
             description = "Send a chat message, or a command when the text starts with `/`, as the player; the text is " +
                 "trimmed, collapsed to single spaces and cut to 256 characters. Replies arrive later; read them with mc_read_messages.",
