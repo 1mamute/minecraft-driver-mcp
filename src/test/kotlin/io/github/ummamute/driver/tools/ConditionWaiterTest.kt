@@ -17,7 +17,7 @@ class ConditionWaiterTest {
 
     private val waiter = ConditionWaiter(
         readState = { ClientStateSnapshot(screen = screen, connected = true, windowFocused = true, player = null) },
-        readMessages = { since -> MessagePage(messages.filter { it.seq > since }, messages.lastOrNull()?.seq ?: 0L) },
+        readMessages = { since -> MessagePage(messages.filter { it.seq > since }, messages.lastOrNull()?.seq ?: 0L, truncated = false) },
         pollMillis = 5L,
     )
 
