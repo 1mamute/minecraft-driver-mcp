@@ -23,10 +23,19 @@ object ClientInput {
 
     private const val INVENTORY_KEY = "inventory"
 
+    /** Longest `mc_use` hold: ten seconds of ticks, enough for any item's use time. */
+    const val MAX_HOLD_TICKS = 200
+
     private val mc: Minecraft get() = Minecraft.getInstance()
 
     /** Keys the agent holds. Render thread only. */
     private val heldKeys = mutableSetOf<String>()
+
+    /** Ticks the use key stays down after [use] started an item. Render thread only. */
+    private var useTicksLeft = 0
+
+    /** Whether [use] still holds the use key down. Render thread only. */
+    val isHoldingUse: Boolean get() = useTicksLeft > 0
 
     /**
      * Applies the held keys at the end of every client tick: down while no screen is open, up while one is. Vanilla sends
@@ -49,6 +58,14 @@ object ClientInput {
     private fun applyHeldKeys() {
         val active = mc.screen == null
         heldKeys.forEach { keyBinding(it).setDown(active) }
+        tickUseHold(active)
+    }
+
+    /** Vanilla releases a using item on any tick the use key is up, so the key stays down for the whole hold. */
+    private fun tickUseHold(active: Boolean) {
+        if (useTicksLeft == 0) return
+        useTicksLeft--
+        mc.options.keyUse.setDown(active && useTicksLeft > 0)
     }
 
     /**
@@ -77,8 +94,10 @@ object ClientInput {
     /**
      * Uses what is under the crosshair, like the use key: each hand in turn tries the entity or block under the crosshair, then its item.
      * Mirrors `Minecraft.startUseItem`, so food, potions, bows, pearls and shields work while aiming at the sky or at stone.
+     * With [holdTicks] above zero and an item now in use, the use key stays down for that many ticks, as when a player holds right click.
      */
-    fun use(): String {
+    fun use(holdTicks: Int = 0): String {
+        require(holdTicks in 0..MAX_HOLD_TICKS) { "hold_ticks must be between 0 and $MAX_HOLD_TICKS, got $holdTicks" }
         val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
         val gameMode = mc.gameMode ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
         if (player.isHandsBusy) error("The player's hands are busy (using an item or riding). Wait, then call mc_use again")
@@ -86,7 +105,7 @@ object ClientInput {
         var lastResult = InteractionResult.PASS
         for (hand in InteractionHand.values()) {
             val result = useHand(player, gameMode, hand, hit)
-            if (result.consumesAction()) return result.toString()
+            if (result.consumesAction()) return startHold(player, holdTicks, result)
             lastResult = result
             if (result == InteractionResult.FAIL) break
         }
@@ -94,6 +113,14 @@ object ClientInput {
             error("Nothing was used: no target under the crosshair, and neither hand holds an item that can be used now (food needs hunger). Aim with mc_look_at, within reach, or change the held item")
         }
         return lastResult.toString()
+    }
+
+    private fun startHold(player: LocalPlayer, holdTicks: Int, result: InteractionResult): String {
+        if (holdTicks > 0 && player.isUsingItem) {
+            useTicksLeft = holdTicks
+            mc.options.keyUse.setDown(true)
+        }
+        return result.toString()
     }
 
     private fun isNothingTargeted(hit: HitResult?): Boolean = hit == null || hit.type == HitResult.Type.MISS

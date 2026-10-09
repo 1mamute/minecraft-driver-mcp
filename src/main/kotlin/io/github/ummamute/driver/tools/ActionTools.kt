@@ -5,6 +5,7 @@ import io.github.ummamute.driver.client.ClientInput
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientSlots
 import io.github.ummamute.driver.client.ClientState
+import io.github.ummamute.driver.client.RenderThread
 import io.github.ummamute.driver.client.SlotClickArgs
 import io.github.ummamute.driver.client.SlotClickPlanner
 import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
@@ -19,9 +20,12 @@ import io.github.ummamute.driver.tools.ToolSupport.requireString
 import io.github.ummamute.driver.tools.ToolSupport.string
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations
+import kotlinx.coroutines.delay
 
 /** Tools that act on the client the way a player would. */
 internal object ActionTools {
+    private const val HOLD_POLL_MS = 25L
+
     private val action = ToolAnnotations(readOnlyHint = false, destructiveHint = false, idempotentHint = false, openWorldHint = false)
 
     fun register(server: Server) {
@@ -140,9 +144,24 @@ internal object ActionTools {
             name = "mc_use",
             description = "Use what is under the crosshair (right click), for example open a block or interact with an entity. " +
                 "When that does nothing, uses the held item (main hand, then off hand), so eating, drinking, throwing and raising a shield work too. " +
-                "Aim first with mc_look_at.",
+                "Aim first with mc_look_at. A single use only starts eating, drinking, drawing a bow or raising a shield, and the game " +
+                "ends it on the next tick. Give hold_ticks to keep the use key down for that many ticks (20 per second) and wait for the " +
+                "release: eating or drinking takes 32, a bow reaches full draw at 20. It applies only when the use starts an item.",
+            inputSchema = ToolSupport.schema(
+                Property("hold_ticks", "integer", "Ticks to hold the use key, 0 to ${ClientInput.MAX_HOLD_TICKS}; default 0 (a single press)"),
+            ),
             toolAnnotations = action,
-        ) { _ -> onRenderThread(ClientInput::use) { jsonResult(mapOf("result" to it)) } }
+        ) { request ->
+            val holdTicks = arguments(request).int("hold_ticks") ?: 0
+            val result = onRenderThread({ ClientInput.use(holdTicks) }) { jsonResult(mapOf("result" to it)) }
+            if (result.isError != true) awaitUseRelease()
+            result
+        }
+    }
+
+    /** Polls between short render-thread reads, so the hold never blocks the game loop. */
+    private suspend fun awaitUseRelease() {
+        while (RenderThread.call { ClientInput.isHoldingUse }) delay(HOLD_POLL_MS)
     }
 
     private fun registerChat(server: Server) {

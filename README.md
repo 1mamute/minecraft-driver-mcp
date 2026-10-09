@@ -39,7 +39,7 @@ Do not add it with `modLocalRuntime(files(...))`: Loom drops the jar's list of b
 | `mc_disconnect` | Leave the current world or server and return to the title screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak (held until released; paused while a screen is open, as in vanilla); press `inventory` to open or close the inventory |
 | `mc_look_at` | Face a world position |
-| `mc_use` | Right click what is under the crosshair, then the held item (either hand) |
+| `mc_use` | Right click what is under the crosshair, then the held item (either hand); `hold_ticks` keeps the key down to finish eating, drinking or drawing a bow |
 | `mc_send_chat` | Send chat or a `/command` as the player; returns the text sent after trimming and collapsing whitespace (256 characters max) |
 | `mc_read_messages` | Chat and system messages received since a sequence number (action-bar text excluded; `truncated` flags dropped messages) |
 | `mc_read_log` | The game's log lines (level, logger, thread, message, throwable) since a sequence number, filtered by level and text |
