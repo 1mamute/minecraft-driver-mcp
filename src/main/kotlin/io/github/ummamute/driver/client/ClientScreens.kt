@@ -52,8 +52,9 @@ object ClientScreens {
         return clickAt(screen, centerX, centerY, button, labelOf(target))
     }
 
+    /** Closes the open screen the way Escape does, so parents reopen and container screens send the close packet. */
     fun close() {
-        mc.setScreen(null)
+        mc.screen?.onClose()
     }
 
     private fun clickAt(screen: Screen, x: Double, y: Double, button: Int, clicked: String?): ClickResult {
