@@ -1,6 +1,7 @@
 package io.github.ummamute.driver.client
 
 import com.mojang.blaze3d.platform.InputConstants
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
@@ -23,11 +24,28 @@ object ClientInput {
 
     private val mc: Minecraft get() = Minecraft.getInstance()
 
+    /** Keys the agent holds. Render thread only. */
+    private val heldKeys = mutableSetOf<String>()
+
+    /**
+     * Re-applies the held keys at the end of every client tick. Opening a screen releases every key
+     * (`Minecraft.setScreen` calls `KeyMapping.releaseAll`) and grabbing the mouse resets them to the physical state,
+     * so without this the player stops while the agent still thinks the key is down.
+     */
+    fun register() {
+        ClientTickEvents.END_CLIENT_TICK.register { reapplyHeldKeys() }
+    }
+
     fun setKey(name: String, down: Boolean): Boolean {
         if (name == INVENTORY_KEY) return pressInventory(down)
         val binding = keyBinding(name)
+        if (down) heldKeys.add(name) else heldKeys.remove(name)
         binding.setDown(down)
         return binding.isDown
+    }
+
+    private fun reapplyHeldKeys() {
+        heldKeys.forEach { keyBinding(it).setDown(true) }
     }
 
     /** Queues one press of the inventory key; the game handles it on its next tick, as for a real key press. */
