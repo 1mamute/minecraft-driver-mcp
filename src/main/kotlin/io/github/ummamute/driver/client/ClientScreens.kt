@@ -42,7 +42,7 @@ object ClientScreens {
 
     /** Clicks the widget with this index or label, or the point (x, y). */
     fun click(index: Int?, label: String?, x: Double?, y: Double?, button: Int): ClickResult {
-        val screen = mc.screen ?: error("No screen is open")
+        val screen = mc.screen ?: error("No screen is open, so there is nothing to click. Use mc_get_state to see what the client shows")
         if (x != null && y != null) return clickAt(screen, x, y, button, clicked = null)
         val target = findTarget(screen, index, label)
         val rectangle = target.rectangle
@@ -66,9 +66,12 @@ object ClientScreens {
 
     private fun findTarget(screen: Screen, index: Int?, label: String?): GuiEventListener {
         val children = screen.children()
-        if (index != null) return children.getOrNull(index) ?: error("No widget at index $index")
-        if (label == null) error("Give a label, an index or x and y")
-        return children.firstOrNull { labelOf(it)?.contains(label, ignoreCase = true) == true } ?: error("No widget labelled \"$label\"")
+        if (index != null) {
+            return children.getOrNull(index) ?: error("No widget at index $index of ${children.size}. Call mc_list_widgets for the current indexes")
+        }
+        if (label == null) error("Give a label, an index, or both x and y")
+        val match = children.firstOrNull { labelOf(it)?.contains(label, ignoreCase = true) == true }
+        return match ?: error("No widget labelled \"$label\". Call mc_list_widgets to see the labels on this screen")
     }
 
     private fun summarize(index: Int, child: GuiEventListener): WidgetSummary {
