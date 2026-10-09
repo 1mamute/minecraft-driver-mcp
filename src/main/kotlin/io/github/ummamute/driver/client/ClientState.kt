@@ -27,7 +27,7 @@ object ClientState {
     fun snapshot(): ClientStateSnapshot {
         val player = mc.player
         return ClientStateSnapshot(
-            screen = mc.screen?.javaClass?.name,
+            screen = mc.screen?.let(ClassNames::of),
             connected = mc.connection != null,
             windowFocused = mc.isWindowActive,
             player = player?.let { PlayerPosition(it.x, it.y, it.z, it.yRot, it.xRot) },

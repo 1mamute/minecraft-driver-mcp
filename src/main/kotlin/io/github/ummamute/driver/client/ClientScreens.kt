@@ -1,9 +1,14 @@
 package io.github.ummamute.driver.client
 
+import io.github.ummamute.driver.mixin.AbstractWidgetAccessor
 import kotlinx.serialization.Serializable
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.components.events.GuiEventListener
+import net.minecraft.client.gui.narration.NarratableEntry
+import net.minecraft.client.gui.narration.NarratedElementType
+import net.minecraft.client.gui.narration.NarrationElementOutput
+import net.minecraft.client.gui.narration.NarrationThunk
 import net.minecraft.client.gui.screens.Screen
 
 /** A clickable element of the open screen. */
@@ -29,11 +34,10 @@ data class ClickResult(val clicked: String?, val handled: Boolean)
 /** Inspects and clicks the open screen through the game's own screen APIs. Call on the render thread. */
 object ClientScreens {
     private val mc: Minecraft get() = Minecraft.getInstance()
-    private val labelGetters = setOf("getText", "getLabel", "getMessage", "getName")
 
     fun describe(): ScreenSummary {
         val screen = mc.screen ?: return ScreenSummary(null, emptyList())
-        return ScreenSummary(screen.javaClass.name, screen.children().mapIndexed(::summarize))
+        return ScreenSummary(ClassNames.of(screen), screen.children().mapIndexed(::summarize))
     }
 
     /** Clicks the widget with this index or label, or the point (x, y). */
@@ -71,7 +75,7 @@ object ClientScreens {
         val widget = child as? AbstractWidget
         return WidgetSummary(
             index = index,
-            type = child.javaClass.name,
+            type = ClassNames.of(child),
             label = labelOf(child),
             x = rectangle.left(),
             y = rectangle.top(),
@@ -84,16 +88,28 @@ object ClientScreens {
 
     private fun labelOf(child: GuiEventListener): String? {
         if (child is AbstractWidget) return child.message.string
-        return child.javaClass.methods
-            .firstOrNull { it.parameterCount == 0 && it.name in labelGetters }
-            ?.let { runCatching { it.invoke(child)?.toString() }.getOrNull() }
+        if (child !is NarratableEntry) return null
+        return narratedTitle(child)
+    }
+
+    /** The title the entry narrates for screen readers, which is the closest typed equivalent of a label. */
+    private fun narratedTitle(entry: NarratableEntry): String? {
+        val titles = mutableListOf<String>()
+        runCatching { entry.updateNarration(TitleCollector(titles)) }
+        return titles.firstOrNull()
+    }
+
+    private class TitleCollector(private val titles: MutableList<String>) : NarrationElementOutput {
+        override fun add(type: NarratedElementType, contents: NarrationThunk<*>) {
+            if (type == NarratedElementType.TITLE) contents.getText { titles.add(it) }
+        }
+
+        override fun nest(): NarrationElementOutput = this
     }
 
     /** Widgets only act when hovered, and hover comes from the real cursor, which stays untouched. */
     private fun markHovered(target: GuiEventListener) {
         if (target !is AbstractWidget) return
-        val field = AbstractWidget::class.java.getDeclaredField("isHovered")
-        field.isAccessible = true
-        field.setBoolean(target, true)
+        (target as AbstractWidgetAccessor).`driver$setHovered`(true)
     }
 }
