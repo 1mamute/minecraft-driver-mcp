@@ -7,6 +7,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.inventory.MerchantMenu
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
@@ -62,7 +63,14 @@ object ClientInventory {
 
     private fun menuType(menu: AbstractContainerMenu): String {
         val type = runCatching { menu.type }.getOrNull()
-        return type?.let { BuiltInRegistries.MENU.getKey(it)?.toString() } ?: menu.javaClass.simpleName
+        return type?.let { BuiltInRegistries.MENU.getKey(it)?.toString() } ?: fallbackMenuName(menu)
+    }
+
+    /** Menus without a registered type; matched by class because the names are the keys of `MenuSlotGroups`. */
+    private fun fallbackMenuName(menu: AbstractContainerMenu): String = when (menu) {
+        is InventoryMenu -> "InventoryMenu"
+        is CreativeModeInventoryScreen.ItemPickerMenu -> "ItemPickerMenu"
+        else -> menu.javaClass.simpleName
     }
 
     private fun tradeOffer(offer: MerchantOffer) = TradeOffer(

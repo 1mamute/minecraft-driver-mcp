@@ -27,7 +27,7 @@ object ScreenText {
     fun end() {
         val frame = building ?: return
         val screen = buildingScreen ?: return
-        last = Published(screen.javaClass.name, screen.title.string, frame)
+        last = Published(ClassNames.of(screen), screen.title.string, frame)
         building = null
         buildingScreen = null
     }
@@ -51,7 +51,7 @@ object ScreenText {
     fun snapshot(): ScreenTextResult {
         val screen = Minecraft.getInstance().screen ?: error("No screen is open. Use mc_get_state to see what the client shows")
         val published = last
-        if (published == null || published.screenClass != screen.javaClass.name) {
+        if (published == null || published.screenClass != ClassNames.of(screen)) {
             error("The screen has not rendered yet. Call again in a moment")
         }
         return ScreenTextResult(published.screenClass, published.title, published.frame.texts(), published.frame.tooltips())
