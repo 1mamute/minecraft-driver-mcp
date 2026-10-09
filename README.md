@@ -42,7 +42,7 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_read_messages` | Chat and system messages received since a sequence number (action-bar text excluded; `truncated` flags dropped messages) |
 | `mc_read_log` | The game's log lines (level, logger, thread, message, throwable) since a sequence number, filtered by level and text |
 | `mc_wait_for` | Block until a message or screen appears, or time out |
-| `mc_list_entities` | Entities within 64 blocks |
+| `mc_list_entities` | Entities within 64 blocks, nearest first (at most 100), with registry type, feet position and distance |
 | `mc_screenshot` | PNG of the game framebuffer |
 | `mc_list_instances` | Every running client with this mod, to find the others |
 
