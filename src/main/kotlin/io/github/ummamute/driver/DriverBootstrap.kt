@@ -1,5 +1,6 @@
 package io.github.ummamute.driver
 
+import io.github.ummamute.driver.client.ClientInput
 import io.github.ummamute.driver.client.LogCapture
 import io.github.ummamute.driver.client.MessageLog
 import io.github.ummamute.driver.server.DriverInstance
@@ -39,6 +40,7 @@ object DriverBootstrap {
 
     private fun launch() {
         MessageLog.register()
+        ClientInput.register()
         LogCapture.install()
         val host = System.getProperty("driver.host", "127.0.0.1")
         val authenticator = TokenAuthenticator(System.getProperty("driver.token"))

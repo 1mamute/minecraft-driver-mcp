@@ -54,6 +54,9 @@ and resumes with its result or exception. The worker is never blocked, and the g
 only runs the short block. Tools that wait for something (`mc_wait_for`) must poll
 by suspending between short render-thread reads, never by holding the render thread.
 
+Held movement keys live in `ClientInput`, which re-applies them at the end of every client tick: opening a
+screen releases all keys and grabbing the mouse resets them, so a key set with `mc_set_key` stays held until released.
+
 Chat and system messages arrive on the client's network thread and are appended to
 `MessageLog`, a bounded buffer with a sequence number. `mc_read_messages(since)` returns
 only newer ones, so an agent can read a reply that arrives asynchronously.
