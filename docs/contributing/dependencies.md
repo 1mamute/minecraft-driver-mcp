@@ -13,7 +13,8 @@ Where each version lives, what constrains it, and how to move it forward.
 | ktlint, detekt, JUnit | `gradle.properties` | Build only. |
 | Java | `versions/<mc>/gradle.properties` (`java_version`) | Follows the Minecraft version. |
 
-Choose stable releases; leave out snapshots, betas and release candidates.
+Choose stable releases; leave out snapshots, betas and release candidates. When a bundled library is added or its license
+changes, update the license table in [the introduction](../introduction.md#license).
 
 ## Version sources
 

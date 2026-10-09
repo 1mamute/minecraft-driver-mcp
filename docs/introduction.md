@@ -67,8 +67,17 @@ keyboard are never used, so the window can stay behind other windows.
 | Java | 21 or newer |
 
 The project is at version 0.x. Tool names and schemas can change between minor versions; changes are called out in the
-release notes. See [Known issues](known-issues.md) for what has been verified.
+[release notes](release-notes.md). See [Known issues](known-issues.md) for what has been verified.
 
 ## License
 
 MIT.
+
+The jar bundles these libraries, each under its own license:
+
+| Library | License |
+| --- | --- |
+| [MCP Kotlin SDK](https://github.com/modelcontextprotocol/kotlin-sdk) | MIT |
+| [Ktor](https://ktor.io) | Apache 2.0 |
+| [Kotlin standard library](https://kotlinlang.org) and kotlinx libraries (coroutines, serialization, io, collections) | Apache 2.0 |
+| [kotlin-logging](https://github.com/oshai/kotlin-logging) and [Typesafe Config](https://github.com/lightbend/config) | Apache 2.0 |

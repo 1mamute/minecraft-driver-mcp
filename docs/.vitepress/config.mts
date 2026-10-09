@@ -52,6 +52,7 @@ export default defineConfig({
           { text: 'Several clients', link: '/multiple-clients' },
           { text: 'Extension API', link: '/extension-api' },
           { text: 'Known issues', link: '/known-issues' },
+          { text: 'Release notes', link: '/release-notes' },
         ],
       },
       {

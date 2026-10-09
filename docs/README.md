@@ -22,6 +22,7 @@ Read these to install the mod and drive a game with an assistant.
 | [Several clients](multiple-clients.md) | Running two or more clients for multiplayer tests |
 | [Extension API](extension-api.md) | Adding tools from another mod |
 | [Known issues](known-issues.md) | Limits, troubleshooting and unverified areas |
+| [Release notes](release-notes.md) | What each version contains and its known limits |
 
 ## For contributors
 
