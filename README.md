@@ -32,6 +32,9 @@ Add the jar to your Loom run, for example `modLocalRuntime(files("libs/minecraft
 | `mc_click` | Click a widget by label or index, or a point |
 | `mc_click_slot` | Click a slot of the open container: pick up, quick move, swap with a hotbar key, throw, clone, gather, or drop the cursor stack |
 | `mc_close_screen` | Close the open screen |
+| `mc_join_server` | Connect to a multiplayer server by `host` or `host:port` (opens the connect screen; login finishes later) |
+| `mc_join_world` | Load a singleplayer world by its save folder name |
+| `mc_disconnect` | Leave the current world or server and return to the title screen |
 | `mc_set_key` | Hold or release forward, back, left, right, jump, sneak |
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair |

@@ -2,6 +2,7 @@ package io.github.ummamute.driver.server
 
 import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.tools.ActionTools
+import io.github.ummamute.driver.tools.ConnectionTools
 import io.github.ummamute.driver.tools.ExtensionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
@@ -65,6 +66,7 @@ class McpEndpoint(
         InstanceTools.register(server)
         ObservationTools.register(server)
         ActionTools.register(server)
+        ConnectionTools.register(server)
         ExtensionTools.register(server, extensionTools)
         return server
     }
