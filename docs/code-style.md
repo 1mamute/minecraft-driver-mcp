@@ -122,6 +122,8 @@ above.
 - Prefer text over images. A screenshot is for when text cannot answer the question.
 - Report a failure as an `isError` result with a message that says what to do next
   ("No screen is open; call mc_get_state"), not an exception message.
+- Read arguments with the `ToolSupport` helpers (`string`, `int`, `long`, `double`, `boolean`): a missing argument and a JSON `null`
+  are both absent, and a present value of the wrong type fails with a message naming the argument and the expected type.
 - Keep tool descriptions to what the agent needs to decide to call it and how.
 - Adding or changing a tool updates the table in `README.md`.
 
