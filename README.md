@@ -1,3 +1,5 @@
+[![Build](https://github.com/1mamute/minecraft-driver-mcp/actions/workflows/build.yml/badge.svg)](https://github.com/1mamute/minecraft-driver-mcp/actions/workflows/build.yml)
+
 <!-- #region site-top -->
 # Minecraft Driver MCP
 

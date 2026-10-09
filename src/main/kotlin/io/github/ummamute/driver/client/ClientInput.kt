@@ -121,7 +121,10 @@ object ClientInput {
             if (result == InteractionResult.FAIL) break
         }
         if (isNothingTargeted(hit)) {
-            error("Nothing was used: no target under the crosshair, and neither hand holds an item that can be used now (food needs hunger). Aim with mc_look_at, within reach, or change the held item")
+            error(
+                "Nothing was used: no target under the crosshair, and neither hand holds an item that can be used now (food needs hunger). " +
+                    "Aim with mc_look_at, within reach, or change the held item",
+            )
         }
         return lastResult.toString()
     }
