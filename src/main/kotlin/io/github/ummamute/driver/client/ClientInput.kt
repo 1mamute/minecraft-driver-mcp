@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.InteractionHand
@@ -17,7 +18,7 @@ import kotlin.math.sqrt
 
 /** Movement, aiming and interaction, applied through the player and game mode. Call on the render thread. */
 object ClientInput {
-    /** Keys that stay down until released, then `inventory`, which is a single press that opens or closes the inventory screen. */
+    /** Keys that stay down until released, then `inventory`, which is a single press that opens the inventory, or closes it when a container screen is open. */
     val keyNames = listOf("forward", "back", "left", "right", "jump", "sneak", INVENTORY_KEY)
 
     private const val INVENTORY_KEY = "inventory"
@@ -48,10 +49,19 @@ object ClientInput {
         heldKeys.forEach { keyBinding(it).setDown(true) }
     }
 
-    /** Queues one press of the inventory key; the game handles it on its next tick, as for a real key press. */
+    /**
+     * Toggles the inventory. With no screen it queues one press of the inventory key, which the game handles on its next tick.
+     * A queued press is consumed only while no screen is open, so with a container screen open it closes that screen directly.
+     */
     private fun pressInventory(down: Boolean): Boolean {
-        if (down) KeyMapping.click(InputConstants.getKey(mc.options.keyInventory.saveString()))
-        return down
+        if (!down) return false
+        val screen = mc.screen
+        when {
+            screen == null -> KeyMapping.click(InputConstants.getKey(mc.options.keyInventory.saveString()))
+            screen is AbstractContainerScreen<*> -> screen.onClose()
+            else -> error("A ${ClassNames.of(screen)} is open, not an inventory. Call mc_close_screen first, then press inventory again")
+        }
+        return true
     }
 
     fun lookAt(x: Double, y: Double, z: Double) {
