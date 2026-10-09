@@ -62,7 +62,7 @@ object ClientInventory {
         outOfStock = offer.isOutOfStock,
     )
 
-    private fun stackInfo(stack: ItemStack): ItemStackInfo? {
+    internal fun stackInfo(stack: ItemStack): ItemStackInfo? {
         if (stack.isEmpty) return null
         return ItemStackInfo(
             id = BuiltInRegistries.ITEM.getKey(stack.item).toString(),

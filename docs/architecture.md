@@ -20,7 +20,7 @@ start and end of `Screen.renderWithTooltip`, `GuiGraphicsMixin` records the two
 `GuiGraphics.drawString` sinks, and `ClientTextTooltipMixin` records tooltip lines. The pure
 collector `TextFrame` turns one frame's text into the data `mc_read_screen_text` returns.
 
-`ClientInventory` maps the player's `Inventory`, the open `AbstractContainerMenu` and merchant offers into the data classes of `InventoryModel.kt`; `SlotLabels` (no Minecraft types) decides each inventory slot's group (hotbar, main, armor, offhand). `mc_read_inventory` and `mc_read_container` return them. Item stacks are sprites, so `mc_read_screen_text` never sees them.
+`ClientInventory` maps the player's `Inventory`, the open `AbstractContainerMenu` and merchant offers into the data classes of `InventoryModel.kt`; `SlotLabels` (no Minecraft types) decides each inventory slot's group (hotbar, main, armor, offhand). `mc_read_inventory` and `mc_read_container` return them. Item stacks are sprites, so `mc_read_screen_text` never sees them. `ClientSlots` sends a slot click through `MultiPlayerGameMode.handleInventoryMouseClick` for `mc_click_slot`; `SlotClickPlanner` (no Minecraft types) validates the arguments.
 
 Because of this split, supporting a new Minecraft version means changing `client/` (and
 the mixin), not the tools or the server.
