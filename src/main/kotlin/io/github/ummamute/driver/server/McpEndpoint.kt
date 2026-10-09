@@ -1,6 +1,7 @@
 package io.github.ummamute.driver.server
 
 import io.github.ummamute.driver.tools.ActionTools
+import io.github.ummamute.driver.tools.ConnectionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
 import io.ktor.server.cio.CIO
@@ -38,6 +39,7 @@ class McpEndpoint(private val host: String, private val port: Int, private val v
         InstanceTools.register(server)
         ObservationTools.register(server)
         ActionTools.register(server)
+        ConnectionTools.register(server)
         return server
     }
 
