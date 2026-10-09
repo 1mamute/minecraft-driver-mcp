@@ -7,6 +7,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.ContentBlock
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -14,7 +15,6 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -57,15 +57,23 @@ internal object ToolSupport {
 
     fun arguments(request: CallToolRequest): JsonObject = request.arguments ?: JsonObject(emptyMap())
 
-    fun JsonObject.string(name: String): String? = this[name]?.jsonPrimitive?.content
+    /** A missing argument and an explicit JSON `null` both mean "not given"; a present value of the wrong type is an error. */
+    private fun <T : Any> JsonObject.typed(name: String, expected: String, parse: (JsonPrimitive) -> T?): T? {
+        val value = this[name]
+        if (value == null || value is JsonNull) return null
+        val primitive = value as? JsonPrimitive
+        return primitive?.let(parse) ?: throw IllegalArgumentException("Argument \"$name\" must be $expected, got $value")
+    }
 
-    fun JsonObject.int(name: String): Int? = this[name]?.jsonPrimitive?.intOrNull
+    fun JsonObject.string(name: String): String? = typed(name, "a string") { it.takeIf(JsonPrimitive::isString)?.content }
 
-    fun JsonObject.long(name: String): Long? = this[name]?.jsonPrimitive?.longOrNull
+    fun JsonObject.int(name: String): Int? = typed(name, "an integer") { it.intOrNull }
 
-    fun JsonObject.double(name: String): Double? = this[name]?.jsonPrimitive?.doubleOrNull
+    fun JsonObject.long(name: String): Long? = typed(name, "an integer") { it.longOrNull }
 
-    fun JsonObject.boolean(name: String): Boolean? = this[name]?.jsonPrimitive?.booleanOrNull
+    fun JsonObject.double(name: String): Double? = typed(name, "a number") { it.doubleOrNull }
+
+    fun JsonObject.boolean(name: String): Boolean? = typed(name, "true or false") { it.booleanOrNull }
 
     fun JsonObject.requireDouble(name: String): Double = double(name) ?: error("Argument \"$name\" must be a number")
 
