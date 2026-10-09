@@ -1,0 +1,101 @@
+/*
+ * Monochrome sky palette: black #000000, charcoal blue #2f4550, blue slate #586f7c, light blue #b8dbd9,
+ * ghost white #f4f4f9.
+ *
+ * Light mode is ghost-white paper with black text. Charcoal blue carries links and buttons (about 9:1 on the page),
+ * blue slate is for secondary text and the active-item marker, and light blue only tints surfaces. Dark mode puts the
+ * page on black, with light blue for links and ghost white for text. Raised surfaces and dividers are charcoal blue
+ * darkened toward black. The tinted and darkened values below are derived from the palette, not part of it.
+ */
+
+:root {
+  --sky-black: #000000;
+  --sky-charcoal: #2f4550;
+  --sky-slate: #586f7c;
+  --sky-light: #b8dbd9;
+  --sky-ghost: #f4f4f9;
+
+  --vp-font-family-base: 'Public Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --vp-font-family-mono: 'Fira Code Variable', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --vp-c-bg: var(--sky-ghost);
+  --vp-c-bg-alt: #ebeef0;
+  --vp-c-bg-soft: #e3eded;
+  --vp-c-bg-elv: #fafafd;
+
+  --vp-c-text-1: var(--sky-black);
+  --vp-c-text-2: var(--sky-charcoal);
+  --vp-c-text-3: var(--sky-slate);
+
+  --vp-c-divider: #d8dfe2;
+  --vp-c-border: #c2ced3;
+  --vp-c-gutter: #e3eded;
+
+  --vp-c-brand-1: var(--sky-charcoal);
+  --vp-c-brand-2: var(--sky-black);
+  --vp-c-brand-3: var(--sky-slate);
+  --vp-c-brand-soft: rgba(184, 219, 217, 0.45);
+
+  --vp-code-color: var(--sky-charcoal);
+  --vp-code-bg: rgba(88, 111, 124, 0.12);
+  --vp-code-block-bg: #ebf1f1;
+  --vp-code-copy-code-bg: var(--sky-ghost);
+
+  --vp-button-brand-bg: var(--sky-charcoal);
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: var(--sky-ghost);
+  --vp-button-brand-hover-bg: var(--sky-black);
+  --vp-button-brand-hover-text: var(--sky-ghost);
+  --vp-button-brand-active-bg: var(--sky-black);
+  --vp-button-brand-active-text: var(--sky-ghost);
+}
+
+.dark {
+  --vp-c-bg: var(--sky-black);
+  --vp-c-bg-alt: #080c0e;
+  --vp-c-bg-soft: #121b20;
+  --vp-c-bg-elv: #162229;
+
+  --vp-c-text-1: var(--sky-ghost);
+  --vp-c-text-2: #a4b4bc;
+  --vp-c-text-3: var(--sky-slate);
+
+  --vp-c-divider: #1d2b33;
+  --vp-c-border: var(--sky-charcoal);
+  --vp-c-gutter: #05080a;
+
+  --vp-c-brand-1: var(--sky-light);
+  --vp-c-brand-2: #ddf0ee;
+  --vp-c-brand-3: var(--sky-slate);
+  --vp-c-brand-soft: rgba(184, 219, 217, 0.14);
+
+  --vp-code-color: var(--sky-light);
+  --vp-code-bg: rgba(184, 219, 217, 0.12);
+  --vp-code-block-bg: #0e1519;
+  --vp-code-copy-code-bg: #1a272e;
+
+  --vp-button-brand-bg: var(--sky-light);
+  --vp-button-brand-text: var(--sky-black);
+  --vp-button-brand-hover-bg: var(--sky-ghost);
+  --vp-button-brand-hover-text: var(--sky-black);
+  --vp-button-brand-active-bg: #9ec4c2;
+  --vp-button-brand-active-text: var(--sky-black);
+}
+
+/* Fira Code ligatures read well in Kotlin and JSON samples; keep them out of inline identifiers like `mc_click`. */
+:not(pre) > code {
+  font-variant-ligatures: none;
+}
+
+/* Tool names in the reference are headings made of code; give them the code face at body weight. */
+.vp-doc h3 > code {
+  font-size: 0.95em;
+  font-weight: 600;
+  background: none;
+  padding: 0;
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc table {
+  font-variant-numeric: tabular-nums;
+}

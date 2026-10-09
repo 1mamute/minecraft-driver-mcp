@@ -46,9 +46,10 @@ function into named steps; do not add baseline entries or `@Suppress` without th
 Three audiences, one source of truth each. `docs/` is user-facing (installation, usage, [tool reference](docs/tools.md),
 configuration, [known issues](docs/known-issues.md)); `docs/contributing/` is developer-facing (architecture, extending,
 testing, code style); [llms.txt](llms.txt) is the self-contained brief for LLM agents. [docs/README.md](docs/README.md)
-indexes them, and a public wiki is generated from them. Every change to tools, system properties, packaging, ports or the
-build updates the matching doc, the tool and property tables in `README.md` and `docs/`, and `llms.txt` in the same PR;
-new docs are added to the index. Public documents are impersonal: no names, machines, paths or launchers from a
+indexes them, and a VitePress site on GitHub Pages is built from `docs/` with `README.md` as its home page (see
+[the contributor guide](docs/contributing/README.md#documentation-site)). Every change to tools, system properties,
+packaging, ports or the build updates the matching doc, the tool and property tables in `README.md` and `docs/`, and
+`llms.txt` in the same PR; new docs are added to the index and to the site sidebar in `docs/.vitepress/config.mts`. Public documents are impersonal: no names, machines, paths or launchers from a
 maintainer's own setup. Write for readers: what it does, how to use it, why a choice was made; leave out what the code
 already states. Unverified behavior and risks go in
 [docs/contributing/known-issues.md](docs/contributing/known-issues.md); limits a user can hit go in

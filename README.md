@@ -1,3 +1,4 @@
+<!-- #region site-top -->
 # Minecraft Driver MCP
 
 **Let an AI assistant drive a real Minecraft client, so it can test and debug your Fabric mod.**
@@ -106,13 +107,19 @@ an instance with `-Ddriver.name`, and find the others with `mc_list_instances`. 
 
 Details are in [Configuration](docs/configuration.md).
 
+<!-- #endregion site-top -->
+
 ## Documentation
+
+The documentation is published at [1mamute.github.io/minecraft-driver-mcp](https://1mamute.github.io/minecraft-driver-mcp/)
+and lives in [docs/](docs/README.md):
 
 - [User documentation](docs/README.md): installation, usage, [debugging mods with an assistant](docs/debugging-mods.md),
   tool reference, configuration, [known issues](docs/known-issues.md).
 - [Contributor guide](docs/contributing/README.md): architecture, extending the mod, testing, code style.
 - [llms.txt](llms.txt): a single self-contained brief for LLM agents.
 
+<!-- #region site-bottom -->
 ## Build
 
 JDK 21 and the Gradle wrapper. [Stonecutter](https://stonecutter.kikugie.dev) builds one jar per Minecraft version from
@@ -133,3 +140,4 @@ change between minor versions. Limits and unverified areas are listed in [Known 
 ## License
 
 MIT
+<!-- #endregion site-bottom -->
