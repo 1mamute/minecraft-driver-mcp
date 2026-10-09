@@ -170,7 +170,8 @@ internal object ObservationTools {
     private fun registerEntities(server: Server) {
         server.addGuardedTool(
             name = "mc_list_entities",
-            description = "List entities within 64 blocks of the player, with id, type, name and position.",
+            description = "List entities within 64 blocks of the player, nearest first and at most 100, with id, registry type, name, " +
+                "feet position and distance.",
             toolAnnotations = readOnly,
         ) { _ -> onRenderThread(ClientState::entitiesNearby) { jsonResult(it) } }
     }
