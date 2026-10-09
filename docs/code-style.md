@@ -126,6 +126,8 @@ above.
   are both absent, and a present value of the wrong type fails with a message naming the argument and the expected type.
 - Register tools with `server.addGuardedTool` (from `ToolSupport`), not `server.addTool`: it turns an `IllegalArgumentException` or
   `IllegalStateException` into a plain `isError` result, where the SDK would add an `Error executing tool` prefix and log a stack trace.
+  It also logs an `Error` such as a `LinkageError` and returns it as `isError`, which the SDK (catching only `Exception`) would let fail
+  the request. Cancellation and `VirtualMachineError` pass through.
 - Keep tool descriptions to what the agent needs to decide to call it and how.
 - Adding or changing a tool updates the table in `README.md`.
 

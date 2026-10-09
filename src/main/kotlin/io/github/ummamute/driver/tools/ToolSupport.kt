@@ -21,9 +21,13 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import kotlinx.serialization.serializer
+import org.slf4j.LoggerFactory
+import kotlin.coroutines.cancellation.CancellationException
 
 /** Shared pieces for tool definitions: input schemas, argument reading and result building. */
 internal object ToolSupport {
+    private val logger = LoggerFactory.getLogger(ToolSupport::class.java)
+
     val json = Json { encodeDefaults = true }
 
     /** Builds an object schema. Each property is a name with its JSON type and description. */
@@ -48,7 +52,8 @@ internal object ToolSupport {
     /**
      * Registers a tool whose bad-input failures (`IllegalArgumentException`, `IllegalStateException`) become plain `isError` results.
      * Without it the SDK reports them as `Error executing tool <name>: ...` and logs them at ERROR with a stack trace,
-     * although they are mistakes in the call and not faults in the driver.
+     * although they are mistakes in the call and not faults in the driver. An `Error` other than a `VirtualMachineError` is logged
+     * and also becomes an `isError` result, because the SDK catches only `Exception`.
      */
     fun Server.addGuardedTool(
         name: String,
@@ -62,12 +67,23 @@ internal object ToolSupport {
         }
     }
 
-    private suspend fun callGuarded(handler: suspend (CallToolRequest) -> CallToolResult, request: CallToolRequest): CallToolResult = try {
-        handler(request)
-    } catch (exception: IllegalArgumentException) {
-        failure(exception.message ?: exception.toString())
-    } catch (exception: IllegalStateException) {
-        failure(exception.message ?: exception.toString())
+    /** Runs a tool handler and turns bad-input exceptions and non-fatal errors into `isError` results. */
+    suspend fun callGuarded(handler: suspend (CallToolRequest) -> CallToolResult, request: CallToolRequest): CallToolResult {
+        val outcome = runCatching { handler(request) }
+        val problem = outcome.exceptionOrNull() ?: return outcome.getOrThrow()
+        return when (problem) {
+            // CancellationException extends IllegalStateException; a cancelled call must stay cancelled.
+            is CancellationException, is VirtualMachineError -> throw problem
+            is IllegalArgumentException, is IllegalStateException -> failure(problem.message ?: problem.toString())
+            is Error -> reportError(request, problem)
+            else -> throw problem
+        }
+    }
+
+    /** An `Error` such as a `LinkageError` escapes the SDK's catch, which handles only `Exception`, and would fail the whole request. */
+    private fun reportError(request: CallToolRequest, error: Error): CallToolResult {
+        logger.error("Tool {} failed", request.name, error)
+        return failure("The tool failed inside the driver: $error. Check the game log; the client keeps running")
     }
 
     fun failure(message: String): CallToolResult = CallToolResult(content = listOf<ContentBlock>(TextContent(text = message)), isError = true)
@@ -76,7 +92,7 @@ internal object ToolSupport {
     suspend fun <T> onRenderThread(action: () -> T, toResult: (T) -> CallToolResult): CallToolResult {
         val outcome = runCatching { toResult(RenderThread.call(action)) }
         val problem = outcome.exceptionOrNull() ?: return outcome.getOrThrow()
-        if (problem is VirtualMachineError) throw problem
+        if (problem is VirtualMachineError || problem is CancellationException) throw problem
         return failure(problem.message ?: problem.toString())
     }
 
