@@ -2,10 +2,19 @@ name: Build
 
 # Runs `./gradlew build` (compile, unit tests, lint, jar) on Linux and Windows. It does not launch the game, so the
 # runtime check in docs/contributing/testing.md stays manual. The Linux job uploads the mod jar as an artifact.
+# Documentation-only changes skip it; the Documentation workflow checks those.
 on:
   push:
     branches: [main]
+    paths-ignore: &docs-only
+      - 'docs/**'
+      - '**.md'
+      - 'llms.txt'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/docs.yml'
   pull_request:
+    paths-ignore: *docs-only
   workflow_dispatch:
 
 permissions:
