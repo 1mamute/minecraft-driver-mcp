@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.PauseScreen
+import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
@@ -78,9 +80,18 @@ object ClientInput {
         when {
             screen == null -> KeyMapping.click(InputConstants.getKey(mc.options.keyInventory.saveString()))
             screen is AbstractContainerScreen<*> -> screen.onClose()
-            else -> error("A ${ClassNames.of(screen)} is open, not an inventory. Call mc_close_screen first, then press inventory again")
+            else -> error(notAnInventoryMessage(screen))
         }
         return true
+    }
+
+    private fun notAnInventoryMessage(screen: Screen): String {
+        val message = "A ${ClassNames.of(screen)} is open, not an inventory. Call mc_close_screen first, then press inventory again"
+        if (screen is PauseScreen && !mc.isWindowActive) {
+            return "$message. The window is not in front, so the game reopens the pause screen: bring the window to the front or " +
+                "start the client with -Ddriver.unfocused=true"
+        }
+        return message
     }
 
     fun lookAt(x: Double, y: Double, z: Double) {
