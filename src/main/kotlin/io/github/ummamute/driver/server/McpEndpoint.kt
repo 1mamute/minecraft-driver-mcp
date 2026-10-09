@@ -39,7 +39,8 @@ class McpEndpoint(
     fun start() {
         val started = embeddedServer(CIO, host = host, port = port) {
             requireToken()
-            mcpStatelessStreamableHttp(path = PATH) { server }
+            val allowList = HostAllowLists.forBindAddress(host)
+            mcpStatelessStreamableHttp(path = PATH, allowedHosts = allowList?.hosts, allowedOrigins = allowList?.origins) { server }
         }
         try {
             started.start(wait = false)
