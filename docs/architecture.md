@@ -93,7 +93,11 @@ machine except the registry:
 
 - **Port.** `PortSelector` takes `driver.port` strictly when set (a fixed port a
   configured agent points at, and it fails if taken), otherwise the first free port from
-  25890, scanning 100 ports.
+  25890, scanning 100 ports. The check and the bind are two steps, so clients started
+  together can pick the same port; `EndpointBinder` retries on the next port after a
+  `BindException` when no port is fixed, and fails with the same message as the check
+  when one is. `DriverBootstrap.start` logs any startup failure and leaves the driver off,
+  so the game keeps running.
 - **Name.** `driver.name` (default: the player name) goes into the MCP server name and
   instructions, so an agent connected to several clients can tell them apart.
 - **Discovery.** `InstanceRegistry` writes `<pid>.json` into

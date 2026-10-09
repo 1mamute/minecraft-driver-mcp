@@ -37,7 +37,12 @@ class McpEndpoint(
             requireToken()
             mcpStatelessStreamableHttp(path = PATH) { buildServer() }
         }
-        started.start(wait = false)
+        try {
+            started.start(wait = false)
+        } catch (e: Exception) {
+            started.stop(gracePeriodMillis = 0, timeoutMillis = STOP_TIMEOUT_MILLIS)
+            throw e
+        }
         engine = started
     }
 
