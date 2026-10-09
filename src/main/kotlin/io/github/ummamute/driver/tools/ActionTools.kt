@@ -90,8 +90,9 @@ internal object ActionTools {
     private fun registerCloseScreen(server: Server) {
         server.addGuardedTool(
             name = "mc_close_screen",
-            description = "Close the open screen and return to the game.",
-            toolAnnotations = action.copy(idempotentHint = true),
+            description = "Close the open screen as Escape does: a sub-screen returns to its parent (Video Settings to Options), " +
+                "a container screen tells the server it closed, and the last screen returns to the game. Returns the state after closing.",
+            toolAnnotations = action,
         ) { _ ->
             onRenderThread({ ClientScreens.close() }) { jsonResult(ClientState.snapshot()) }
         }
