@@ -11,8 +11,9 @@ Minecraft: port selection, the instance registry, and anything else in `server/`
 The `Build` workflow (`.github/workflows/build.yml`) runs `./gradlew build` on Linux and
 Windows for every pull request and every push to `main`, and uploads the mod jar as an
 artifact of the Linux job. It does not launch the game, so it does not replace the runtime
-check below. Changes that only touch documentation skip it; the `Documentation` workflow
-builds the site for those and fails on a dead link.
+check below. Changes that only touch documentation skip the build jobs; the `Documentation`
+workflow builds the site for those and fails on a dead link. `main` requires the `Build result`
+check, which passes when the build passed or was skipped for a documentation-only change.
 
 ## Runtime check
 

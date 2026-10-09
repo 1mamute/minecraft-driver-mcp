@@ -2,30 +2,47 @@ name: Build
 
 # Runs `./gradlew build` (compile, unit tests, lint, jar) on Linux and Windows. It does not launch the game, so the
 # runtime check in docs/contributing/testing.md stays manual. The Linux job uploads the mod jar as an artifact.
-# Documentation-only changes skip it; the Documentation workflow checks those.
+# Documentation-only changes skip the build jobs; the Documentation workflow checks those. The workflow itself always
+# runs so that the `Build result` check, which branch protection requires, reports on every pull request.
 on:
   push:
     branches: [main]
-    paths-ignore: &docs-only
-      - 'docs/**'
-      - '**.md'
-      - 'llms.txt'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/docs.yml'
   pull_request:
-    paths-ignore: *docs-only
   workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+      # A file counts as code unless it matches one of the documentation patterns.
+      - id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!**.md'
+              - '!llms.txt'
+              - '!package.json'
+              - '!package-lock.json'
+              - '!.github/workflows/docs.yml'
+
   build:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -52,3 +69,13 @@ jobs:
             versions/*/build/libs/*.jar
             !versions/*/build/libs/*-sources.jar
           if-no-files-found: error
+
+  # The one check branch protection requires: it passes when the build passed or was skipped for documentation.
+  result:
+    name: Build result
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
