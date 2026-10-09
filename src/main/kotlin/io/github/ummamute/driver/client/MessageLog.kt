@@ -7,18 +7,21 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
 @Serializable
 data class LoggedMessage(val seq: Long, val text: String)
 
-/** Messages after a sequence number, and the sequence number to pass next time. */
+/**
+ * Messages after a sequence number, and the sequence number to pass next time.
+ * [truncated] is true when messages after the requested number were already dropped from the buffer.
+ */
 @Serializable
-data class MessagePage(val messages: List<LoggedMessage>, val latest: Long)
+data class MessagePage(val messages: List<LoggedMessage>, val latest: Long, val truncated: Boolean)
 
-/** Bounded buffer of the chat and system messages this client received. */
+/** Bounded buffer of the chat and system messages this client received. Action-bar text is not recorded. */
 object MessageLog {
     private const val CAPACITY = 200
     private val entries = ArrayDeque<LoggedMessage>()
     private var lastSeq = 0L
 
     fun register() {
-        ClientReceiveMessageEvents.GAME.register { message, _ -> add(message.string) }
+        ClientReceiveMessageEvents.GAME.register { message, overlay -> if (!overlay) add(message.string) }
         ClientReceiveMessageEvents.CHAT.register { message, _, _, _, _ -> add(message.string) }
     }
 
@@ -30,7 +33,10 @@ object MessageLog {
     }
 
     @Synchronized
-    fun since(seq: Long): MessagePage = MessagePage(entries.filter { it.seq > seq }, lastSeq)
+    fun since(seq: Long): MessagePage {
+        val oldest = entries.firstOrNull()?.seq ?: lastSeq + 1
+        return MessagePage(entries.filter { it.seq > seq }, lastSeq, truncated = seq < oldest - 1)
+    }
 
     /** Sequence number of the newest message, or 0 when none arrived yet. */
     @Synchronized

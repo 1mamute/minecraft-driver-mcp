@@ -102,7 +102,8 @@ internal object ObservationTools {
         server.addTool(
             name = "mc_read_messages",
             description = "Read chat and system messages the client received after sequence number `since`. " +
-                "Pass the returned `latest` as `since` next time to read only new messages.",
+                "Pass the returned `latest` as `since` next time to read only new messages. `truncated` is true when older messages were dropped " +
+                "from the 200-message buffer before you read them. Action-bar text is not included.",
             inputSchema = ToolSupport.schema(Property("since", "integer", "Last seen sequence number. Defaults to 0 (everything buffered)")),
             toolAnnotations = readOnly,
         ) { request -> jsonResult(MessageLog.since(ToolSupport.arguments(request).long("since") ?: 0L)) }

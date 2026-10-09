@@ -59,7 +59,9 @@ screen releases all keys and grabbing the mouse resets them, so a key set with `
 
 Chat and system messages arrive on the client's network thread and are appended to
 `MessageLog`, a bounded buffer with a sequence number. `mc_read_messages(since)` returns
-only newer ones, so an agent can read a reply that arrives asynchronously.
+only newer ones, so an agent can read a reply that arrives asynchronously. Action-bar (overlay) text is skipped so it
+cannot evict chat, and the result has `truncated: true` when messages after `since` were already dropped from the
+200-entry buffer.
 
 The game's own log goes the same way: `LogCapture` attaches a Log4j2 appender to the root logger at start
 and detaches it on shutdown. Lines land in `LogBuffer` (1000 lines, messages cut at 2000 characters), and
