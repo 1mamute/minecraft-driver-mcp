@@ -101,7 +101,7 @@ internal object ActionTools {
             name = "mc_set_key",
             description = "Hold or release a movement key. The key stays in that state until it is set again, so release it when done. " +
                 "A held key stays down across screens that open, such as the pause screen, until released. " +
-                "\"inventory\" is one press (down true) that opens or closes the inventory screen.",
+                "\"inventory\" is one press (down true) that opens the inventory, or closes it when a container screen is open.",
             inputSchema = ToolSupport.schema(
                 Property("name", "string", "The key", allowed = ClientInput.keyNames),
                 Property("down", "boolean", "true to hold (default), false to release"),
