@@ -63,12 +63,19 @@ jobs:
       - name: Build the jar
         if: github.ref_type == 'tag'
         run: ./gradlew build
+      - name: Package the gateway
+        if: github.ref_type == 'tag'
+        working-directory: gateway
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm pack
       - name: Publish the release
         if: github.ref_type == 'tag'
         run: |
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
             --notes-file "$RUNNER_TEMP/notes.md" \
-            $(ls versions/*/build/libs/*.jar | grep -v -- '-sources.jar')
+            $(ls versions/*/build/libs/*.jar | grep -v -- '-sources.jar') gateway/*.tgz
           id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
             --jq '.[] | select(.draft and .tag_name == "unreleased") | .id' | head -n 1)
           if [ -n "$id" ]; then

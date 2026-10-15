@@ -1,6 +1,5 @@
 package io.github.ummamute.driver.tools
 
-import io.github.ummamute.driver.catalogue.BuiltInTools
 import io.github.ummamute.driver.server.InstanceRegistry
 import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
 import io.github.ummamute.driver.tools.ToolSupport.jsonResult

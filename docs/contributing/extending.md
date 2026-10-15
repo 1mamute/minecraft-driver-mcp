@@ -8,7 +8,7 @@ Read [Architecture](architecture.md) and [Code style](code-style.md) first. Ever
 
 ## Add a tool
 
-A tool that reads or changes the game needs a definition in `catalogue/`, a method in `client/` that touches Minecraft,
+A tool that reads or changes the game needs a definition in `gateway/catalogue.json`, a method in `client/` that touches Minecraft,
 and a registration in `tools/` that attaches the handler.
 
 ### 1. Put the game access in `client/`
@@ -28,8 +28,9 @@ Keep logic that does not need Minecraft (validation, planning, formatting) in a 
 
 Add a `register<Name>` function to the matching group (`ObservationTools` for read-only tools, `ActionTools` for tools
 that change the game, `ConnectionTools`, `InstanceTools`) and call it from the group's `register`.
-First add the definition to `BuiltInTools` in the shared `catalogue` module. Keep the name, description, input schema
-and all four annotations there, with no references to mod handlers or Minecraft.
+First add the name, description, input schema and all four annotations to
+`gateway/catalogue.json`. Gradle bundles that file into the mod; `tools/BuiltInTools`
+loads it for handler registration. The JSON has no references to handlers or Minecraft.
 
 An illustrative example (`ClientState.health` is hypothetical):
 
@@ -53,7 +54,7 @@ private fun registerHealth(server: Server) {
 ### 3. Test and document
 
 - Unit test the pure parts under `src/test/kotlin`, in the same package, with backtick test names.
-- Test definition changes under `catalogue/src/test/kotlin`; update the compatibility fixture for intentional changes.
+- Run the mod and gateway checks; update `src/test/resources/built-in-tools.json` for intentional contract changes.
 - Run the [runtime check](testing.md#runtime-check): `tools/list` shows the tool with its annotations; call it on the
   title screen and in a world; call it with a missing argument.
 - Update, in the same change: the tool table in `README.md`, [../tools.md](../tools.md), `llms.txt`, and

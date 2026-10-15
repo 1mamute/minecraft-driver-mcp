@@ -1,7 +1,7 @@
 name: Build
 
 # Runs `./gradlew build` (compile, unit tests, lint, jar) on Linux and Windows. It does not launch the game, so the
-# runtime check in docs/contributing/testing.md stays manual. The Linux job uploads the mod jar as an artifact.
+# runtime check in docs/contributing/testing.md stays manual. The Linux job uploads the mod jar and gateway archive.
 # Documentation-only changes skip the build jobs; the Documentation workflow checks those. The workflow itself always
 # runs so that the `Build result` check, which branch protection requires, reports on every pull request.
 on:
@@ -59,8 +59,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-provider: basic
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: gateway/package-lock.json
       - run: ./gradlew build
         shell: bash
+      - run: npm ci --no-audit --no-fund
+        working-directory: gateway
+      - run: npm test
+        working-directory: gateway
+      - run: npm pack
+        working-directory: gateway
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
@@ -68,6 +79,7 @@ jobs:
           path: |
             versions/*/build/libs/*.jar
             !versions/*/build/libs/*-sources.jar
+            gateway/*.tgz
           if-no-files-found: error
 
   # The one check branch protection requires: it passes when the build passed or was skipped for documentation.

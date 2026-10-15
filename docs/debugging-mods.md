@@ -4,10 +4,14 @@ This page shows how to combine the tools to test and debug a Fabric mod. The rec
 edit the mod's code and call the MCP tools, so the whole loop (change, build, launch, drive, read, fix) runs without a
 person clicking through menus.
 
+Set up the [gateway connection](getting-started.md) once before starting the agent.
+It keeps tools available while the game is closed or restarting. With multiple
+clients, include the chosen `instance_name` or `instance_pid` on game calls.
+
 ## The basic loop
 
 1. Build the mod and start a client with it in `run/mods/` next to the driver jar.
-2. `mc_get_state` to confirm the client is up and see the screen.
+2. `mc_wait_for_instance` to wait for its endpoint, then `mc_get_state` to see the screen.
 3. Navigate to the feature under test: `mc_list_widgets` and `mc_click`, `mc_join_world`, `mc_send_chat`.
 4. Trigger the behavior.
 5. Observe: `mc_read_screen_text`, `mc_read_container`, `mc_read_messages`, `mc_screenshot`.

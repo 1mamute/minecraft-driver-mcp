@@ -18,9 +18,9 @@ dependencies {
     detektCli("io.gitlab.arturbosch.detekt:detekt-cli:$detektVersion")
 }
 
-val ktlintSources = listOf("src/**/*.kt", "catalogue/src/**/*.kt", "catalogue/*.kts", "*.kts", "gradle/**/*.kts")
+val ktlintSources = listOf("src/**/*.kt", "*.kts", "gradle/**/*.kts")
 val ktlintBaseline = "config/ktlint/baseline.xml"
-val detektInput = "src/main/kotlin,src/test/kotlin,catalogue/src/main/kotlin,catalogue/src/test/kotlin"
+val detektInput = "src/main/kotlin,src/test/kotlin"
 val detektConfig = "config/detekt/detekt.yml"
 val detektBaseline = "config/detekt/baseline.xml"
 

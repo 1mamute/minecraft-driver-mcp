@@ -1,0 +1,30 @@
+{
+    "name": "minecraft-driver-mcp",
+    "version": "0.2.0",
+    "description": "Stdio MCP gateway for the Minecraft Driver Fabric mod",
+    "license": "MIT",
+    "type": "module",
+    "bin": {
+        "minecraft-driver-mcp": "dist/cli.js"
+    },
+    "files": [
+        "dist",
+        "catalogue.json"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "build": "node check-package.mjs && tsc",
+        "test": "npm run build && node --test test/*.test.mjs",
+        "prepack": "npm run build && node check-package.mjs"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "1.32.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "prettier": "^3.9.10",
+        "typescript": "^5.9.3"
+    }
+}

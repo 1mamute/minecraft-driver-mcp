@@ -1,6 +1,5 @@
 package io.github.ummamute.driver.tools
 
-import io.github.ummamute.driver.catalogue.BuiltInTools
 import io.github.ummamute.driver.client.ClientChat
 import io.github.ummamute.driver.client.ClientInput
 import io.github.ummamute.driver.client.ClientKeyboard

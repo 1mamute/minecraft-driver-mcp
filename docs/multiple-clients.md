@@ -2,6 +2,7 @@
 
 Testing multiplayer needs two or more clients. Each client starts its own MCP server, so the ports must not collide.
 The mod is built for this: nothing is global to the machine except a small registry of running instances.
+Register the [gateway](gateway.md) once to reach all clients through one agent connection.
 
 ## Ports
 
@@ -18,8 +19,11 @@ assistant connected to several clients can tell which one it is talking to. With
 ## Discovery
 
 Each running client writes `~/.minecraft-driver-mcp/instances/<pid>.json` and removes it on exit. Call
-`mc_list_instances` on any client to list the live ones with their URLs, ports, Minecraft versions and game
-directories. A client that was killed leaves its file behind, but it is ignored because its process no longer exists.
+`mc_list_instances` through the gateway to list live clients and their selectors, or
+`mc_wait_for_instance` to wait for one to become ready. Game calls accept `instance_name`
+or `instance_pid`; multiple live clients require explicit selection even if only one
+endpoint is ready. A crashed client leaves its file behind, but it is ignored because
+its process no longer exists.
 
 ## Game directories
 
@@ -27,7 +31,14 @@ Minecraft requires a separate run directory for each client. Give each one its o
 
 ## Stable setups
 
-For setups that are used repeatedly, fix the ports and register each client once:
+Give each client a unique `driver.name` and leave ports automatic. The gateway
+discovers the selected client's endpoint on each call, so name-based selection
+continues working after a restart. PIDs identify a single process and change on restart.
+
+## Direct HTTP alternative
+
+For specialized setups, extension tools or endpoint debugging, connect directly to
+each client's HTTP endpoint. Fixed ports can be useful for these registrations:
 
 ```bash
 claude mcp add --transport http alice http://127.0.0.1:25901/mcp

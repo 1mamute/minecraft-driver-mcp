@@ -6,7 +6,8 @@
 **Let an AI assistant drive a real Minecraft client, so it can test and debug your Fabric mod.**
 
 Minecraft Driver MCP is a Fabric client mod that starts a [Model Context Protocol](https://modelcontextprotocol.io)
-server inside the running game. An assistant connects to it and can read the open screen, click buttons, type, walk,
+server inside the running game. Coding agents connect through the local stdio gateway, which stays available before
+Minecraft starts and across game restarts. An assistant can read the open screen, click buttons, type, walk,
 chat, open chests, read the game log and take screenshots, all through the game's own APIs.
 
 ## Why it exists
@@ -31,6 +32,7 @@ It is a development tool, not a gameplay bot.
 - Read the game's log with level, logger and exception frames, filtered by level and text.
 - Join a world or a server, leave it, list nearby entities, take a screenshot.
 - Run several clients at once, each with its own port, for multiplayer tests.
+- Register the local gateway once in Claude Code, Codex or another stdio MCP host; discover clients as they start.
 - Let other mods add their own tools.
 
 Everything runs on the render thread through screen and player APIs. The operating system's mouse and keyboard are never
@@ -40,24 +42,26 @@ used, so the window can stay behind other windows. The server binds to `127.0.0.
 
 1. Put the jar for your Minecraft version in the client's `mods/` folder, next to Fabric API. Kotlin and the server
    libraries are bundled. Requires Fabric Loader 0.19.5+ and Java 21+.
-2. Start the client. The log prints the endpoint:
-
-   ```text
-   Minecraft Driver MCP "Player123" listening on http://127.0.0.1:25890/mcp
-   ```
-
-3. Point an MCP client at it:
+2. Install Node.js 22 or later and use a gateway release matching the mod. For source builds, follow
+   [Build and install](docs/gateway.md#build-and-install) to install the local archive.
+3. Register the gateway once in your coding agent (examples use release `0.2.0`):
 
    ```bash
-   claude mcp add --transport http minecraft http://127.0.0.1:25890/mcp
+   claude mcp add --transport stdio minecraft-driver -- npx -y minecraft-driver-mcp@0.2.0
+   # Or, for Codex:
+   codex mcp add minecraft-driver -- npx -y minecraft-driver-mcp@0.2.0
    ```
 
-4. Ask the assistant to call `mc_get_state`, then describe what to test.
+4. Start an agent session, then launch Minecraft. Ask the assistant to call `mc_list_instances` or
+   `mc_wait_for_instance`, followed by `mc_get_state`, and describe what to test. Tools are available even when
+   the game has not started; game calls work once a client is ready.
 
 For a mod's development environment, copy the jar into `run/mods/` and run `gradlew runClient`. Do not add it with
 `modLocalRuntime(files(...))`: the client crashes with `NoClassDefFoundError: kotlin/...`. A fresh game directory opens
 the accessibility screen first; close it once with `mc_click` or set `onboardAccessibility:false` in `options.txt`.
 See [Installation](docs/installation.md) and [Getting started](docs/getting-started.md).
+Direct HTTP access remains available for specialized setups, extension tools and endpoint debugging; see
+[Direct HTTP alternative](docs/getting-started.md#direct-http-alternative).
 
 ## Tools
 
@@ -85,16 +89,29 @@ See [Installation](docs/installation.md) and [Getting started](docs/getting-star
 | `mc_wait_for` | Block until a message or screen appears, or time out |
 | `mc_list_entities` | Entities within 64 blocks, nearest first |
 | `mc_screenshot` | PNG of the game framebuffer |
-| `mc_list_instances` | Every running client with this mod |
+| `mc_list_instances` | Every running client with this mod; the gateway adds health and auth/version status |
+| `mc_wait_for_instance` | Wait for a selected gateway endpoint |
 
 Arguments and results are in the [tool reference](docs/tools.md). Other mods add tools named
-`<modid>_<verb>_<noun>` through the [extension API](docs/extension-api.md).
+`<modid>_<verb>_<noun>` through the [extension API](docs/extension-api.md); use direct HTTP to access those tools.
 
 ## Several clients
 
-A client takes the first free port from 25890, so two clients get 25890 and 25891. Fix a port with `-Ddriver.port`, name
-an instance with `-Ddriver.name`, and find the others with `mc_list_instances`. See
+The gateway discovers each client's chosen port automatically. Give clients unique names with `-Ddriver.name`,
+list them with `mc_list_instances`, and select one per call with `instance_name` or `instance_pid`. See
 [Running several clients](docs/multiple-clients.md).
+
+## Gateway for coding agents
+
+The Node.js gateway is the recommended connection method for coding agents. It exposes
+tools before Minecraft starts and gives one stdio MCP connection access to several
+clients. Build it from the repository with Node.js 22 or later, configure the shared
+instance registry, and register it with Claude Code or Codex. Each call selects a
+client by its stable instance name or current process ID. It uses the shared tool
+catalogue and does not launch Minecraft. The gateway requires a matching mod release;
+the Minecraft jar's `+<minecraft-version>` suffix is ignored when matching versions.
+See [Local gateway](docs/gateway.md) for npm installation, local archives,
+configuration and host setup details.
 
 ## Configuration
 
@@ -109,6 +126,21 @@ an instance with `-Ddriver.name`, and find the others with `mc_list_instances`. 
 
 Details are in [Configuration](docs/configuration.md).
 
+The gateway reads `~/.minecraft-driver-mcp/gateway.json` (override with
+`--config <path>`):
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `registryDirectory` | mod registry directory | Shared directory where clients register |
+| `tokens` | `{}` | Unique instance name mapped to an environment variable name containing its token |
+| `connectTimeoutMs` | `5000` | Connection timeout in milliseconds |
+| `requestTimeoutMs` | `70000` | Forwarded request timeout in milliseconds |
+
+`mc_list_instances` reports basic registry entries; through the gateway,
+`check_ready:true` adds health and auth/version details. Game calls accept optional
+`instance_name` and `instance_pid`; multiple live clients require explicit selection,
+even if only one endpoint is ready. See
+[Local gateway](docs/gateway.md).
 <!-- #endregion site-top -->
 
 ## Documentation
@@ -127,19 +159,18 @@ and lives in [docs/](docs/README.md):
 JDK 21 and the Gradle wrapper. [Stonecutter](https://stonecutter.kikugie.dev) builds one jar per Minecraft version from
 one source tree.
 
-The Minecraft-independent `catalogue` module holds the built-in tool definitions for reuse by other JVM applications.
-It is included in the mod jar; installing the mod still requires only that one file.
+Built-in tool definitions live in `gateway/catalogue.json`. Gradle bundles that file
+into the mod jar; building the mod requires JDK 21 and does not require Node.js.
 
 ```bash
 ./gradlew build          # jars in versions/<mc>/build/libs
 ./gradlew lint           # ktlint and detekt
-./gradlew :catalogue:build # shared definitions and standalone tests, without Minecraft on their classpath
 ./gradlew :1.21.1:runClient
 ```
 
 ## Status
 
-Pre-release (0.1.0) for Minecraft 1.21.1. The tools above are checked against a running client, both in a development
+Version 0.2.0 targets Minecraft 1.21.1. The tools above are checked against a running client, both in a development
 environment and in a regular launcher-managed install with other mods, before each change merges. Other Minecraft
 versions and operating systems other than Windows have not been tested, and tool names and schemas can change between
 minor versions. Limits and unverified areas are listed in [Known issues](docs/known-issues.md).

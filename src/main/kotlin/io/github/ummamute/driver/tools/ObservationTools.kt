@@ -1,7 +1,5 @@
 package io.github.ummamute.driver.tools
 
-import io.github.ummamute.driver.catalogue.BuiltInTools
-import io.github.ummamute.driver.catalogue.ToolContract
 import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientState
@@ -27,8 +25,8 @@ import java.util.Base64
 
 /** Tools that read the client without changing it. */
 internal object ObservationTools {
-    private const val DEFAULT_WAIT_MILLIS = ToolContract.DEFAULT_WAIT_MILLIS
-    private const val MAX_WAIT_MILLIS = ToolContract.MAX_WAIT_MILLIS
+    private const val DEFAULT_WAIT_MILLIS = 10_000L
+    private const val MAX_WAIT_MILLIS = 60_000L
     private const val DEFAULT_LOG_LEVEL = "INFO"
 
     fun register(server: Server) {

@@ -9,6 +9,12 @@ Limits a user can run into, with workarounds. Internal verification notes are in
 - The mod is a client mod for development and testing. It is not meant for gameplay automation on public servers.
 - The project is at 0.x. Tool names, schemas and the extension API can change in any minor version.
 
+## Matching gateway and mod releases
+
+The gateway requires a matching mod release. If testing an unreleased source build,
+use a locally packed gateway archive. See [Local gateway](gateway.md) for installation and
+[gateway verification status](contributing/known-issues.md#gateway) for checks performed.
+
 ## modLocalRuntime crashes the client
 
 Adding the jar to a mod's development run with `modLocalRuntime(files(...))` crashes the client with

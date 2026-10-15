@@ -7,9 +7,9 @@ Each tool carries the MCP annotations `readOnlyHint`, `destructiveHint`, `idempo
 client can decide which calls need confirmation. Results are JSON text, except `mc_screenshot`, which returns a PNG
 image. A failure is an `isError` result whose message says what to do next.
 
-Built-in definitions come from a shared Minecraft-independent catalogue. JVM applications can use those definitions
-without starting a game; executing these tools still requires a running client. See the
-[module boundary](contributing/architecture.md#shared-tool-catalogue).
+Built-in definitions live in `gateway/catalogue.json` and are bundled into the mod.
+The gateway can advertise them before a game starts; execution requires a running
+client. See [Shared tool catalogue](contributing/architecture.md#shared-tool-catalogue).
 
 Tools that use the screen, the player or the level run on the game's render thread. They fail with a clear message
 when the game is not in the required state, for example when no world is joined.
@@ -28,7 +28,8 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
 | [`mc_list_entities`](#mc_list_entities) | read | Entities near the player |
 | [`mc_screenshot`](#mc_screenshot) | read | PNG of the game framebuffer |
-| [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod |
+| [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
+| [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
 | [`mc_click`](#mc_click) | act | Click a widget or a point |
 | [`mc_click_slot`](#mc_click_slot) | act | Click a container slot |
 | [`mc_close_screen`](#mc_close_screen) | act | Close the open screen |
@@ -151,6 +152,39 @@ others. Prefer the text tools when they can answer the question.
 
 Every running client with this mod on the machine: name, MCP URL, port, Minecraft version, game directory and whether a
 token is required. See [Several clients](multiple-clients.md).
+
+## Gateway discovery tools
+
+The recommended stdio gateway provides local discovery and waiting. The mod's direct
+HTTP endpoint has its own `mc_list_instances`; `mc_wait_for_instance` is gateway-only.
+The gateway also adds `instance_name` or `instance_pid` routing fields to every
+forwarded game tool; those fields are removed before the call reaches the mod. See
+[Local gateway](gateway.md).
+
+### Gateway: mc_list_instances
+
+The gateway replaces the mod's `mc_list_instances` with a local registry view.
+`check_ready:true` adds endpoint health and available authentication and version
+status. This is discovery only; it does not launch clients.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `check_ready` | boolean | Add endpoint health and auth/version status when `true` |
+
+### mc_wait_for_instance
+
+Wait for a selected registry entry to reach the requested endpoint readiness.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `instance_name` | string | Stable configured instance name |
+| `instance_pid` | integer | Current process ID |
+| `ready` | boolean | Wait for readiness; defaults to `true`. `false` returns discovery data without waiting |
+| `timeout_ms` | integer | Wait duration; defaults to 10000 ms and is capped at 60000 ms |
+
+Select with the name or PID. If both selectors are given, they must identify the same
+record. The result returns the selector used. Readiness only checks the gateway
+endpoint; use the mod's `mc_wait_for` for an in-game screen or message.
 
 ## Action tools
 

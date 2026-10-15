@@ -41,6 +41,7 @@ export default defineConfig({
           { text: 'Introduction', link: '/introduction' },
           { text: 'Installation', link: '/installation' },
           { text: 'Getting started', link: '/getting-started' },
+          { text: 'Local gateway', link: '/gateway' },
           { text: 'Debugging mods', link: '/debugging-mods' },
         ],
       },

@@ -47,9 +47,6 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
 
-    implementation(project(":catalogue"))
-    include(project(":catalogue"))
-
     bundled("io.modelcontextprotocol:kotlin-sdk-server:$mcpSdkVersion")
     bundled("io.ktor:ktor-server-cio:$ktorVersion")
     bundled("org.jetbrains.kotlin:kotlin-stdlib:${property("kotlin_version")}")
@@ -95,6 +92,10 @@ tasks.matching { it.name == "runClient" }.configureEach {
 tasks.processResources {
     inputs.property("version", project.version)
     inputs.property("minecraft", minecraftVersion)
+
+    from(rootProject.file("gateway/catalogue.json")) {
+        into("minecraft-driver-mcp")
+    }
 
     filesMatching("fabric.mod.json") {
         expand("version" to project.version, "minecraft" to minecraftVersion, "loader" to loaderVersion)

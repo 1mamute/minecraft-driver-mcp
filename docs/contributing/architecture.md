@@ -3,15 +3,14 @@
 ## Layers
 
 ```text
-agent ──HTTP──▶ server/McpEndpoint ──▶ tools/*Tools ──▶ client/Client* ──▶ Minecraft
-                  (Ktor + MCP SDK)     (handlers, JSON)   (render thread)
+agent --stdio--> gateway --HTTP--> server/McpEndpoint --> tools/*Tools --> client/Client* --> Minecraft
 ```
 
 - `server/` knows Ktor, the MCP SDK, ports and the instance registry. It does not know
   Minecraft.
-- `catalogue/` is a plain Kotlin/JVM module containing the built-in names, descriptions,
-  input schemas and all four MCP annotations. It depends on the MCP SDK core, with no
-  Minecraft, Fabric, mod handlers or instance registry on its classpath.
+- `gateway/catalogue.json` holds the built-in names, descriptions, input schemas and
+  all four MCP annotations. The TypeScript gateway reads it directly; Gradle bundles
+  the same file into the mod as a resource.
 - `tools/` attaches handlers to catalogue definitions and builds result JSON. It calls
   `client/` and does not import `net.minecraft`.
 - `client/` is the only code that touches the game. Each object owns one concern.
@@ -34,16 +33,61 @@ the mixin), not the tools or the server.
 
 ### Shared tool catalogue
 
-JVM consumers use `project(":catalogue")` and read `BuiltInTools.all` or look up a
-definition by name. Each definition is an SDK `Tool`, so it can be advertised before a
-game starts. Loading definitions does not initialize handlers or game state. The mod
-passes those definitions to `ToolSupport.addGuardedTool` with its existing handlers;
-argument parsing, render-thread dispatch and error handling stay in the mod.
+`gateway/catalogue.json` is the authoritative built-in catalogue, maintained inside
+the gateway package. It contains a release version and MCP tool definitions. It has
+no separate project, build task or distribution artifact.
 
-Input enums and limits that affect schemas live with the catalogue and are reused by
-the handlers. Dynamic extension definitions are supplied by running clients through
-the extension API; they are not part of the built-in catalogue. This module provides
-definitions only; gateway routing and Maven publication are separate work.
+Gradle's `processResources` copies it to `minecraft-driver-mcp/catalogue.json` inside
+the mod jar. `tools/BuiltInTools` deserializes that resource into SDK `Tool` values
+and attaches the existing handlers through `ToolSupport.addGuardedTool`. No gateway
+process or Node.js installation is needed to build or run the mod.
+
+Handler limits and supported argument values remain with the game handlers. Tests
+compare the JSON enums with the game handlers and preserve the direct endpoint's
+definitions through a compatibility fixture. Dynamic extension definitions come
+from running clients and stay outside the built-in catalogue.
+
+## Local gateway
+
+The Node.js gateway in `gateway/` is the recommended connection method for coding
+agents. It starts as an MCP stdio server with the agent session, advertises built-in
+tools before Minecraft starts, then forwards calls to the
+existing per-client HTTP `/mcp` endpoints bound to `127.0.0.1`. It reads the built-in
+definitions from its own `catalogue.json`, which is also bundled into the mod. This
+keeps names, schemas and annotations in one source of truth.
+
+Direct HTTP access to the mod remains available for specialized setups, extension
+tools and endpoint debugging.
+
+The gateway replaces `mc_list_instances` with a local registry view; the optional
+`check_ready:true` adds endpoint health and auth/version metadata. It adds
+`mc_wait_for_instance` to wait for a selected registry record to become ready.
+Ordinary tool calls take optional `instance_name` or
+`instance_pid` routing fields; when both are supplied they must refer to the same
+record. The gateway removes those routing fields before forwarding the original tool
+arguments. It resolves the selected endpoint once and never retries a game action on
+another client. Registry names are intended to remain stable across restarts; process
+PIDs are temporary. Without a selector there must be exactly one live registry record;
+multiple live records require explicit selection, including when only one endpoint
+is ready. Multiple records with the same name must be selected by PID. Token
+mappings have unique instance names, so duplicate-name records cannot be authenticated
+by name. The gateway does not start or stop Minecraft clients and does not
+load tools added dynamically by extension mods.
+
+The config file defaults to `~/.minecraft-driver-mcp/gateway.json`, with `--config`
+to select another path. If `registryDirectory` is omitted, the gateway uses the mod's
+default registry directory. Other configured paths are resolved relative to the config
+file. Its `tokens` object maps unique instance names to environment variable names;
+token values stay in the process environment and are not stored in this file.
+Connect and request timeouts default to 5000 and 70000 milliseconds. Calls are not
+retried; canceling an MCP request does not undo an action already sent to the game.
+Each operation opens a fresh upstream MCP client, initializes and checks the mod
+release, forwards at most one tool call, then closes the transport. No notification
+stream or persistent game selection is kept. The connection deadline covers the
+whole handshake, and the request deadline includes that handshake. Host disconnects
+cancel outstanding work.
+Both processes are local tools with access to the player's game, so their stdio host
+and the local machine must be trusted.
 
 ## Lifecycle
 
@@ -136,15 +180,14 @@ machine except the registry:
 
 ## Packaging
 
-Everything ships in one jar and does not depend on Fabric Language Kotlin:
+The mod ships in one jar and does not depend on Fabric Language Kotlin:
 
 - The `bundled` configuration holds the Kotlin stdlib, the MCP SDK and Ktor. The
   `afterEvaluate` block in `build.gradle.kts` resolves it and adds each module to Loom's
   `include`, which nests the jars (jar-in-jar). Fabric Loader loads nested jars itself.
 - slf4j and the JetBrains annotations are not bundled; Minecraft provides them.
 - `implementation` extends `bundled`, so the code compiles against the same libraries.
-- The `catalogue` project is an explicit `implementation` and Loom `include` dependency.
-  Its jar is nested alongside the libraries, without adding a second installation file.
+- `gateway/catalogue.json` is copied into the mod as a resource, with no additional jar.
 
 A new library goes into `bundled`. Check the jar size and that it does not clash with a
 library Minecraft or another mod already provides.
@@ -160,9 +203,8 @@ Stonecutter builds one jar per Minecraft version from one source tree.
 - Version-specific source is marked with Stonecutter comments (`//? if >=1.21.5 {`).
   Past a few lines, move the code into one class per version instead.
 - The root project must not apply `java` or `base`; Stonecutter rejects a buildable root.
-- `catalogue/build.gradle.kts` builds the shared definitions independently of the
-  versioned mod sources. `./gradlew :catalogue:build` compiles and tests them without
-  Minecraft on their classpath; `./gradlew build` builds both the catalogue and mods.
-  Root lint also covers the catalogue sources and build script.
+- `gateway/` uses Node.js 22 or later and is built and tested separately with
+  `npm --prefix gateway test`. The npm package is named `minecraft-driver-mcp`;
+  publishing a release is a separate step.
 
 See [dependencies.md](dependencies.md) for how to move versions forward.

@@ -43,6 +43,20 @@ All checks below were made on Minecraft 1.21.1, in a development environment unl
 | Bundled libraries | Ktor or kotlinx bundled by other mods. | Run next to such mods and watch for `NoSuchMethodError` and duplicate-class warnings. |
 | Held-use items | A shield and a potion with `hold_ticks`. | Try both. |
 
+## Gateway
+
+Claude Code and Codex have each passed an uninterrupted session started without a
+game: tools were available immediately, waiting discovered two clients with separate
+bearer tokens, each client answered state calls, unqualified calls were ambiguous,
+and restarting one client preserved name-based routing while its old PID failed.
+The gateway's automated checks also cover release mismatch, unsafe endpoints,
+cancellation, deadlines, and forwarding failures without retries.
+Real-client checks also covered image forwarding, an actionable bad-argument result,
+loading an isolated singleplayer save, reading state and applying a look action.
+
+The npm package is not published. A registry installation through `npx` remains
+unverified; use the local archive and the [manual gateway sequence](testing.md#gateway-checks).
+
 ## Design limits
 
 - **Stateless HTTP.** `mcpStatelessStreamableHttp` keeps no session, so the server cannot push notifications.

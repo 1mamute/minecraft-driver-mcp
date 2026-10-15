@@ -6,6 +6,12 @@ Minecraft Driver MCP is a Fabric **client** mod. When the Minecraft client start
 local machine. Any MCP-capable AI assistant can connect to it and operate the running game: look at the open screen,
 click buttons, type, walk, chat, open containers, read the game log and take screenshots.
 
+For coding agents, connect through the [local gateway](gateway.md). Register it once
+to make tools available before Minecraft starts and keep the same connection across
+game restarts. Direct HTTP access is an
+[alternative](getting-started.md#direct-http-alternative) for specialized setups,
+extension tools and endpoint debugging.
+
 It is a development tool for mod authors and testers. It is not a gameplay bot and it is not meant for use on public
 servers.
 

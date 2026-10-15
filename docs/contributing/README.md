@@ -11,7 +11,7 @@ MCP Kotlin SDK) inside the Minecraft client. The source is in three layers, and 
 | Package | Role | May import Minecraft |
 | --- | --- | --- |
 | `client/` | One object per concern of the game client; every call runs on the render thread | Yes |
-| `tools/` | MCP tool definitions: names, schemas, annotations, result JSON | No |
+| `tools/` | MCP handlers, bundled definition loading and result JSON | No |
 | `server/` | Ktor and MCP SDK endpoint, port choice, instance registry | No |
 | `api/` | Public, Minecraft-free API for other mods | No |
 
@@ -22,7 +22,7 @@ Minecraft, supporting a new Minecraft version changes those and nothing else.
 
 | Page | Contents |
 | --- | --- |
-| [Architecture](architecture.md) | Layers, lifecycle, threading, transport, several clients, packaging, the build |
+| [Architecture](architecture.md) | Layers, lifecycle, threading, transport, several clients, gateway, packaging, the build |
 | [Extending the mod](extending.md) | Step-by-step: add a tool, add a client concern, add a mixin, support a Minecraft version |
 | [Testing](testing.md) | Unit tests, the runtime check, driving a client by hand, debugging |
 | [Code style](code-style.md) | Naming, readability limits, tool conventions, linting |
@@ -35,9 +35,9 @@ Requires JDK 21 and the Gradle wrapper.
 
 ```bash
 ./gradlew build                  # compile, unit tests, lint, jar in versions/<mc>/build/libs
-./gradlew :catalogue:build       # Minecraft-independent definitions and their tests
 ./gradlew lint                   # ktlint and detekt
 ./gradlew :1.21.1:runClient      # start a client with the mod and the MCP endpoint
+npm --prefix gateway test       # compile and test the stdio gateway
 ```
 
 Then connect an MCP client to the endpoint printed in the log and call `tools/list`.
@@ -95,5 +95,11 @@ replaced, so the intro and known limits stay hand-written.
 - `npm run changelog` updates `docs/release-notes.md`; `node scripts/changelog.mjs --check` fails when it is stale.
 - The `Release` workflow does not commit to `main`. On every push to `main` it refreshes a draft release tagged
   `unreleased` with the same notes. Pushing a `v<mod_version>` tag builds the jar and publishes a release with those
-  notes and the jar attached, then deletes the draft.
-- To release: bump `mod_version` in a pull request, run `npm run changelog`, review the file, merge, then tag `main`.
+  notes, mod jars and the gateway npm archive attached, then deletes the draft.
+- To release: bump `mod_version` in a pull request, align `gateway/package.json` and
+  its lockfile and `gateway/catalogue.json` with that version, run `npm run changelog`, review,
+  merge, then tag `main`. Gateway builds reject a package/catalogue version mismatch.
+- npm publication is separate from the GitHub release. With the intended publisher
+  authenticated (`npm whoami`), publish the reviewed gateway archive using
+  `npm publish <archive.tgz> --access public`. Verify the matching npm release before
+  recommending the registry-based `npx` command.

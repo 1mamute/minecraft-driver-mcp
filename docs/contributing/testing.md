@@ -6,10 +6,11 @@
 Minecraft: port selection, the instance registry, and anything else in `server/` and
 `tools/` that can run on its own. Code in `client/` needs the running game.
 
-`./gradlew :catalogue:build` runs the shared catalogue tests without Minecraft or the
-mod handlers on the test classpath. Its compatibility fixture records the built-in
-definitions before extraction. Intentional contract changes update that fixture and
-the tool documentation together. Root lint includes `catalogue/src/`.
+The mod tests load the bundled `gateway/catalogue.json`, compare it with the
+compatibility fixture under `src/test/resources`, check that each definition has a
+handler, and compare declared enums with supported game values. Intentional contract
+changes update the fixture and tool documentation together. Gateway builds validate
+the JSON schemas, annotations, unique names and matching release versions.
 
 ## Continuous integration
 
@@ -19,6 +20,30 @@ artifact of the Linux job. It does not launch the game, so it does not replace t
 check below. Changes that only touch documentation skip the build jobs; the `Documentation`
 workflow builds the site for those and fails on a dead link. `main` requires the `Build result`
 check, which passes when the build passed or was skipped for a documentation-only change.
+
+## Gateway checks
+
+The gateway uses Node.js 22 or later. Run its TypeScript build and unit tests with:
+
+```bash
+npm --prefix gateway test
+```
+
+For a manual host check, in `gateway/` run `npm ci`, `npm test` and `npm pack`, then
+install the local package into Claude Code and Codex using their stdio MCP
+configuration. Start each host session before either game and verify tools are
+available without manually toggling `/mcp`. Then start two modded clients with
+distinct names and tokens. Check
+`tools/list`, calls routed by each name and PID, the mismatch and unavailable-endpoint
+errors, readiness timeout, token selection, and restart behavior. After restarting a
+client, verify that its stable name still selects it while its former PID no longer
+does. Verify the mod's `mc_wait_for` separately inside each world;
+`mc_wait_for_instance` checks endpoint readiness only.
+
+The no-game startup, two-client token routing and restart checks passed in both hosts. See
+[Verification status](known-issues.md) for gaps and current evidence. The docs do not
+claim an npm publication; use the locally packed artifact until a matching release is
+published.
 
 ## Runtime check
 

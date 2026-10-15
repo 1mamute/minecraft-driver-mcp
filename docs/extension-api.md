@@ -4,13 +4,17 @@ A Fabric mod can add its own MCP tools to the endpoint of the running client, fo
 
 **Stability.** The project is at 0.x. The API can change in any MINOR release; a change is flagged in the release notes and the commit body.
 
+To use extension tools, connect to the client's
+[direct HTTP endpoint](getting-started.md#direct-http-alternative). The recommended
+gateway currently forwards built-in tools only.
+
 ## Add the dependency
 
 Compile against the driver jar and keep it out of your own jar. In a Loom project:
 
 ```kotlin
 dependencies {
-    modCompileOnly(files("libs/minecraft-driver-mcp-0.1.0+1.21.1.jar"))
+    modCompileOnly(files("libs/minecraft-driver-mcp-0.2.0+1.21.1.jar"))
 }
 ```
 

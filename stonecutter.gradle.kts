@@ -1,7 +1,5 @@
 plugins {
     id("dev.kikugie.stonecutter")
-    kotlin("jvm") apply false
-    kotlin("plugin.serialization") apply false
 }
 
 stonecutter active "1.21.1"

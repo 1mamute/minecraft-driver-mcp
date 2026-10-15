@@ -14,6 +14,8 @@ each step.
   thin hook that calls a Kotlin object.
 - Do not depend on Fabric Language Kotlin. Kotlin and the MCP libraries are bundled in
   the jar (see [architecture.md](architecture.md#packaging)).
+- The local gateway is TypeScript under `gateway/`; it is a separate Node.js
+  stdio process and does not add TypeScript or Node.js to the game mod.
 
 ## Packages and naming
 
@@ -118,8 +120,9 @@ above.
 
 - Annotate every tool: `readOnlyHint`, `destructiveHint`, `idempotentHint`,
   `openWorldHint`. Observation tools are read-only and idempotent.
-- Keep built-in names, descriptions, schemas and annotations in the shared `catalogue/`
-  module. Attach handlers in `tools/` with the corresponding `BuiltInTools` definition.
+- Keep built-in names, descriptions, schemas and annotations in `gateway/catalogue.json`.
+  Gradle bundles it into the mod. Attach handlers in `tools/` with the corresponding
+  `BuiltInTools` definition.
 - Return JSON text built from `@Serializable` data classes, not hand-built strings.
 - Prefer text over images. A screenshot is for when text cannot answer the question.
 - Report a failure as an `isError` result with a message that says what to do next

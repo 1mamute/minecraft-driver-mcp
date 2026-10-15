@@ -5,9 +5,13 @@
 - Minecraft Java Edition 1.21.1 with [Fabric Loader](https://fabricmc.net/use/) 0.19.5 or newer.
 - [Fabric API](https://modrinth.com/mod/fabric-api) for 1.21.1.
 - Java 21 or newer.
-- An MCP client that supports the Streamable HTTP transport, for example Claude Code or the MCP Inspector.
+- Node.js 22 or later for the gateway.
+- A coding agent with stdio MCP support, such as Claude Code or Codex.
 
-Kotlin, the MCP SDK and the HTTP server are bundled in the jar. Nothing else needs to be installed.
+Kotlin, the MCP SDK and the HTTP server are bundled in the mod jar. Install the
+matching gateway as described in [Build and install](gateway.md#build-and-install)
+and [connect the coding agent](getting-started.md). Direct HTTP access is an
+[alternative](getting-started.md#direct-http-alternative) for specialized setups and debugging.
 
 ## Install in a normal client
 
@@ -21,7 +25,8 @@ When the client starts, the log prints the endpoint:
 Minecraft Driver MCP "Player123" listening on http://127.0.0.1:25890/mcp
 ```
 
-Use that URL to [connect an assistant](getting-started.md).
+The gateway discovers this endpoint automatically. Register the gateway once using
+[Getting started](getting-started.md); no per-client URL registration is needed.
 
 ## Install in a mod's development environment
 
@@ -64,8 +69,7 @@ Requires JDK 21 and the Gradle wrapper.
 ```
 
 The jar is written to `versions/<minecraft version>/build/libs/`. Use the jar without the `-sources` suffix.
-The shared tool catalogue is already nested inside it; the jar under `catalogue/build/libs/` is for JVM consumers of
-the definitions and is not installed separately in the game.
+The tool catalogue is bundled as a JSON resource inside the mod jar; no additional file is needed.
 
 ## Verify the installation
 

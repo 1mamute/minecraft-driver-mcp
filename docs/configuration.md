@@ -1,5 +1,8 @@
 # Configuration
 
+Use the [gateway](gateway.md) for coding-agent connections; it discovers game ports
+automatically. Its settings are described under [Gateway configuration](#gateway-configuration).
+
 The mod is configured with Java system properties, passed to the game as JVM arguments (`-Ddriver.port=25901`). In a
 Gradle development environment, add them to the `runClient` JVM arguments. Launchers differ in whether they pass `-D`
 arguments through; see [Known issues](known-issues.md#launchers-and-jvm-arguments).
@@ -21,7 +24,8 @@ By default a client takes the first free port from 25890, scanning 100 ports, so
 when they start at the same moment.
 
 `driver.port` fixes the port. If it is taken, the mod logs an error and leaves the driver off; the game still starts.
-Use a fixed port when an MCP client is configured to point at it.
+Use a fixed port for a direct HTTP client configured to point at it. The gateway
+discovers automatic ports through the registry.
 
 ### Host
 
@@ -38,6 +42,10 @@ tell them apart. It defaults to the player name.
 
 When `driver.token` is set, every request must carry `Authorization: Bearer <token>`. Requests without it, or with a
 wrong token, get `401` with `WWW-Authenticate: Bearer`, and no tool runs. An empty value leaves the endpoint open.
+
+For gateway connections, map the instance name to a token environment variable in
+[gateway configuration](gateway.md#configure-instances-and-tokens). Direct HTTP
+clients supply the header themselves.
 
 The token is never logged and never written to the registry; the registry only records `authRequired`. A `-D` argument
 is visible to other local users in the process list, so the token protects against other web pages and other
@@ -59,3 +67,21 @@ changed. Without the flag, vanilla behavior stays, and `mc_get_state` reports `w
 
 For a driven client, `options.txt` should contain `onboardAccessibility:false` and, unless `driver.unfocused` is used,
 `pauseOnLostFocus:false`. See [Installation](installation.md#options-for-a-driven-client).
+
+## Gateway configuration
+
+The gateway is the recommended connection method for coding agents. It routes tools
+from one stdio MCP connection to several modded clients. It uses the same registry
+directory as the mod and a separate configuration
+file at `~/.minecraft-driver-mcp/gateway.json` by default; `--config <path>` overrides
+the file. The `tokens` object maps unique instance names to environment variable
+names containing bearer token values. It does not store token values in the config.
+
+| Gateway setting | Default | Meaning |
+| --- | --- | --- |
+| `registryDirectory` | `~/.minecraft-driver-mcp/instances` | Registry directory used by the clients |
+| `tokens` | `{}` | Instance-name to token environment-variable-name mapping |
+| `connectTimeoutMs` | `5000` | Timeout for establishing a client connection |
+| `requestTimeoutMs` | `70000` | Timeout for a forwarded tool request |
+
+See [Local gateway](gateway.md) for installation, host registration and routing.

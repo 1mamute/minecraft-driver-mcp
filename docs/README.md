@@ -15,7 +15,8 @@ Read these to install the mod and drive a game with an assistant.
 | --- | --- |
 | [Introduction](introduction.md) | What the mod is, why it exists, what it can do and what it is not |
 | [Installation](installation.md) | Requirements, installing the jar, using it in a mod's development environment |
-| [Getting started](getting-started.md) | Connecting an assistant, first calls, the first-launch screen |
+| [Getting started](getting-started.md) | Recommended gateway setup, first calls, direct HTTP alternative |
+| [Local gateway](gateway.md) | Installation, registration, instance selection and authentication for coding agents |
 | [Debugging mods with an assistant](debugging-mods.md) | Workflows for testing screens, commands, containers and crashes |
 | [Tool reference](tools.md) | Every MCP tool with its arguments and results |
 | [Configuration](configuration.md) | System properties, ports, names, the optional access token |
@@ -31,6 +32,7 @@ The [contributor guide](contributing/README.md) covers how the mod is built and 
 | Page | Contents |
 | --- | --- |
 | [Architecture](contributing/architecture.md) | Layers, threading, transport, several clients, packaging |
+| [Gateway architecture](contributing/architecture.md#local-gateway) | Shared catalogue, routing and lifecycle |
 | [Extending the mod](contributing/extending.md) | Adding a tool, a client concern or a mixin; supporting a Minecraft version |
 | [Testing](contributing/testing.md) | Unit tests, the runtime check, driving a client by hand |
 | [Code style](contributing/code-style.md) | Naming, readability limits, tool conventions, linting |
