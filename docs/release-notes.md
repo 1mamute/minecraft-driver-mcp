@@ -4,6 +4,26 @@ Versions follow [Semantic Versioning](https://semver.org). While the project is 
 properties, the instance registry format and the extension API can change in any minor version, and each change is
 listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version>.jar`.
 
+## 0.2.0
+
+<!-- changelog:0.2.0 -->
+### Features
+
+- Add always-available multi-client MCP gateway
+
+### Refactoring
+
+- Extract Minecraft-independent tool catalogue
+
+### Documentation
+
+- Record gateway release notes
+
+### Chores
+
+- Add issues directory to .gitignore
+<!-- /changelog:0.2.0 -->
+
 ## 0.1.0
 
 First release, for Minecraft 1.21.1 with Fabric Loader 0.19.5 or newer, Fabric API and Java 21. See the
