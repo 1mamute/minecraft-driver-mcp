@@ -127,9 +127,13 @@ and lives in [docs/](docs/README.md):
 JDK 21 and the Gradle wrapper. [Stonecutter](https://stonecutter.kikugie.dev) builds one jar per Minecraft version from
 one source tree.
 
+The Minecraft-independent `catalogue` module holds the built-in tool definitions for reuse by other JVM applications.
+It is included in the mod jar; installing the mod still requires only that one file.
+
 ```bash
 ./gradlew build          # jars in versions/<mc>/build/libs
 ./gradlew lint           # ktlint and detekt
+./gradlew :catalogue:build # shared definitions and standalone tests, without Minecraft on their classpath
 ./gradlew :1.21.1:runClient
 ```
 

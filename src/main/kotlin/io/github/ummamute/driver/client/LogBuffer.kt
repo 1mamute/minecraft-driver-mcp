@@ -1,5 +1,6 @@
 package io.github.ummamute.driver.client
 
+import io.github.ummamute.driver.catalogue.ToolContract
 import kotlinx.serialization.Serializable
 
 /** One line of the game's log output. */
@@ -65,13 +66,13 @@ class LogBuffer(private val capacity: Int = CAPACITY) {
 
     companion object {
         const val CAPACITY = 1000
-        const val DEFAULT_LIMIT = 100
-        const val MAX_LIMIT = 500
+        const val DEFAULT_LIMIT = ToolContract.DEFAULT_LOG_LIMIT
+        const val MAX_LIMIT = ToolContract.MAX_LOG_LIMIT
         const val MAX_MESSAGE = 2000
         const val MAX_THROWABLE = 4000
 
         /** Log levels from least to most severe. */
-        val LEVELS = listOf("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL")
+        val LEVELS = ToolContract.LOG_LEVELS
 
         /** Whether [level] names a level in [LEVELS], ignoring case. */
         fun isLevel(level: String): Boolean = LEVELS.contains(level.uppercase())

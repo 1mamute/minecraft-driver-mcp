@@ -118,6 +118,8 @@ above.
 
 - Annotate every tool: `readOnlyHint`, `destructiveHint`, `idempotentHint`,
   `openWorldHint`. Observation tools are read-only and idempotent.
+- Keep built-in names, descriptions, schemas and annotations in the shared `catalogue/`
+  module. Attach handlers in `tools/` with the corresponding `BuiltInTools` definition.
 - Return JSON text built from `@Serializable` data classes, not hand-built strings.
 - Prefer text over images. A screenshot is for when text cannot answer the question.
 - Report a failure as an `isError` result with a message that says what to do next

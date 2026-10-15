@@ -25,3 +25,5 @@ stonecutter {
 }
 
 rootProject.name = "minecraft-driver-mcp"
+
+include("catalogue")

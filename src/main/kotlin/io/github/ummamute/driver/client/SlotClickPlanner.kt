@@ -1,15 +1,16 @@
 package io.github.ummamute.driver.client
 
+import io.github.ummamute.driver.catalogue.ToolContract
 import kotlinx.serialization.Serializable
 
 /** The ways to click a slot, named as the agent passes them. */
 enum class SlotAction(val label: String) {
-    PICK_UP("pick_up"),
-    QUICK_MOVE("quick_move"),
-    SWAP("swap"),
-    THROW("throw"),
-    CLONE("clone"),
-    PICK_UP_ALL("pick_up_all"),
+    PICK_UP(ToolContract.PICK_UP),
+    QUICK_MOVE(ToolContract.QUICK_MOVE),
+    SWAP(ToolContract.SWAP),
+    THROW(ToolContract.THROW),
+    CLONE(ToolContract.CLONE),
+    PICK_UP_ALL(ToolContract.PICK_UP_ALL),
 }
 
 /** The raw tool arguments of a slot click. */

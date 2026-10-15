@@ -1,6 +1,7 @@
 package io.github.ummamute.driver.client
 
 import com.mojang.blaze3d.platform.InputConstants
+import io.github.ummamute.driver.catalogue.ToolContract
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
@@ -21,12 +22,12 @@ import kotlin.math.sqrt
 /** Movement, aiming and interaction, applied through the player and game mode. Call on the render thread. */
 object ClientInput {
     /** Keys that stay held until released (while no screen is open), then `inventory`, which is a single press that opens the inventory, or closes it when a container screen is open. */
-    val keyNames = listOf("forward", "back", "left", "right", "jump", "sneak", INVENTORY_KEY)
+    val keyNames = ToolContract.MOVEMENT_KEYS
 
     private const val INVENTORY_KEY = "inventory"
 
     /** Longest `mc_use` hold: ten seconds of ticks, enough for any item's use time. */
-    const val MAX_HOLD_TICKS = 200
+    const val MAX_HOLD_TICKS = ToolContract.MAX_HOLD_TICKS
 
     private val mc: Minecraft get() = Minecraft.getInstance()
 

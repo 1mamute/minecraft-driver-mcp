@@ -6,6 +6,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.ContentBlock
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.Tool
 import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
@@ -29,9 +30,6 @@ internal object ToolSupport {
     private val logger = LoggerFactory.getLogger(ToolSupport::class.java)
 
     val json = Json { encodeDefaults = true }
-
-    /** Builds an object schema. Each property is a name with its JSON type and description. */
-    fun schema(vararg properties: Property, required: List<String> = emptyList()): ToolSchema = schema(properties.toList(), required)
 
     /** Builds an object schema from a list of properties. */
     fun schema(properties: List<Property>, required: List<String>): ToolSchema {
@@ -65,6 +63,11 @@ internal object ToolSupport {
         addTool(name = name, description = description, inputSchema = inputSchema, toolAnnotations = toolAnnotations) { request ->
             callGuarded(handler, request)
         }
+    }
+
+    /** Attaches a guarded handler to a shared built-in definition. */
+    fun Server.addGuardedTool(definition: Tool, handler: suspend (CallToolRequest) -> CallToolResult) {
+        addTool(definition) { request -> callGuarded(handler, request) }
     }
 
     /** Runs a tool handler and turns bad-input exceptions and non-fatal errors into `isError` results. */

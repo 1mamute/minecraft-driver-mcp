@@ -47,6 +47,9 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
 
+    implementation(project(":catalogue"))
+    include(project(":catalogue"))
+
     bundled("io.modelcontextprotocol:kotlin-sdk-server:$mcpSdkVersion")
     bundled("io.ktor:ktor-server-cio:$ktorVersion")
     bundled("org.jetbrains.kotlin:kotlin-stdlib:${property("kotlin_version")}")

@@ -1,5 +1,6 @@
 package io.github.ummamute.driver.client
 
+import io.github.ummamute.driver.catalogue.ToolContract
 import kotlinx.serialization.Serializable
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
@@ -16,7 +17,7 @@ data class KeyPressResult(val handled: Int)
 /** Sends typed characters and key presses to the open screen, as the keyboard does. Call on the render thread. */
 object ClientKeyboard {
     /** Longest text one `mc_type_text` call sends, which covers a book page and keeps the render thread free. */
-    const val MAX_TYPED_CHARS = 1000
+    const val MAX_TYPED_CHARS = ToolContract.MAX_TYPED_CHARS
 
     private val keyCodes = mapOf(
         "enter" to GLFW.GLFW_KEY_ENTER,
@@ -38,7 +39,7 @@ object ClientKeyboard {
     val keyNames: List<String> = keyCodes.keys.toList()
 
     /** Most presses one `mc_press_key` call repeats, enough to empty any text field. */
-    const val MAX_PRESSES = 256
+    const val MAX_PRESSES = ToolContract.MAX_PRESSES
 
     private val mc: Minecraft get() = Minecraft.getInstance()
 

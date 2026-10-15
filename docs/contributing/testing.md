@@ -6,6 +6,11 @@
 Minecraft: port selection, the instance registry, and anything else in `server/` and
 `tools/` that can run on its own. Code in `client/` needs the running game.
 
+`./gradlew :catalogue:build` runs the shared catalogue tests without Minecraft or the
+mod handlers on the test classpath. Its compatibility fixture records the built-in
+definitions before extraction. Intentional contract changes update that fixture and
+the tool documentation together. Root lint includes `catalogue/src/`.
+
 ## Continuous integration
 
 The `Build` workflow (`.github/workflows/build.yml`) runs `./gradlew build` on Linux and

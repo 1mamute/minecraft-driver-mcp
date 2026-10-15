@@ -4,13 +4,16 @@
 
 ```text
 agent ──HTTP──▶ server/McpEndpoint ──▶ tools/*Tools ──▶ client/Client* ──▶ Minecraft
-                  (Ktor + MCP SDK)     (schemas, JSON)    (render thread)
+                  (Ktor + MCP SDK)     (handlers, JSON)   (render thread)
 ```
 
 - `server/` knows Ktor, the MCP SDK, ports and the instance registry. It does not know
   Minecraft.
-- `tools/` defines what the agent sees: names, input schemas, annotations and result
-  JSON. It calls `client/` and does not import `net.minecraft`.
+- `catalogue/` is a plain Kotlin/JVM module containing the built-in names, descriptions,
+  input schemas and all four MCP annotations. It depends on the MCP SDK core, with no
+  Minecraft, Fabric, mod handlers or instance registry on its classpath.
+- `tools/` attaches handlers to catalogue definitions and builds result JSON. It calls
+  `client/` and does not import `net.minecraft`.
 - `client/` is the only code that touches the game. Each object owns one concern.
 - `DriverBootstrap` reads the system properties, builds the pieces and hooks the client
   lifecycle. The Java entrypoint `DriverMod` only calls it.
@@ -28,6 +31,19 @@ Other mods add tools through the `minecraft-driver-mcp` Fabric entrypoint ([exte
 
 Because of this split, supporting a new Minecraft version means changing `client/` (and
 the mixin), not the tools or the server.
+
+### Shared tool catalogue
+
+JVM consumers use `project(":catalogue")` and read `BuiltInTools.all` or look up a
+definition by name. Each definition is an SDK `Tool`, so it can be advertised before a
+game starts. Loading definitions does not initialize handlers or game state. The mod
+passes those definitions to `ToolSupport.addGuardedTool` with its existing handlers;
+argument parsing, render-thread dispatch and error handling stay in the mod.
+
+Input enums and limits that affect schemas live with the catalogue and are reused by
+the handlers. Dynamic extension definitions are supplied by running clients through
+the extension API; they are not part of the built-in catalogue. This module provides
+definitions only; gateway routing and Maven publication are separate work.
 
 ## Lifecycle
 
@@ -127,6 +143,8 @@ Everything ships in one jar and does not depend on Fabric Language Kotlin:
   `include`, which nests the jars (jar-in-jar). Fabric Loader loads nested jars itself.
 - slf4j and the JetBrains annotations are not bundled; Minecraft provides them.
 - `implementation` extends `bundled`, so the code compiles against the same libraries.
+- The `catalogue` project is an explicit `implementation` and Loom `include` dependency.
+  Its jar is nested alongside the libraries, without adding a second installation file.
 
 A new library goes into `bundled`. Check the jar size and that it does not clash with a
 library Minecraft or another mod already provides.
@@ -142,5 +160,9 @@ Stonecutter builds one jar per Minecraft version from one source tree.
 - Version-specific source is marked with Stonecutter comments (`//? if >=1.21.5 {`).
   Past a few lines, move the code into one class per version instead.
 - The root project must not apply `java` or `base`; Stonecutter rejects a buildable root.
+- `catalogue/build.gradle.kts` builds the shared definitions independently of the
+  versioned mod sources. `./gradlew :catalogue:build` compiles and tests them without
+  Minecraft on their classpath; `./gradlew build` builds both the catalogue and mods.
+  Root lint also covers the catalogue sources and build script.
 
 See [dependencies.md](dependencies.md) for how to move versions forward.

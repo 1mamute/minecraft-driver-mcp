@@ -64,6 +64,8 @@ Requires JDK 21 and the Gradle wrapper.
 ```
 
 The jar is written to `versions/<minecraft version>/build/libs/`. Use the jar without the `-sources` suffix.
+The shared tool catalogue is already nested inside it; the jar under `catalogue/build/libs/` is for JVM consumers of
+the definitions and is not installed separately in the game.
 
 ## Verify the installation
 

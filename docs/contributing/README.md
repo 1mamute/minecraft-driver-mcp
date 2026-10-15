@@ -35,6 +35,7 @@ Requires JDK 21 and the Gradle wrapper.
 
 ```bash
 ./gradlew build                  # compile, unit tests, lint, jar in versions/<mc>/build/libs
+./gradlew :catalogue:build       # Minecraft-independent definitions and their tests
 ./gradlew lint                   # ktlint and detekt
 ./gradlew :1.21.1:runClient      # start a client with the mod and the MCP endpoint
 ```

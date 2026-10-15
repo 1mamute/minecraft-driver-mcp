@@ -196,7 +196,10 @@ release.
 - `client/` talks to Minecraft; one object per concern: `ClientState`, `ClientScreens`, `ClientInput`, `ClientKeyboard`,
   `ClientInventory`, `ClientSlots`, `ClientChat`, `ClientConnection`, `Screenshots`, `ScreenText`, `RenderThread`,
   `MessageLog`, `LogCapture`/`LogBuffer`, `ClassNames`; pure helpers `SlotClickPlanner`, `TextFrame`, `InventoryModel`.
-- `tools/` defines MCP tools: `ObservationTools`, `ActionTools`, `ConnectionTools`, `InstanceTools`, `ExtensionTools`,
+- `catalogue/` is a separate Kotlin/JVM module: `BuiltInTools` holds SDK `Tool` definitions (names, descriptions,
+  schemas, four annotations), loadable without Minecraft or initialized handlers. Input enums and limits are shared
+  with the mod. Dynamic extensions are discovered from running clients and stay outside this catalogue.
+- `tools/` attaches MCP handlers: `ObservationTools`, `ActionTools`, `ConnectionTools`, `InstanceTools`, `ExtensionTools`,
   `ExtensionRegistry`, `ToolNames`, `ToolSupport` (schema builder, argument readers, `addGuardedTool`, `onRenderThread`),
   `ConditionWaiter`.
 - `server/` is the Ktor + MCP SDK endpoint (`McpEndpoint`), `PortSelector`, `EndpointBinder`, `InstanceRegistry`,
@@ -214,7 +217,7 @@ release.
   with `addGuardedTool`; errors say what to do next; prefer text over images.
 - Bind to `127.0.0.1` only. No fixed ports without an opt-in. No shared mutable files except the instance registry.
 - One jar: Kotlin stdlib, MCP SDK and Ktor are jar-in-jar (`bundled` in `build.gradle.kts`). Do not depend on Fabric
-  Language Kotlin.
+  Language Kotlin. The catalogue project is also nested via Loom `include`; no separate installation is needed.
 - Version differences: Stonecutter conditionals (`//? if >=1.21.5 {`); past a few lines, a class per version.
 - Mappings: official Mojang names with Parchment parameter names. Translate Yarn examples against the resolved sources.
 - Code style: one statement per line, one job per function, guard clauses, constructor injection, `object` for stateless
@@ -225,8 +228,9 @@ release.
 
 1. Add a function to the right `client/` object that runs on the render thread, guards against a missing player/level
    with a message that says what to do next, and returns a `@Serializable` data class.
-2. Add `register<Name>` in the matching `tools/*Tools` object and call it from its `register`; name, description,
-   `ToolSupport.schema(Property(...))`, four annotations, `addGuardedTool`, `onRenderThread`.
+2. Add the definition (name, description, schema, four annotations) to `BuiltInTools` in `catalogue/`. Add
+   `register<Name>` in the matching `tools/*Tools` object and call it from its `register`; pass the catalogue definition
+   to `addGuardedTool` and dispatch game calls through `onRenderThread`.
 3. Unit test pure logic (`src/test/kotlin`, same package).
 4. Update `README.md` tool table, `docs/tools.md`, `llms.txt`, and `docs/known-issues.md` if limits exist.
 5. Run the checks below.
@@ -234,6 +238,8 @@ release.
 ### Build, test, run
 
 - JDK 21 and the Gradle wrapper. `./gradlew build` = compile + unit tests + lint + jar in `versions/<mc>/build/libs`.
+- `./gradlew :catalogue:build` tests and builds only the shared definitions, with no Minecraft on their classpath.
+  Its jar is in `catalogue/build/libs/`; JVM consumers use `project(":catalogue")`. Maven publication is separate work.
 - `./gradlew lint`, `./gradlew ktlintFormat`, `./gradlew detekt`.
 - CI (`.github/workflows/build.yml`) runs `./gradlew build` on Linux and Windows for pull requests and `main`; it does not
   run the runtime check.

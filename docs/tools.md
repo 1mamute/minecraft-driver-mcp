@@ -7,6 +7,10 @@ Each tool carries the MCP annotations `readOnlyHint`, `destructiveHint`, `idempo
 client can decide which calls need confirmation. Results are JSON text, except `mc_screenshot`, which returns a PNG
 image. A failure is an `isError` result whose message says what to do next.
 
+Built-in definitions come from a shared Minecraft-independent catalogue. JVM applications can use those definitions
+without starting a game; executing these tools still requires a running client. See the
+[module boundary](contributing/architecture.md#shared-tool-catalogue).
+
 Tools that use the screen, the player or the level run on the game's render thread. They fail with a clear message
 when the game is not in the required state, for example when no world is joined.
 
