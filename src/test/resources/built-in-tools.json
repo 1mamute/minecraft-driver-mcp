@@ -331,6 +331,33 @@
     }
   },
   {
+    "name": "mc_look",
+    "inputSchema": {
+      "properties": {
+        "yaw": {
+          "type": "number",
+          "description": "Relative yaw in degrees: positive turns right, negative turns left; use 0 to leave yaw unchanged"
+        },
+        "pitch": {
+          "type": "number",
+          "description": "Relative pitch in degrees: positive looks down, negative looks up; use 0 to leave pitch unchanged"
+        }
+      },
+      "required": [
+        "yaw",
+        "pitch"
+      ],
+      "type": "object"
+    },
+    "description": "Rotate the player view relative to its current direction, in degrees. Both yaw and pitch are required finite numbers. Yaw wraps to [-180, 180); pitch clamps to [-90, 90]. Repeated calls add their deltas to the current view. Returns the new state. Use mc_look_at to face a world position.",
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "mc_look_at",
     "description": "Turn the player to face a world position.",
     "inputSchema": {
