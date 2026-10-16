@@ -37,6 +37,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_press_key`](#mc_press_key) | act | Press a key on the open screen |
 | [`mc_set_key`](#mc_set_key) | act | Hold or release a movement key |
 | [`mc_look_at`](#mc_look_at) | act | Face a world position |
+| [`mc_select_hotbar_slot`](#mc_select_hotbar_slot) | act | Select the held hotbar slot by index 0-8 |
 | [`mc_use`](#mc_use) | act | Right click, then use the held item |
 | [`mc_send_chat`](#mc_send_chat) | act | Send chat or a command |
 | [`mc_join_server`](#mc_join_server) | act | Connect to a multiplayer server |
@@ -266,6 +267,21 @@ closes it, or a container screen, on the next press. Idempotent.
 ### mc_look_at
 
 Turn the player to face the world position `x`, `y`, `z` (all required). Returns the new state. Idempotent.
+
+### mc_select_hotbar_slot
+
+Select the held hotbar slot directly. Requires a joined world. Idempotent.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `slot` | integer | Required, zero-based hotbar index from 0 to 8, as shown by `mc_read_inventory` |
+
+Returns `selectedHotbarSlot` and `item` (the held item, or `null` for an empty slot). The selected slot changes
+immediately; vanilla synchronizes it to the server on the next tick or before the next use or attack. The next
+action uses the newly selected item. Calling again with the same slot keeps it selected.
+
+These are hotbar indexes, not the menu indexes used by `mc_click_slot`. To equip an item, call `mc_read_inventory`,
+find its `hotbar` slot, then call `mc_select_hotbar_slot {"slot": 2}` and `mc_use`.
 
 ### mc_use
 

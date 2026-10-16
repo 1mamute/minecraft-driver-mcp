@@ -13,9 +13,20 @@ import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.trading.MerchantOffer
 
-/** Reads the player's inventory and the open container. Call on the render thread. */
+/** Reads inventory and container contents and selects the held slot. Call on the render thread. */
 object ClientInventory {
+    private const val LAST_HOTBAR_SLOT = 8
+
     private val mc: Minecraft get() = Minecraft.getInstance()
+
+    /** Selects a zero-based hotbar slot; vanilla synchronizes it on the next tick or before an interaction. */
+    fun selectHotbarSlot(slot: Int): HotbarSelection {
+        require(slot in 0..LAST_HOTBAR_SLOT) { "slot must be between 0 and $LAST_HOTBAR_SLOT; use mc_read_inventory to choose a hotbar slot" }
+        val player = mc.player ?: error("Not in a world. Join one with mc_join_world or mc_join_server, then call mc_select_hotbar_slot again")
+        check(mc.level != null && mc.gameMode != null) { "World is still loading. Call mc_get_state, then retry mc_select_hotbar_slot after joining" }
+        player.inventory.selected = slot
+        return HotbarSelection(slot, stackInfo(player.mainHandItem))
+    }
 
     fun inventory(includeEmpty: Boolean): InventorySnapshot {
         val player = mc.player ?: error("Not in a world. Join or create one with mc_click on the menus, then call again")
