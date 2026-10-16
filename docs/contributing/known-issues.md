@@ -30,7 +30,7 @@ All checks below were made on Minecraft 1.21.1, in a development environment unl
 
 | Area | Gap | How to close it |
 | --- | --- | --- |
-| Auth token with a real client | A real MCP client sending the header; two clients with different tokens; timing side channels beyond the SHA-256 plus `MessageDigest.isEqual` comparison. | Connect a client with the header and call a tool. |
+| Auth token timing | Timing side channels beyond the SHA-256 plus `MessageDigest.isEqual` comparison. Real MCP clients and two instances with different tokens have been checked through the gateway. | Assess the comparison under a timing test. |
 | `-D` arguments in launchers | Some launchers do not pass them, so token and flag behavior in a production install is unchecked. | Test with a launcher that passes JVM arguments. |
 | `driver.unfocused` on other systems | Measured on Windows only. | Compare `mc_get_state` with the OS foreground window on macOS and Linux. |
 | Separate run directories | Loom ignores the `workingDir` override of `runClient`; `--gameDir` moves saves, options and crash reports, but the log4j file appenders still write `logs/latest.log` under the default run directory, so two development clients share it. | Point the log file at the game directory with a custom log4j configuration, or keep documenting it. |
@@ -54,8 +54,11 @@ cancellation, deadlines, and forwarding failures without retries.
 Real-client checks also covered image forwarding, an actionable bad-argument result,
 loading an isolated singleplayer save, reading state and applying a look action.
 
-The npm package is not published. A registry installation through `npx` remains
-unverified; use the local archive and the [manual gateway sequence](testing.md#gateway-checks).
+The matching mod and gateway release is published as `0.2.0`. The npm registry serves
+the reviewed archive, and `npx minecraft-driver-mcp@0.2.0 --help` runs successfully.
+Both Claude Code and Codex also passed the full no-game startup, two-token client,
+ambiguity, 60-second wait timeout, restart and expired-PID sequence using that
+published package in one uninterrupted session per host, without MCP reconfiguration.
 
 ## Design limits
 

@@ -41,9 +41,10 @@ does. Verify the mod's `mc_wait_for` separately inside each world;
 `mc_wait_for_instance` checks endpoint readiness only.
 
 The no-game startup, two-client token routing and restart checks passed in both hosts. See
-[Verification status](known-issues.md) for gaps and current evidence. The docs do not
-claim an npm publication; use the locally packed artifact until a matching release is
-published.
+[Verification status](known-issues.md) for gaps and current evidence. For a release,
+repeat the host check with `npx minecraft-driver-mcp@<version>` after publishing the
+matching mod and gateway. Confirm the npm archive's integrity matches the reviewed
+package before testing it.
 
 ## Runtime check
 
