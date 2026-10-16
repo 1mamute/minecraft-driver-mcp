@@ -2,6 +2,7 @@ package io.github.ummamute.driver.tools
 
 import io.github.ummamute.driver.client.ClientChat
 import io.github.ummamute.driver.client.ClientInput
+import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientKeyboard
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientSlots
@@ -33,6 +34,7 @@ internal object ActionTools {
         registerKey(server)
         registerLook(server)
         registerLookAt(server)
+        registerSelectHotbarSlot(server)
         registerUse(server)
         registerChat(server)
         registerTypeText(server)
@@ -96,6 +98,13 @@ internal object ActionTools {
             onRenderThread({ ClientInput.lookAt(args.requireDouble("x"), args.requireDouble("y"), args.requireDouble("z")) }) {
                 jsonResult(ClientState.snapshot())
             }
+        }
+    }
+
+    private fun registerSelectHotbarSlot(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_select_hotbar_slot"]) { request ->
+            val slot = arguments(request).int("slot") ?: error("Argument \"slot\" is required; choose a hotbar index from 0 to 8")
+            onRenderThread({ ClientInventory.selectHotbarSlot(slot) }) { jsonResult(it) }
         }
     }
 

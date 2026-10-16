@@ -18,6 +18,10 @@ data class ItemStackInfo(
 @Serializable
 data class SlotInfo(val group: String, val slot: Int, val part: String?, val item: ItemStackInfo?)
 
+/** The selected zero-based hotbar slot and its held item, or null when the slot is empty. */
+@Serializable
+data class HotbarSelection(val selectedHotbarSlot: Int, val item: ItemStackInfo?)
+
 /** The player's own inventory. */
 @Serializable
 data class InventorySnapshot(val selectedHotbarSlot: Int, val carried: ItemStackInfo?, val slots: List<SlotInfo>)
