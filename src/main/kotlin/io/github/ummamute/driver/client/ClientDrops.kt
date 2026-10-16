@@ -1,8 +1,8 @@
 package io.github.ummamute.driver.client
 
+import io.github.ummamute.driver.mixin.MultiPlayerGameModeAccessor
 import kotlinx.serialization.Serializable
 import net.minecraft.client.Minecraft
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.InteractionHand
 
 /** The client's predicted result of dropping from the selected hotbar slot. */
@@ -24,8 +24,8 @@ object ClientDrops {
         check(!player.isSpectator) { "Spectators cannot drop items. Switch to survival or creative mode, then call mc_drop_item again" }
         val before = player.mainHandItem.count
         if (before == 0) return DropItemResult(dropped = false, count = 0, remaining = 0)
-        // A preceding slot selection may not have reached the next game-mode tick yet. Order it before the drop packet.
-        player.connection.send(ServerboundSetCarriedItemPacket(player.inventory.selected))
+        // Keep vanilla's cached slot consistent when selection and dropping happen before the next game-mode tick.
+        (minecraft.gameMode as MultiPlayerGameModeAccessor).`driver$ensureHasSentCarriedItem`()
         val dropped = player.drop(fullStack)
         if (dropped) player.swing(InteractionHand.MAIN_HAND)
         val remaining = player.mainHandItem.count

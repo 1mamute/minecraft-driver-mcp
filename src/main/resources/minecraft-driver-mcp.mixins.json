@@ -9,6 +9,7 @@
 		"ClientTextTooltipMixin",
 		"GameRendererMixin",
 		"GuiGraphicsMixin",
+		"MultiPlayerGameModeAccessor",
 		"ScreenMixin",
 		"WindowMixin"
 	],
