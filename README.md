@@ -79,6 +79,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_join_world` | Load a singleplayer world by save folder name |
 | `mc_disconnect` | Leave the current world or server |
 | `mc_set_key` | Hold or release a movement key; press `inventory` |
+| `mc_look` | Rotate the view by yaw and pitch deltas in degrees |
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair, then the held item; `hold_ticks` finishes eating, drinking or drawing a bow |
 | `mc_send_chat` | Send chat or a `/command` as the player |

@@ -151,6 +151,10 @@ gateway section above for arguments and readiness semantics.
 - `mc_set_key {name, down?}` (idempotent) -> hold/release forward back left right jump sneak. Held until set again, so
   release it. An open screen releases all held keys; they resume when it closes. `name:"inventory"` is one press that
   opens/closes the inventory or a container screen.
+- `mc_look {yaw,pitch}` -> rotate from the current view by required finite deltas in degrees; positive yaw turns right,
+  negative yaw left, positive pitch down, negative pitch up. Pass 0 for an unchanged axis. Yaw wraps to [-180,180), pitch
+  clamps to [-90,90]. Repeated calls keep rotating (not idempotent). Requires a world; returns state with player yaw/pitch.
+  Example: `{yaw:90,pitch:0}` turns right a quarter turn; `{yaw:0,pitch:-15}` looks up 15 degrees.
 - `mc_look_at {x,y,z}` (idempotent) -> face a world position; returns state.
 - `mc_use {hold_ticks?}` -> right click the crosshair target, else use the held item (main then off hand). One press only
   starts eating/drinking/bow/shield; `hold_ticks` (0-200, 20 per second) holds the key: eating/drinking 32, full bow 20.

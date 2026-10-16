@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.phys.BlockHitResult
@@ -24,6 +25,7 @@ object ClientInput {
     val keyNames = listOf("forward", "back", "left", "right", "jump", "sneak", INVENTORY_KEY)
 
     private const val INVENTORY_KEY = "inventory"
+    private const val MAX_PITCH = 90.0
 
     /** Longest `mc_use` hold: ten seconds of ticks, enough for any item's use time. */
     const val MAX_HOLD_TICKS = 200
@@ -92,6 +94,15 @@ object ClientInput {
                 "start the client with -Ddriver.unfocused=true"
         }
         return message
+    }
+
+    /** Rotates from the current view in degrees: positive yaw turns right and positive pitch looks down. */
+    fun look(yaw: Double, pitch: Double) {
+        require(yaw.isFinite()) { "yaw must be a finite number of degrees; call mc_look again with a finite yaw" }
+        require(pitch.isFinite()) { "pitch must be a finite number of degrees; call mc_look again with a finite pitch" }
+        val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
+        player.yRot = Mth.wrapDegrees((player.yRot + Mth.wrapDegrees(yaw)).toFloat())
+        player.xRot = (player.xRot + pitch).coerceIn(-MAX_PITCH, MAX_PITCH).toFloat()
     }
 
     fun lookAt(x: Double, y: Double, z: Double) {
