@@ -25,4 +25,6 @@ data class ScreenshotMetadata(
     val player: PlayerPosition?,
     /** Client-observed world day time in ticks; null without a level. */
     val worldTime: Long?,
+    /** Absolute saved artifact paths, or null when this capture was not saved. */
+    val evidence: ScreenshotEvidencePaths? = null,
 )

@@ -16,7 +16,19 @@ arguments through; see [Known issues](known-issues.md#launchers-and-jvm-argument
 | `driver.name` | the player name | Instance name |
 | `driver.token` | unset (no authentication) | Shared access token |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
+| `driver.screenshotDirectory` | unset (saving disabled) | Opt-in directory for screenshot PNG + JSON evidence |
 | `driver.unfocused` | `false` | Create the window without focus and keep the game running while it is behind other windows |
+
+### Screenshot evidence
+
+Set `-Ddriver.screenshotDirectory=<directory>` to enable `mc_screenshot`'s optional `save_as` argument.
+Relative directories resolve against the game's working directory. Missing directories are created when saving.
+Use a separate directory per client to keep evidence independent. The default returns inline images without writing files.
+
+`save_as` accepts a simple filename such as `inventory-1.png`; its stem may contain letters, digits, underscores and
+hyphens. The tool writes that PNG and a matching `inventory-1.json` capture-metadata sidecar, and returns their absolute
+paths in `evidence`. Nested/absolute paths and symbolic links in the directory or targets are rejected.
+Existing PNG or JSON files are never overwritten; choose a fresh filename for each save. See [mc_screenshot](tools.md#mc_screenshot).
 
 ### Port
 

@@ -17,6 +17,7 @@ class ScreenshotResultsTest {
         val metadata = metadata().copy(
             player = PlayerPosition(x = 1.5, y = 64.0, z = -3.0, yaw = 45f, pitch = -10f),
             worldTime = 12345L,
+            evidence = ScreenshotEvidencePaths("evidence/capture.png", "evidence/capture.json"),
         )
 
         val result = ScreenshotResults.inline(png, metadata)
