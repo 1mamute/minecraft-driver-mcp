@@ -81,6 +81,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_set_key` | Hold or release a movement key; press `inventory` |
 | `mc_look_at` | Face a world position |
 | `mc_use` | Right click what is under the crosshair, then the held item; `hold_ticks` finishes eating, drinking or drawing a bow |
+| `mc_drop_item` | Drop one held item or the selected stack without opening inventory |
 | `mc_send_chat` | Send chat or a `/command` as the player |
 | `mc_type_text` | Type into the focused widget |
 | `mc_press_key` | Press enter, escape, tab, backspace, arrows and similar on the open screen |

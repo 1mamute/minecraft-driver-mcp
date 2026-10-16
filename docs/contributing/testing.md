@@ -72,6 +72,15 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+### Dropping held items
+
+In survival and creative mode, put a known stack in the selected hotbar slot. Call `mc_drop_item`, then
+`mc_read_inventory` after server updates: one item should be removed. Repeat with `full_stack: true` and
+confirm the slot becomes empty. Empty hand should return a successful no-op. Check the title-screen,
+open-screen, spectator and non-boolean argument errors. Select another slot immediately before dropping
+and verify the server removes items from that slot. The container alternative is `mc_click_slot` with
+`action: "throw"` and `button: 0` (one) or `1` (stack).
+
 ### Auth token
 
 Run this when you touch `McpEndpoint`, `TokenAuthenticator` or the registry format. Start the client twice
