@@ -28,6 +28,19 @@
             }
         },
         {
+            "name": "mc_read_effects",
+            "description": "Read the local player's active status effects: registry id, zero-based amplifier and remainingTicks (-1 for infinite). Returns up to 100 effects sorted by id, with total and truncated. Fails outside a world; join one first.",
+            "inputSchema": {
+                "type": "object"
+            },
+            "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+            }
+        },
+        {
             "name": "mc_list_widgets",
             "inputSchema": {
                 "type": "object"

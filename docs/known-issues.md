@@ -85,6 +85,13 @@ directories. The second client cannot open it and logs file-lock errors, but its
   item per click.
 - The returned slot state is the client's prediction. Read the container again to see what the server kept.
 
+## Player status effects
+
+`mc_read_effects` returns at most 100 active effects, sorted by registry identifier. Check `total` and `truncated`
+before treating the list as complete. Clear effects or inspect the mod's state directly when it is truncated.
+Hidden effects waiting to replace a stronger effect are omitted. Duration is the client's current count in game
+ticks and can lag server updates.
+
 ## Joining and leaving
 
 A successful login to a real dedicated server, servers that prompt for a resource pack, and saves that need an upgrade

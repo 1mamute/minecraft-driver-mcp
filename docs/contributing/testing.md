@@ -80,6 +80,14 @@ slot; selection should stay stable and the empty slot should return `item: null`
 `mc_use` and verify the server observes that item (for example, a placeable block in slot 8). Check `isError`
 for a missing slot, a non-integer slot, -1, 9, and a call from the title screen. The error should explain how to retry.
 
+### Player effects
+
+For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run
+`/effect give @s minecraft:speed 60 1`, verify its ID, amplifier `1` and decreasing `remainingTicks`, then run
+`/effect give @s minecraft:night_vision infinite` and verify `remainingTicks: -1`. Remove each effect with
+`/effect clear @s` and confirm the list becomes empty. For modded effects, verify namespaced IDs and, when more
+than 100 are active, a sorted 100-entry list with `total` and `truncated: true`.
+
 ### Auth token
 
 Run this when you touch `McpEndpoint`, `TokenAuthenticator` or the registry format. Start the client twice

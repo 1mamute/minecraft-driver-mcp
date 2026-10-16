@@ -1,5 +1,6 @@
 package io.github.ummamute.driver.tools
 
+import io.github.ummamute.driver.client.ClientEffects
 import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientState
@@ -31,6 +32,7 @@ internal object ObservationTools {
 
     fun register(server: Server) {
         registerState(server)
+        registerEffects(server)
         registerScreen(server)
         registerScreenText(server)
         registerInventory(server)
@@ -48,6 +50,10 @@ internal object ObservationTools {
 
     private fun registerScreen(server: Server) {
         server.addGuardedTool(BuiltInTools["mc_list_widgets"]) { _ -> onRenderThread(ClientScreens::describe) { jsonResult(it) } }
+    }
+
+    private fun registerEffects(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_read_effects"]) { _ -> onRenderThread(ClientEffects::snapshot) { jsonResult(it) } }
     }
 
     private fun registerScreenText(server: Server) {
