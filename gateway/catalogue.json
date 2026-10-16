@@ -405,6 +405,30 @@
             }
         },
         {
+            "name": "mc_select_hotbar_slot",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "slot": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 8,
+                        "description": "Zero-based hotbar index (0 to 8), as shown by mc_read_inventory; not a container menu index."
+                    }
+                },
+                "required": [
+                    "slot"
+                ]
+            },
+            "description": "Select the held hotbar slot directly, using a zero-based index from 0 to 8. Returns selectedHotbarSlot and the held item (null for an empty slot). Requires a joined world. Idempotent; the next use or attack uses this slot, with normal vanilla server synchronization. Use mc_read_inventory to inspect hotbar contents.",
+            "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+            }
+        },
+        {
             "name": "mc_use",
             "inputSchema": {
                 "properties": {

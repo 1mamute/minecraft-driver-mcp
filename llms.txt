@@ -161,6 +161,9 @@ gateway section above for arguments and readiness semantics.
   clamps to [-90,90]. Repeated calls keep rotating (not idempotent). Requires a world; returns state with player yaw/pitch.
   Example: `{yaw:90,pitch:0}` turns right a quarter turn; `{yaw:0,pitch:-15}` looks up 15 degrees.
 - `mc_look_at {x,y,z}` (idempotent) -> face a world position; returns state.
+- `mc_select_hotbar_slot {slot}` -> select the held hotbar slot, zero-based 0-8 (not a container menu index).
+  Requires a joined world. Returns selectedHotbarSlot and item (null if empty). Idempotent; the next use or attack
+  uses this slot, with vanilla server synchronization. Find contents with mc_read_inventory first.
 - `mc_use {hold_ticks?}` -> right click the crosshair target, else use the held item (main then off hand). One press only
   starts eating/drinking/bow/shield; `hold_ticks` (0-200, 20 per second) holds the key: eating/drinking 32, full bow 20.
   Aim first with `mc_look_at`. Returns the interaction result (`CONSUME`, `SUCCESS`, `PASS`, ...).

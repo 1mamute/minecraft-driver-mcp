@@ -72,6 +72,16 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+### Hotbar selection
+
+Give the player distinct items in hotbar slots 0 and 8. Call `mc_select_hotbar_slot` for each, then
+`mc_read_inventory`; verify `selectedHotbarSlot` and the returned item. Repeat the same slot and select an empty
+slot; selection should stay stable and the empty slot should return `item: null`. Use the selected item with
+`mc_use` and verify the server observes that item (for example, a placeable block in slot 8). Check `isError`
+for a missing slot, a non-integer slot, -1, 9, and a call from the title screen. The error should explain how to retry.
+
+### Player effects
+
 For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run
 `/effect give @s minecraft:speed 60 1`, verify its ID, amplifier `1` and decreasing `remainingTicks`, then run
 `/effect give @s minecraft:night_vision infinite` and verify `remainingTicks: -1`. Remove each effect with
