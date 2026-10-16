@@ -37,6 +37,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_type_text`](#mc_type_text) | act | Type into the focused widget |
 | [`mc_press_key`](#mc_press_key) | act | Press a key on the open screen |
 | [`mc_set_key`](#mc_set_key) | act | Hold or release a movement key |
+| [`mc_look`](#mc_look) | act | Rotate the view by yaw and pitch deltas in degrees |
 | [`mc_look_at`](#mc_look_at) | act | Face a world position |
 | [`mc_use`](#mc_use) | act | Right click, then use the held item |
 | [`mc_send_chat`](#mc_send_chat) | act | Send chat or a command |
@@ -281,6 +282,21 @@ Hold or release a movement key.
 A held key stays down until it is set again. While a screen is open the player stops, and a held key resumes when the
 screen closes. `inventory` is one press: it opens the player's inventory (the creative screen in creative mode) and
 closes it, or a container screen, on the next press. Idempotent.
+
+### mc_look
+
+Rotate the player's view relative to its current direction. Returns the new state, including the resulting
+`player.yaw` and `player.pitch`. Requires a player in a world.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `yaw` | number | Required finite delta in degrees; positive turns right, negative turns left |
+| `pitch` | number | Required finite delta in degrees; positive looks down, negative looks up |
+
+Pass `0` for an axis to leave its direction unchanged. Yaw wraps to `[-180, 180)` and pitch clamps to `[-90, 90]`,
+where `-90` is straight up and `90` is straight down. Each call adds its deltas to the current view, so repeated calls
+continue rotating. For example, `{"yaw":90,"pitch":0}` turns right by a quarter turn; repeating it turns another quarter.
+`{"yaw":0,"pitch":-15}` looks up by 15 degrees. Not idempotent. Use `mc_look_at` to face a known world position.
 
 ### mc_look_at
 

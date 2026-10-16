@@ -31,6 +31,7 @@ internal object ActionTools {
         registerClickSlot(server)
         registerCloseScreen(server)
         registerKey(server)
+        registerLook(server)
         registerLookAt(server)
         registerUse(server)
         registerChat(server)
@@ -74,6 +75,18 @@ internal object ActionTools {
         server.addGuardedTool(BuiltInTools["mc_set_key"]) { request ->
             val args = arguments(request)
             onRenderThread({ ClientInput.setKey(args.requireString("name"), args.boolean("down") ?: true) }) { jsonResult(mapOf("down" to it)) }
+        }
+    }
+
+    private fun registerLook(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_look"]) { request ->
+            val args = arguments(request)
+            val yaw = args.requireDouble("yaw")
+            val pitch = args.requireDouble("pitch")
+            onRenderThread({
+                ClientInput.look(yaw, pitch)
+                ClientState.snapshot()
+            }) { jsonResult(it) }
         }
     }
 
