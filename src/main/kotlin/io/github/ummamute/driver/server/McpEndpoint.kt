@@ -74,7 +74,7 @@ class McpEndpoint(
             instructions = "This is the client \"$instanceName\". $INSTRUCTIONS",
         )
         InstanceTools.register(server)
-        ObservationTools.register(server)
+        ObservationTools.register(server, instanceName)
         ActionTools.register(server)
         ConnectionTools.register(server)
         ExtensionTools.register(server, extensionTools)

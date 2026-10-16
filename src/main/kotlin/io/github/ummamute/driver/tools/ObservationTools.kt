@@ -19,10 +19,6 @@ import io.github.ummamute.driver.tools.ToolSupport.long
 import io.github.ummamute.driver.tools.ToolSupport.onRenderThread
 import io.github.ummamute.driver.tools.ToolSupport.string
 import io.modelcontextprotocol.kotlin.sdk.server.Server
-import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
-import io.modelcontextprotocol.kotlin.sdk.types.ContentBlock
-import io.modelcontextprotocol.kotlin.sdk.types.ImageContent
-import java.util.Base64
 
 /** Tools that read the client without changing it. */
 internal object ObservationTools {
@@ -30,7 +26,7 @@ internal object ObservationTools {
     private const val MAX_WAIT_MILLIS = 60_000L
     private const val DEFAULT_LOG_LEVEL = "INFO"
 
-    fun register(server: Server) {
+    fun register(server: Server, instanceName: String) {
         registerState(server)
         registerEffects(server)
         registerScreen(server)
@@ -41,7 +37,7 @@ internal object ObservationTools {
         registerLog(server)
         registerWaitFor(server)
         registerEntities(server)
-        registerScreenshot(server)
+        registerScreenshot(server, instanceName)
     }
 
     private fun registerState(server: Server) {
@@ -114,10 +110,9 @@ internal object ObservationTools {
         server.addGuardedTool(BuiltInTools["mc_list_entities"]) { _ -> onRenderThread(ClientState::entitiesNearby) { jsonResult(it) } }
     }
 
-    private fun registerScreenshot(server: Server) {
-        server.addGuardedTool(BuiltInTools["mc_screenshot"]) { _ -> onRenderThread(Screenshots::capturePng, ::imageResult) }
+    private fun registerScreenshot(server: Server, instanceName: String) {
+        server.addGuardedTool(BuiltInTools["mc_screenshot"]) { _ ->
+            onRenderThread({ Screenshots.capture(instanceName) }) { ScreenshotResults.inline(it.png, it.metadata) }
+        }
     }
-
-    private fun imageResult(png: ByteArray): CallToolResult =
-        CallToolResult(content = listOf<ContentBlock>(ImageContent(data = Base64.getEncoder().encodeToString(png), mimeType = "image/png")))
 }

@@ -4,8 +4,8 @@ All built-in tools are named `mc_<verb>_<noun>`. Tools added by other mods are n
 [Extension API](extension-api.md)).
 
 Each tool carries the MCP annotations `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`, so a
-client can decide which calls need confirmation. Results are JSON text, except `mc_screenshot`, which returns a PNG
-image. A failure is an `isError` result whose message says what to do next.
+client can decide which calls need confirmation. Results are JSON text; `mc_screenshot` returns an inline PNG
+followed by JSON metadata. A failure is an `isError` result whose message says what to do next.
 
 Built-in definitions live in `gateway/catalogue.json` and are bundled into the mod.
 The gateway can advertise them before a game starts; execution requires a running
@@ -28,7 +28,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
 | [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
 | [`mc_list_entities`](#mc_list_entities) | read | Entities near the player |
-| [`mc_screenshot`](#mc_screenshot) | read | PNG of the game framebuffer |
+| [`mc_screenshot`](#mc_screenshot) | read | PNG of the game framebuffer with coordinate and capture metadata |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
 | [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
 | [`mc_click`](#mc_click) | act | Click a widget or a point |
@@ -168,7 +168,28 @@ distance. Requires a world.
 ### mc_screenshot
 
 A PNG of the game framebuffer. It is taken from the game, never from the desktop, so it works while the window is behind
-others. Prefer the text tools when they can answer the question.
+others. Its first content block remains an inline `image/png`; the second is JSON text containing:
+
+| Field | Meaning |
+| --- | --- |
+| `framebuffer` | PNG `width` and `height`, in pixels. |
+| `gui` | Scaled GUI `width` and `height`, in the units accepted by `mc_click`. |
+| `guiScale` | Effective Minecraft GUI scale, including automatic scale and Unicode adjustments. |
+| `instance` | Discovery `name` and process `pid` of the capturing client. |
+| `screen` | Current screen class name, or `null` during gameplay without an open screen. |
+| `capturedAt` | Unix epoch milliseconds sampled at capture, before PNG encoding. |
+| `player` | Position `x`, `y`, `z` and rotation `yaw`, `pitch`, as in `mc_get_state`; `null` without a player. |
+| `worldTime` | Client-observed world day time in ticks, or `null` without a level. |
+
+The pixels and metadata are sampled in one render-thread call. The framebuffer contains the most recently rendered
+image; state can have advanced since that frame was drawn. Coordinates in both spaces start at the top-left corner;
+X increases rightward and Y downward. For a point `(px, py)` in the returned PNG, call `mc_click` with
+`x = px * gui.width / framebuffer.width` and `y = py * gui.height / framebuffer.height`.
+Keep fractional coordinates: `mc_click` accepts doubles. If a downstream consumer requires integer GUI coordinates,
+floor each result. GUI dimensions round upward, so use these dimension ratios rather than dividing by `guiScale`.
+For the center of a pixel indexed `(i, j)`, use `px = i + 0.5` and `py = j + 0.5`.
+Capture again after resizing the window or changing GUI scale; earlier dimensions no longer describe the current GUI.
+Prefer the text tools when they can answer the question.
 
 ### mc_list_instances
 

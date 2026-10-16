@@ -72,6 +72,18 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+### Screenshot metadata
+
+Call `mc_screenshot` on the title screen and in a world. Confirm the first content block is an inline PNG and the
+second is JSON text. Decode the PNG header and compare its dimensions with `framebuffer`; compare `instance` with
+`mc_list_instances`, `screen` and `player` with `mc_get_state`, and the timestamp with the capture time. Without a world,
+`player` and `worldTime` are null. In a world, confirm day-time ticks advance unless time is stopped.
+
+Repeat with at least two GUI scales and after resizing to dimensions not divisible by the scale. Check `gui` against
+the screen size and click a visible widget at a point converted using `px * gui.width / framebuffer.width` and
+`py * gui.height / framebuffer.height`. Keep fractional results. Confirm the top-left origin and repeat after a resize;
+GUI dimensions round up, so dividing by nominal `guiScale` can differ at the edges.
+
 ### Hotbar selection
 
 Give the player distinct items in hotbar slots 0 and 8. Call `mc_select_hotbar_slot` for each, then
