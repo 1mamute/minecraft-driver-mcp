@@ -109,6 +109,23 @@ open-screen, spectator and non-boolean argument errors. Select another slot imme
 and verify the server removes items from that slot. The container alternative is `mc_click_slot` with
 `action: "throw"` and `button: 0` (one) or `1` (stack).
 
+### Screenshot evidence
+
+Run this when changing screenshot saving, after `initialize` and `tools/list`:
+
+1. Without `driver.screenshotDirectory`, call `mc_screenshot` with no arguments: it must return inline PNG first and
+   metadata second without writing files. Call `{"save_as":"disabled.png"}` and check for an actionable opt-in error.
+2. Restart with `-Ddriver.screenshotDirectory=<temporary-directory>`. Call `{"save_as":"title-1.png"}` at the title screen.
+   Check that `evidence.pngPath` and `evidence.metadataPath` name the new files in that directory. Decode the inline PNG
+   and compare its bytes with the saved PNG. The JSON sidecar must match inline capture metadata except `evidence` is null.
+3. Repeat the filename and verify an error leaves both files unchanged. Separately precreate only the PNG and only the JSON
+   for two other names; each save must fail without changing that file or creating its counterpart.
+4. Try `{"save_as":"../outside.png"}`, an absolute filename, and `{"save_as":123}`. Each must return an actionable error
+   without creating files. Where symbolic links are available, check linked target files and directory ancestors too.
+5. Join a world and save with a fresh name. Verify the sidecar contains the current instance, player/world state, dimensions
+   and capture timestamp, and the saved PNG still matches the inline bytes. A subsequent capture without `save_as` writes
+   no additional files.
+
 ### Auth token
 
 Run this when you touch `McpEndpoint`, `TokenAuthenticator` or the registry format. Start the client twice

@@ -92,7 +92,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_read_log` | The game's log lines since a sequence number, filtered by level and text |
 | `mc_wait_for` | Block until a message or screen appears, or time out |
 | `mc_list_entities` | Entities within 64 blocks, nearest first |
-| `mc_screenshot` | PNG of the game framebuffer with coordinate and capture metadata |
+| `mc_screenshot` | PNG with coordinate/capture metadata; optional PNG + JSON evidence saving |
 | `mc_list_instances` | Every running client with this mod; the gateway adds health and auth/version status |
 | `mc_wait_for_instance` | Wait for a selected gateway endpoint |
 
@@ -126,6 +126,7 @@ configuration and host setup details.
 | `driver.name` | player name | Instance name |
 | `driver.token` | unset (no authentication) | When set, every request needs `Authorization: Bearer <token>` |
 | `driver.registry` | `~/.minecraft-driver-mcp/instances` | Directory of running instances |
+| `driver.screenshotDirectory` | unset (saving disabled) | Opt-in directory for screenshot PNG + JSON evidence |
 | `driver.unfocused` | `false` | Create the window without focus and keep the game running while it is behind other windows |
 
 Details are in [Configuration](docs/configuration.md).

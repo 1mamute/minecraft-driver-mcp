@@ -6,6 +6,7 @@ import io.github.ummamute.driver.tools.ConnectionTools
 import io.github.ummamute.driver.tools.ExtensionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
+import io.github.ummamute.driver.tools.ScreenshotEvidence
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -20,6 +21,7 @@ import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcpStatelessStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
+import java.nio.file.Path
 
 /** The MCP server on localhost. Stateless Streamable HTTP: every request is independent, so restarting the agent needs no session. */
 class McpEndpoint(
@@ -29,6 +31,7 @@ class McpEndpoint(
     private val instanceName: String,
     private val extensionTools: List<ToolDefinition> = emptyList(),
     private val authenticator: TokenAuthenticator = TokenAuthenticator(null),
+    private val screenshotEvidence: ScreenshotEvidence = ScreenshotEvidence(System.getProperty("driver.screenshotDirectory")?.let(Path::of)),
 ) {
     private var engine: EmbeddedServer<*, *>? = null
 
@@ -74,7 +77,7 @@ class McpEndpoint(
             instructions = "This is the client \"$instanceName\". $INSTRUCTIONS",
         )
         InstanceTools.register(server)
-        ObservationTools.register(server, instanceName)
+        ObservationTools.register(server, instanceName, screenshotEvidence)
         ActionTools.register(server)
         ConnectionTools.register(server)
         ExtensionTools.register(server, extensionTools)

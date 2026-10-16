@@ -19,6 +19,8 @@ import io.github.ummamute.driver.tools.ToolSupport.long
 import io.github.ummamute.driver.tools.ToolSupport.onRenderThread
 import io.github.ummamute.driver.tools.ToolSupport.string
 import io.modelcontextprotocol.kotlin.sdk.server.Server
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** Tools that read the client without changing it. */
 internal object ObservationTools {
@@ -26,7 +28,7 @@ internal object ObservationTools {
     private const val MAX_WAIT_MILLIS = 60_000L
     private const val DEFAULT_LOG_LEVEL = "INFO"
 
-    fun register(server: Server, instanceName: String) {
+    fun register(server: Server, instanceName: String, screenshotEvidence: ScreenshotEvidence = ScreenshotEvidence(null)) {
         registerState(server)
         registerEffects(server)
         registerScreen(server)
@@ -37,7 +39,7 @@ internal object ObservationTools {
         registerLog(server)
         registerWaitFor(server)
         registerEntities(server)
-        registerScreenshot(server, instanceName)
+        registerScreenshot(server, instanceName, screenshotEvidence)
     }
 
     private fun registerState(server: Server) {
@@ -110,9 +112,20 @@ internal object ObservationTools {
         server.addGuardedTool(BuiltInTools["mc_list_entities"]) { _ -> onRenderThread(ClientState::entitiesNearby) { jsonResult(it) } }
     }
 
-    private fun registerScreenshot(server: Server, instanceName: String) {
-        server.addGuardedTool(BuiltInTools["mc_screenshot"]) { _ ->
-            onRenderThread({ Screenshots.capture(instanceName) }) { ScreenshotResults.inline(it.png, it.metadata) }
+    private fun registerScreenshot(server: Server, instanceName: String, evidence: ScreenshotEvidence) {
+        server.addGuardedTool(BuiltInTools["mc_screenshot"]) { request ->
+            val args = ToolSupport.arguments(request)
+            val saveAs = args.string("save_as")
+            if (saveAs != null) evidence.validate(saveAs)
+            val capture = RenderThread.call { Screenshots.capture(instanceName) }
+            val paths = if (saveAs == null) {
+                null
+            } else {
+                withContext(Dispatchers.IO) {
+                    evidence.save(capture.png, ToolSupport.json.encodeToString(capture.metadata), saveAs)
+                }
+            }
+            ScreenshotResults.inline(capture.png, capture.metadata.copy(evidence = paths))
         }
     }
 }

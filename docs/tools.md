@@ -28,7 +28,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
 | [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
 | [`mc_list_entities`](#mc_list_entities) | read | Entities near the player |
-| [`mc_screenshot`](#mc_screenshot) | read | PNG of the game framebuffer with coordinate and capture metadata |
+| [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with coordinate/capture metadata and optional PNG + JSON evidence saving |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
 | [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
 | [`mc_click`](#mc_click) | act | Click a widget or a point |
@@ -180,6 +180,7 @@ others. Its first content block remains an inline `image/png`; the second is JSO
 | `capturedAt` | Unix epoch milliseconds sampled at capture, before PNG encoding. |
 | `player` | Position `x`, `y`, `z` and rotation `yaw`, `pitch`, as in `mc_get_state`; `null` without a player. |
 | `worldTime` | Client-observed world day time in ticks, or `null` without a level. |
+| `evidence` | Absolute `pngPath` and `metadataPath` when saved, otherwise `null`. |
 
 The pixels and metadata are sampled in one render-thread call. The framebuffer contains the most recently rendered
 image; state can have advanced since that frame was drawn. Coordinates in both spaces start at the top-left corner;
@@ -190,6 +191,18 @@ floor each result. GUI dimensions round upward, so use these dimension ratios ra
 For the center of a pixel indexed `(i, j)`, use `px = i + 0.5` and `py = j + 0.5`.
 Capture again after resizing the window or changing GUI scale; earlier dimensions no longer describe the current GUI.
 Prefer the text tools when they can answer the question.
+
+Optional argument: `save_as` (string). Saving requires the client to start
+with `-Ddriver.screenshotDirectory=<directory>`. For example, `{"save_as":"inventory-1.png"}` saves the exact inline PNG
+as `inventory-1.png` and capture metadata as `inventory-1.json` in that directory. The sidecar's `evidence` field is `null`;
+the inline metadata contains both saved absolute paths. Omitting `save_as` writes no files.
+
+Use a simple `.png` filename whose stem contains only letters, digits, underscores and hyphens and starts with a letter
+or digit. Absolute paths, path separators, traversal and symbolic links in the configured directory or targets are
+rejected. Missing directories are created. Either existing artifact blocks the save; choose a fresh filename to retry.
+Existing files are never overwritten. Writes run outside the render thread. A failed save returns an actionable error;
+retry with a different filename or check the configured directory's permissions and available disk space.
+Tool annotations account for the optional file writes; capturing leaves game state unchanged.
 
 ### mc_list_instances
 
