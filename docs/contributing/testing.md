@@ -72,6 +72,14 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+### Hotbar selection
+
+Give the player distinct items in hotbar slots 0 and 8. Call `mc_select_hotbar_slot` for each, then
+`mc_read_inventory`; verify `selectedHotbarSlot` and the returned item. Repeat the same slot and select an empty
+slot; selection should stay stable and the empty slot should return `item: null`. Use the selected item with
+`mc_use` and verify the server observes that item (for example, a placeable block in slot 8). Check `isError`
+for a missing slot, a non-integer slot, -1, 9, and a call from the title screen. The error should explain how to retry.
+
 ### Dropping held items
 
 In survival and creative mode, put a known stack in the selected hotbar slot. Call `mc_drop_item`, then
@@ -141,6 +149,11 @@ Run this check when you touch ports, the registry or names.
   confirm button after it appears.
 - **Screenshots** come from the game's framebuffer, never from the desktop, so they work
   with the window behind other windows.
+- **Relative aiming.** After joining a world, record `mc_get_state` and call `mc_look {yaw:90,pitch:0}` twice: each
+  result must turn right another 90 degrees, with yaw in `[-180,180)`. Call `{yaw:0,pitch:-180}` to look straight up
+  (`pitch:-90`), then `{yaw:0,pitch:15}` to reach `-75`. Check the downward clamp with `pitch:180`, and a full yaw turn
+  with `yaw:360`. `mc_look_at` must still face a supplied world position. After disconnecting, `mc_look` must return an
+  actionable join-world error. Missing, wrong-type and non-finite deltas must return an error without changing the view.
 - **Inventory and containers.** Switch a creative world to survival with `mc_send_chat` (`/gamemode survival`), fill slots with `/give` and `/item replace`, then call `mc_read_inventory`. For a container, place a chest with `/setblock`, aim with `mc_look_at` and open it with `mc_use`; a villager (`/summon villager ... {NoAI:1b}`) works the same way and fills `offers`. Slot numbers in `mc_read_container` are menu indexes, so the player's hotbar is not 0-8 there; `mc_read_inventory` uses inventory indexes. The world list needs a click on the entry (a point click) before `Play Selected World` is enabled.
 - **Opening the inventory.** `mc_set_key` with `name` `inventory` opens the player's inventory and, on a second press, closes it or any other container screen (any other screen gives an error pointing to `mc_close_screen`). In creative mode it is the creative item screen. Its tabs are not widgets: click one with a point click (`x`, `y` in GUI units). In the creative item grid slots 0-44 are the visible items (group `creative`) and 45-53 the hotbar; on the inventory tab the slots follow the player menu (crafting, armor, main, hotbar, offhand) and the last one is the trash.
 - **Clicking slots.** `mc_click_slot` takes the menu indexes `mc_read_container` shows (a chest is 0-26, then main 27-53 and hotbar 54-62; a merchant is 0-1 payment, 2 result, 3-29 main, 30-38 hotbar). A merchant needs its trade selected first: `mc_click` the trade button by `index` from `mc_list_widgets`, then `quick_move` slot 2 takes the result. The returned state is the client prediction; call `mc_read_container` to see what the server kept.

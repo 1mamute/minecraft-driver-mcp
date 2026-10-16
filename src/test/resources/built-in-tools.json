@@ -331,6 +331,33 @@
     }
   },
   {
+    "name": "mc_look",
+    "inputSchema": {
+      "properties": {
+        "yaw": {
+          "type": "number",
+          "description": "Relative yaw in degrees: positive turns right, negative turns left; use 0 to leave yaw unchanged"
+        },
+        "pitch": {
+          "type": "number",
+          "description": "Relative pitch in degrees: positive looks down, negative looks up; use 0 to leave pitch unchanged"
+        }
+      },
+      "required": [
+        "yaw",
+        "pitch"
+      ],
+      "type": "object"
+    },
+    "description": "Rotate the player view relative to its current direction, in degrees. Both yaw and pitch are required finite numbers. Yaw wraps to [-180, 180); pitch clamps to [-90, 90]. Repeated calls add their deltas to the current view. Returns the new state. Use mc_look_at to face a world position.",
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "mc_look_at",
     "description": "Turn the player to face a world position.",
     "inputSchema": {
@@ -355,6 +382,30 @@
         "z"
       ]
     },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "mc_select_hotbar_slot",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "Zero-based hotbar index (0 to 8), as shown by mc_read_inventory; not a container menu index."
+        }
+      },
+      "required": [
+        "slot"
+      ]
+    },
+    "description": "Select the held hotbar slot directly, using a zero-based index from 0 to 8. Returns selectedHotbarSlot and the held item (null for an empty slot). Requires a joined world. Idempotent; the next use or attack uses this slot, with normal vanilla server synchronization. Use mc_read_inventory to inspect hotbar contents.",
     "annotations": {
       "readOnlyHint": false,
       "destructiveHint": false,

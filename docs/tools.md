@@ -36,7 +36,9 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_type_text`](#mc_type_text) | act | Type into the focused widget |
 | [`mc_press_key`](#mc_press_key) | act | Press a key on the open screen |
 | [`mc_set_key`](#mc_set_key) | act | Hold or release a movement key |
+| [`mc_look`](#mc_look) | act | Rotate the view by yaw and pitch deltas in degrees |
 | [`mc_look_at`](#mc_look_at) | act | Face a world position |
+| [`mc_select_hotbar_slot`](#mc_select_hotbar_slot) | act | Select the held hotbar slot by index 0-8 |
 | [`mc_use`](#mc_use) | act | Right click, then use the held item |
 | [`mc_drop_item`](#mc_drop_item) | act | Drop one held item or its stack |
 | [`mc_send_chat`](#mc_send_chat) | act | Send chat or a command |
@@ -264,9 +266,39 @@ A held key stays down until it is set again. While a screen is open the player s
 screen closes. `inventory` is one press: it opens the player's inventory (the creative screen in creative mode) and
 closes it, or a container screen, on the next press. Idempotent.
 
+### mc_look
+
+Rotate the player's view relative to its current direction. Returns the new state, including the resulting
+`player.yaw` and `player.pitch`. Requires a player in a world.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `yaw` | number | Required finite delta in degrees; positive turns right, negative turns left |
+| `pitch` | number | Required finite delta in degrees; positive looks down, negative looks up |
+
+Pass `0` for an axis to leave its direction unchanged. Yaw wraps to `[-180, 180)` and pitch clamps to `[-90, 90]`,
+where `-90` is straight up and `90` is straight down. Each call adds its deltas to the current view, so repeated calls
+continue rotating. For example, `{"yaw":90,"pitch":0}` turns right by a quarter turn; repeating it turns another quarter.
+`{"yaw":0,"pitch":-15}` looks up by 15 degrees. Not idempotent. Use `mc_look_at` to face a known world position.
+
 ### mc_look_at
 
 Turn the player to face the world position `x`, `y`, `z` (all required). Returns the new state. Idempotent.
+
+### mc_select_hotbar_slot
+
+Select the held hotbar slot directly. Requires a joined world. Idempotent.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `slot` | integer | Required, zero-based hotbar index from 0 to 8, as shown by `mc_read_inventory` |
+
+Returns `selectedHotbarSlot` and `item` (the held item, or `null` for an empty slot). The selected slot changes
+immediately; vanilla synchronizes it to the server on the next tick or before the next use or attack. The next
+action uses the newly selected item. Calling again with the same slot keeps it selected.
+
+These are hotbar indexes, not the menu indexes used by `mc_click_slot`. To equip an item, call `mc_read_inventory`,
+find its `hotbar` slot, then call `mc_select_hotbar_slot {"slot": 2}` and `mc_use`.
 
 ### mc_use
 
