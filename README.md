@@ -92,7 +92,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_read_log` | The game's log lines since a sequence number, filtered by level and text |
 | `mc_wait_for` | Block until a message or screen appears, or time out |
 | `mc_list_entities` | Entities within 64 blocks, nearest first |
-| `mc_screenshot` | PNG of the game framebuffer |
+| `mc_screenshot` | PNG of the game framebuffer with coordinate and capture metadata |
 | `mc_list_instances` | Every running client with this mod; the gateway adds health and auth/version status |
 | `mc_wait_for_instance` | Wait for a selected gateway endpoint |
 

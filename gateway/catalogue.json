@@ -211,7 +211,7 @@
             "inputSchema": {
                 "type": "object"
             },
-            "description": "Take a screenshot of the game framebuffer (not the desktop) and return it as a PNG image.",
+            "description": "Take a screenshot of the game framebuffer and return an inline PNG followed by JSON metadata: framebuffer and GUI dimensions, effective GUI scale, instance name/PID, screen, capture timestamp, and available player/world state. Both origins are top left; convert PNG coordinates to mc_click GUI units with x * gui.width / framebuffer.width and y * gui.height / framebuffer.height, without rounding.",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,

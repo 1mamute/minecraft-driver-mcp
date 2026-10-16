@@ -22,7 +22,7 @@ class BuiltInRegistrationTest {
             options = ServerOptions(capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = false))),
         )
         InstanceTools.register(server)
-        ObservationTools.register(server)
+        ObservationTools.register(server, "catalogue-test")
         ActionTools.register(server)
         ConnectionTools.register(server)
 
