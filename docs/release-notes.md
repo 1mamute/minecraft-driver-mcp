@@ -4,6 +4,24 @@ Versions follow [Semantic Versioning](https://semver.org). While the project is 
 properties, the instance registry format and the extension API can change in any minor version, and each change is
 listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version>.jar`.
 
+## 0.3.0
+
+<!-- changelog:0.3.0 -->
+### Features
+
+- Add relative camera rotation
+- Select hotbar slots directly
+- Read active player status effects
+- Drop the selected item directly
+- Report screenshot coordinate metadata
+- Save screenshot evidence
+- Crop and resize screenshots
+
+### Documentation
+
+- Record published gateway verification
+<!-- /changelog:0.3.0 -->
+
 ## 0.2.0
 
 <!-- changelog:0.2.0 -->
