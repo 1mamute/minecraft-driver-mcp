@@ -19,6 +19,7 @@ when the game is not in the required state, for example when no world is joined.
 | Tool | Kind | Does |
 | --- | --- | --- |
 | [`mc_get_state`](#mc_get_state) | read | Open screen, connection, window focus, player position |
+| [`mc_read_effects`](#mc_read_effects) | read | Active player status effects, amplifier and remaining ticks |
 | [`mc_list_widgets`](#mc_list_widgets) | read | Widgets of the open screen |
 | [`mc_read_screen_text`](#mc_read_screen_text) | read | Text the open screen drew |
 | [`mc_read_inventory`](#mc_read_inventory) | read | The player's inventory |
@@ -59,6 +60,24 @@ player's position and rotation (`null` outside a world).
 
 `windowFocused` turns `false` only after the window had focus and lost it; it does not report the operating system's
 foreground state at launch.
+
+### mc_read_effects
+
+The local player's active status effects, sorted by registry identifier. Takes no arguments. Each effect has a
+namespaced `id` (including modded effects), a zero-based `amplifier` (`0` is level I), and `remainingTicks` in game ticks.
+`remainingTicks: -1` means infinite duration. At the normal tick rate, 20 ticks is one second; paused games do not
+count down. The snapshot reflects the client's current state, which can lag server updates.
+
+```json
+{ "effects": [ { "id": "minecraft:speed", "amplifier": 1, "remainingTicks": 1200 } ],
+  "total": 1, "truncated": false }
+```
+
+An in-world player with no effects returns `{"effects":[],"total":0,"truncated":false}`. Outside a world the tool
+returns an error directing the caller to join one. Only currently active instances are reported; hidden instances
+waiting to replace stronger effects are omitted. At most 100 effects are returned; `total` counts all active effects
+and `truncated` reports whether the limit was reached. Clear effects or inspect the mod's state directly if the list
+is truncated.
 
 ### mc_list_widgets
 

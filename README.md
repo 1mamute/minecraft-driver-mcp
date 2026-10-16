@@ -68,6 +68,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | Tool | Does |
 | --- | --- |
 | `mc_get_state` | Open screen, connection, window focus, player position |
+| `mc_read_effects` | Active player status effects, amplifier and remaining ticks |
 | `mc_list_widgets` | Widgets of the open screen with index, type, label and bounds |
 | `mc_read_screen_text` | Text the open screen drew, with coordinates |
 | `mc_read_inventory` | The player's slots with item id, name, count, durability, enchantments and lore, plus the cursor stack |

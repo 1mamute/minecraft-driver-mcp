@@ -72,6 +72,12 @@ any HTTP client:
    and the error result (a missing argument, no world joined).
 3. `mc_screenshot` when rendering is involved.
 
+For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run
+`/effect give @s minecraft:speed 60 1`, verify its ID, amplifier `1` and decreasing `remainingTicks`, then run
+`/effect give @s minecraft:night_vision infinite` and verify `remainingTicks: -1`. Remove each effect with
+`/effect clear @s` and confirm the list becomes empty. For modded effects, verify namespaced IDs and, when more
+than 100 are active, a sorted 100-entry list with `total` and `truncated: true`.
+
 ### Auth token
 
 Run this when you touch `McpEndpoint`, `TokenAuthenticator` or the registry format. Start the client twice
