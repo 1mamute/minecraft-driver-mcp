@@ -27,4 +27,14 @@ data class ScreenshotMetadata(
     val worldTime: Long?,
     /** Absolute saved artifact paths, or null when this capture was not saved. */
     val evidence: ScreenshotEvidencePaths? = null,
+    /** Actual returned PNG dimensions, after cropping and optional downscaling. */
+    val image: ScreenshotDimensions = framebuffer,
+    /** Source rectangle in original framebuffer pixels, with a top-left origin. */
+    val crop: ScreenshotRegion = ScreenshotRegion(x = 0, y = 0, width = framebuffer.width, height = framebuffer.height),
+    val imageToGui: ScreenshotGuiTransform = ScreenshotGuiTransform(
+        offsetX = 0.0,
+        offsetY = 0.0,
+        scaleX = gui.width.toDouble() / framebuffer.width,
+        scaleY = gui.height.toDouble() / framebuffer.height,
+    ),
 )

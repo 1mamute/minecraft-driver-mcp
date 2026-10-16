@@ -113,7 +113,7 @@ internal object ToolSupport {
 
     fun JsonObject.string(name: String): String? = typed(name, "a string") { it.takeIf(JsonPrimitive::isString)?.content }
 
-    fun JsonObject.int(name: String): Int? = typed(name, "an integer") { it.intOrNull }
+    fun JsonObject.int(name: String): Int? = typed(name, "an integer") { if (it.isString) null else it.intOrNull }
 
     fun JsonObject.long(name: String): Long? = typed(name, "an integer") { it.longOrNull }
 
