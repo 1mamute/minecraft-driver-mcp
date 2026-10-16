@@ -206,15 +206,40 @@
   },
   {
     "name": "mc_screenshot",
-    "description": "Take a screenshot of the game framebuffer and return an inline PNG followed by JSON metadata: framebuffer and GUI dimensions, effective GUI scale, instance name/PID, screen, capture timestamp, and available player/world state. Both origins are top left; convert PNG coordinates to mc_click GUI units with x * gui.width / framebuffer.width and y * gui.height / framebuffer.height, without rounding. Optional save_as writes PNG and JSON evidence under the configured screenshot directory and returns their paths; existing artifacts are never overwritten.",
+    "description": "Take a screenshot of the game framebuffer as an inline PNG followed by JSON capture metadata. Optionally crop using x, y, width and height together in original framebuffer pixels from the top left, then downscale with max_width. Without arguments returns the original full-size PNG. Metadata includes original framebuffer/GUI dimensions, actual image dimensions, crop, imageToGui transform, instance, screen, timestamp and available player/world state. Convert returned PNG points to mc_click GUI units with x = imageToGui.offsetX + px * imageToGui.scaleX and y = imageToGui.offsetY + py * imageToGui.scaleY; keep fractional coordinates. Optional save_as writes the returned PNG and matching JSON metadata under the configured screenshot directory and returns their paths; existing artifacts are never overwritten.",
     "inputSchema": {
+      "type": "object",
       "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Crop left edge in original framebuffer pixels. Give x, y, width and height together."
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Crop top edge in original framebuffer pixels, measured downward."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Crop width in original framebuffer pixels; the rectangle must fit entirely inside the framebuffer."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Crop height in original framebuffer pixels."
+        },
+        "max_width": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum output PNG width after cropping. Downscales only, preserving aspect ratio with height floored to at least one pixel."
+        },
         "save_as": {
           "type": "string",
           "description": "Optional simple .png filename (letters, digits, underscores and hyphens) to save with a JSON sidecar under driver.screenshotDirectory; saving must be enabled at client startup."
         }
-      },
-      "type": "object"
+      }
     },
     "annotations": {
       "readOnlyHint": false,

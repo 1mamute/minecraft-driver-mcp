@@ -84,6 +84,18 @@ the screen size and click a visible widget at a point converted using `px * gui.
 `py * gui.height / framebuffer.height`. Keep fractional results. Confirm the top-left origin and repeat after a resize;
 GUI dimensions round up, so dividing by nominal `guiScale` can differ at the edges.
 
+Call `mc_screenshot` with an in-bounds `x`, `y`, `width`, `height` crop. Compare decoded pixels against the same
+region of a full capture of a stable screen; native pixels should match without resizing. Add `max_width` smaller
+than the crop, then larger than the crop: verify the first shrinks and the second preserves native size. Check the
+PNG dimensions against `image`, while `framebuffer` remains the original size and `crop` records the source region.
+Check a height that rounds down and a narrow resize that produces height one. Click a visible widget using
+`imageToGui.offsetX + px * imageToGui.scaleX` and the matching Y formula; test crop-only, resize-only and combined.
+Verify `isError` with a missing crop member, negative origin, zero/negative dimensions, zero `max_width`, non-integers,
+an out-of-bounds edge and an overflowing rectangle such as `x:1,width:2147483647`. A no-argument capture still returns
+the full original PNG followed by metadata.
+Combine a crop and `max_width` with a fresh `save_as` filename. Compare the saved PNG bytes with the inline image
+and its dimensions with `image`; confirm the sidecar has the same crop and GUI transform as the inline metadata.
+
 ### Hotbar selection
 
 Give the player distinct items in hotbar slots 0 and 8. Call `mc_select_hotbar_slot` for each, then

@@ -57,4 +57,13 @@ class ToolArgumentParsingTest {
         assertFailsWith<IllegalArgumentException> { arguments("text" to JsonPrimitive(5)).string("text") }
         assertFailsWith<IllegalArgumentException> { arguments("text" to buildJsonArray { }).string("text") }
     }
+
+    @Test
+    fun `integer arguments reject numeric JSON strings with an actionable type error`() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            arguments("max_width" to JsonPrimitive("100")).int("max_width")
+        }
+
+        assertEquals("Argument \"max_width\" must be an integer, got \"100\"", error.message)
+    }
 }

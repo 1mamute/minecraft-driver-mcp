@@ -28,7 +28,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
 | [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
 | [`mc_list_entities`](#mc_list_entities) | read | Entities near the player |
-| [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with coordinate/capture metadata and optional PNG + JSON evidence saving |
+| [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
 | [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
 | [`mc_click`](#mc_click) | act | Click a widget or a point |
@@ -168,11 +168,30 @@ distance. Requires a world.
 ### mc_screenshot
 
 A PNG of the game framebuffer. It is taken from the game, never from the desktop, so it works while the window is behind
-others. Its first content block remains an inline `image/png`; the second is JSON text containing:
+others. With no arguments it returns the original full-size PNG. Its first content block remains an inline `image/png`;
+the second is JSON text. Prefer the text tools when they can answer the question.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `x`, `y` | integer | Crop's left/top edge in original framebuffer pixels, starting at zero. |
+| `width`, `height` | integer | Positive crop dimensions in original framebuffer pixels. |
+| `max_width` | integer | Positive maximum output width after cropping; omitted means native size. |
+| `save_as` | string | Save the returned PNG and JSON metadata using a fresh simple `.png` filename; requires startup configuration below. |
+
+Give all four crop arguments together, or omit all four to capture the full framebuffer. The crop must fit entirely
+inside the original framebuffer; negative coordinates, partial crops and out-of-bounds rectangles return an error.
+`max_width` only shrinks images, preserving the aspect ratio with the output height rounded down to at least one pixel.
+Cropping without resizing preserves native pixels. For example, `{"x":200,"y":100,"width":800,"height":400,"max_width":400}`
+returns a 400 by 200 PNG of that region when it fits the framebuffer.
+
+Metadata fields:
 
 | Field | Meaning |
 | --- | --- |
-| `framebuffer` | PNG `width` and `height`, in pixels. |
+| `framebuffer` | Original full framebuffer `width` and `height`, in pixels. |
+| `image` | Actual returned PNG `width` and `height`, after cropping and resizing. |
+| `crop` | Source rectangle `x`, `y`, `width`, `height` in original framebuffer pixels; full framebuffer by default. |
+| `imageToGui` | `offsetX`, `offsetY`, `scaleX`, `scaleY` for converting returned PNG points to `mc_click` coordinates. |
 | `gui` | Scaled GUI `width` and `height`, in the units accepted by `mc_click`. |
 | `guiScale` | Effective Minecraft GUI scale, including automatic scale and Unicode adjustments. |
 | `instance` | Discovery `name` and process `pid` of the capturing client. |
@@ -185,17 +204,21 @@ others. Its first content block remains an inline `image/png`; the second is JSO
 The pixels and metadata are sampled in one render-thread call. The framebuffer contains the most recently rendered
 image; state can have advanced since that frame was drawn. Coordinates in both spaces start at the top-left corner;
 X increases rightward and Y downward. For a point `(px, py)` in the returned PNG, call `mc_click` with
-`x = px * gui.width / framebuffer.width` and `y = py * gui.height / framebuffer.height`.
+`x = imageToGui.offsetX + px * imageToGui.scaleX` and `y = imageToGui.offsetY + py * imageToGui.scaleY`.
+The offsets include the crop origin, and the scales include the actual resized dimensions, including height rounding.
+Without cropping or resizing this reduces to `x = px * gui.width / framebuffer.width` and
+`y = py * gui.height / framebuffer.height`.
 Keep fractional coordinates: `mc_click` accepts doubles. If a downstream consumer requires integer GUI coordinates,
 floor each result. GUI dimensions round upward, so use these dimension ratios rather than dividing by `guiScale`.
 For the center of a pixel indexed `(i, j)`, use `px = i + 0.5` and `py = j + 0.5`.
 Capture again after resizing the window or changing GUI scale; earlier dimensions no longer describe the current GUI.
-Prefer the text tools when they can answer the question.
 
 Optional argument: `save_as` (string). Saving requires the client to start
 with `-Ddriver.screenshotDirectory=<directory>`. For example, `{"save_as":"inventory-1.png"}` saves the exact inline PNG
 as `inventory-1.png` and capture metadata as `inventory-1.json` in that directory. The sidecar's `evidence` field is `null`;
 the inline metadata contains both saved absolute paths. Omitting `save_as` writes no files.
+Cropping and resizing happen before saving, so the saved PNG matches the inline image and the sidecar includes
+its `image`, `crop` and `imageToGui` fields.
 
 Use a simple `.png` filename whose stem contains only letters, digits, underscores and hyphens and starts with a letter
 or digit. Absolute paths, path separators, traversal and symbolic links in the configured directory or targets are

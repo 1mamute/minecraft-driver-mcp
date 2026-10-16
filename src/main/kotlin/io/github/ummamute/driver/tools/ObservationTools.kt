@@ -117,15 +117,27 @@ internal object ObservationTools {
             val args = ToolSupport.arguments(request)
             val saveAs = args.string("save_as")
             if (saveAs != null) evidence.validate(saveAs)
+            val options = ScreenshotOptions(
+                x = args.int("x"),
+                y = args.int("y"),
+                width = args.int("width"),
+                height = args.int("height"),
+                maxWidth = args.int("max_width"),
+            )
             val capture = RenderThread.call { Screenshots.capture(instanceName) }
+            val image = withContext(Dispatchers.Default) {
+                val framebuffer = capture.metadata.framebuffer
+                ScreenshotTransform.apply(capture.png, framebuffer.width, framebuffer.height, options)
+            }
+            val metadata = image.metadata(capture.metadata)
             val paths = if (saveAs == null) {
                 null
             } else {
                 withContext(Dispatchers.IO) {
-                    evidence.save(capture.png, ToolSupport.json.encodeToString(capture.metadata), saveAs)
+                    evidence.save(image.png, ToolSupport.json.encodeToString(metadata), saveAs)
                 }
             }
-            ScreenshotResults.inline(capture.png, capture.metadata.copy(evidence = paths))
+            ScreenshotResults.inline(image.png, metadata.copy(evidence = paths))
         }
     }
 }
