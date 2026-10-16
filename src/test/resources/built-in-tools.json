@@ -446,6 +446,25 @@
     }
   },
   {
+    "name": "mc_drop_item",
+    "description": "Drop one held item, or the entire selected stack with full_stack=true, as the player drop key does. Requires a joined world, no open screen and a non-spectator player. Returns client-predicted dropped, count and remaining; re-read mc_read_inventory to observe server updates. Empty hand is a successful no-op. For an open container, use mc_click_slot with action throw.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "full_stack": {
+          "type": "boolean",
+          "description": "Drop the entire selected stack instead of one item. Default false."
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
     "name": "mc_send_chat",
     "description": "Send a chat message, or a command when the text starts with `/`, as the player; the text is trimmed, collapsed to single spaces and cut to 256 characters. Replies arrive later; read them with mc_read_messages.",
     "inputSchema": {

@@ -167,6 +167,10 @@ gateway section above for arguments and readiness semantics.
 - `mc_use {hold_ticks?}` -> right click the crosshair target, else use the held item (main then off hand). One press only
   starts eating/drinking/bow/shield; `hold_ticks` (0-200, 20 per second) holds the key: eating/drinking 32, full bow 20.
   Aim first with `mc_look_at`. Returns the interaction result (`CONSUME`, `SUCCESS`, `PASS`, ...).
+- `mc_drop_item {full_stack?}` -> drop one held item (default) or the selected stack (true).
+  Requires a joined world, no screen, and survival or creative mode. Empty hand is a successful no-op.
+  Returns client-predicted dropped/count/remaining; verify later with mc_read_inventory. With a container open,
+  use mc_click_slot action throw, button 0 for one or 1 for the stack, using its menu slot index.
 - `mc_send_chat {text}` (destructive, open world) -> chat or a `/command`; trims, collapses whitespace, cuts to 256
   characters; returns what was sent. Replies are asynchronous.
 - `mc_join_server {address}` -> `host` or `host:port` (default 25565). Returns at once with the connect screen open;

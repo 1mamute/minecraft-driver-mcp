@@ -41,6 +41,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_look_at`](#mc_look_at) | act | Face a world position |
 | [`mc_select_hotbar_slot`](#mc_select_hotbar_slot) | act | Select the held hotbar slot by index 0-8 |
 | [`mc_use`](#mc_use) | act | Right click, then use the held item |
+| [`mc_drop_item`](#mc_drop_item) | act | Drop one held item or its stack |
 | [`mc_send_chat`](#mc_send_chat) | act | Send chat or a command |
 | [`mc_join_server`](#mc_join_server) | act | Connect to a multiplayer server |
 | [`mc_join_world`](#mc_join_world) | act | Load a singleplayer world |
@@ -330,6 +331,23 @@ nothing, the held item is used (main hand, then off hand).
 A single press only starts eating, drinking, drawing a bow or raising a shield, and the game ends it on the next tick.
 Use `hold_ticks` to finish: eating or drinking takes 32 ticks, a bow reaches full draw at 20. Aim first with
 `mc_look_at`. The result is the interaction result such as `CONSUME`, `SUCCESS` or `PASS`.
+
+### mc_drop_item
+
+Drop from the selected hotbar slot through the player drop action, in survival or creative mode.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `full_stack` | boolean | Drop the entire stack when true; default false drops one item |
+
+Returns `dropped`, `count` (items removed) and `remaining` (items left in the selected slot).
+An empty hand succeeds with `dropped: false`, `count: 0` and `remaining: 0`. These are client predictions;
+call `mc_read_inventory` again after server updates to verify the inventory. A rejected drop can be restored
+by the server. The tool errors outside a world, with an open screen or in spectator mode.
+
+For a container that is already open, use `mc_click_slot` with `action: "throw"`, its menu slot index,
+and `button: 0` for one item or `button: 1` for the stack. See [`mc_read_container`](#mc_read_container)
+for the menu indexes.
 
 ### mc_send_chat
 

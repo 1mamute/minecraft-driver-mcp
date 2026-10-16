@@ -1,6 +1,7 @@
 package io.github.ummamute.driver.tools
 
 import io.github.ummamute.driver.client.ClientChat
+import io.github.ummamute.driver.client.ClientDrops
 import io.github.ummamute.driver.client.ClientInput
 import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientKeyboard
@@ -36,6 +37,7 @@ internal object ActionTools {
         registerLookAt(server)
         registerSelectHotbarSlot(server)
         registerUse(server)
+        registerDropItem(server)
         registerChat(server)
         registerTypeText(server)
         registerPressKey(server)
@@ -114,6 +116,13 @@ internal object ActionTools {
             val result = onRenderThread({ ClientInput.use(holdTicks) }) { jsonResult(mapOf("result" to it)) }
             if (result.isError != true) awaitUseRelease()
             result
+        }
+    }
+
+    private fun registerDropItem(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_drop_item"]) { request ->
+            val fullStack = arguments(request).boolean("full_stack") ?: false
+            onRenderThread({ ClientDrops.drop(fullStack) }) { jsonResult(it) }
         }
     }
 
