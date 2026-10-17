@@ -134,6 +134,21 @@ frame after aiming or moving before each comparison:
    a rendered frame and verify the updated cached result. Confirm `tools/list` advertises no arguments and the four
    annotations: read-only and idempotent true, destructive and open-world false.
 
+### Block observations
+
+Start the client at the title screen, then run the repeatable check against a disposable saved world with cheats enabled:
+
+```bash
+node scripts/check-block.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
+```
+
+The script changes blocks near `(0, 300, 0)`, including negative chunk coordinates, and changes the player's position
+and game mode. It checks `initialize`, `tools/list`, title-screen and coordinate errors, loaded air versus unloaded
+chunks, block IDs and properties, synchronized sign text, absence of server-only chest inventory data, oversized banner
+update tags, subsequent block updates and unchanged player/inventory state during repeated reads. It disconnects after the world checks.
+For modded block entities, also compare returned update tags with the mod's client synchronization contract. Verify
+a block awaiting its client entity reports `not_available`.
+
 ### Player effects
 
 For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run

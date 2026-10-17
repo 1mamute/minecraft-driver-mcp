@@ -18,6 +18,7 @@ All checks below were made on Minecraft 1.21.1, in a development environment unl
 | `mc_click_slot` | Pick up, put down, quick move in both directions, swap with a hotbar key, throw, pick up all, drop outside, merchant trades, in survival and in creative (item grid, inventory tab), furnace, brewing stand and crafting table. |
 | `mc_use` | Throwing a snowball, eating with `hold_ticks`, drawing a bow, error cases. A screen opened mid-hold releases the key. |
 | `mc_get_target` | The repeatable target check passed against a real client: title-screen and disconnect errors, block ID/position/face and distance, entity ID/UUID/type, sky and out-of-reach misses, survival/creative ranges, changes to both range attributes, solid blocks behind water and fluid-only misses, and unchanged player/inventory state during repeated reads. |
+| `mc_get_block` | The repeatable block check passed against a real client: handshake and tool definition, title-screen and coordinate errors, loaded air versus unloaded chunks, block IDs and state properties, negative chunk boundaries, synchronized sign text, omission of server-only chest inventory data and oversized banner update tags, subsequent block updates, unchanged player/inventory state during repeated reads, and disconnect errors. |
 | `mc_set_key` | Held keys follow vanilla: released while any screen is open and resumed when it closes. `inventory` opens and closes the inventory and container screens, and errors with a pointer to `mc_close_screen` on other screens. |
 | Joining and leaving | `mc_disconnect` and `mc_join_world` with a singleplayer world; `mc_join_server` up to the connect screen and the failure path (a disconnect screen); error results for a bad port, a missing address, an unknown folder and being already in a world. |
 | Log capture | WARN and ERROR lines from the game, `min_level`, `contains`, `since`, the bounded buffer, the unknown-level error. A clean shutdown ends with no errors and removes the registry file. |
@@ -31,6 +32,7 @@ All checks below were made on Minecraft 1.21.1, in a development environment unl
 
 | Area | Gap | How to close it |
 | --- | --- | --- |
+| `mc_get_block` | The transient `not_available` case when a block entity is absent from the client map, modded update-tag contracts and reads on a dedicated server. | Read during a delayed block-entity update, compare modded data with its synchronization contract, and repeat on a dedicated server. |
 | Auth token timing | Timing side channels beyond the SHA-256 plus `MessageDigest.isEqual` comparison. Real MCP clients and two instances with different tokens have been checked through the gateway. | Assess the comparison under a timing test. |
 | `-D` arguments in launchers | Some launchers do not pass them, so token and flag behavior in a production install is unchecked. | Test with a launcher that passes JVM arguments. |
 | `driver.unfocused` on other systems | Measured on Windows only. | Compare `mc_get_state` with the OS foreground window on macOS and Linux. |

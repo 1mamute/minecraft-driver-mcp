@@ -93,6 +93,15 @@ distance describe an endpoint or rejected hit, not a successful interaction. Van
 can return a solid block behind or in water. Items such as buckets can use a separate fluid raycast. The target reflects
 modded targeting and client state; server updates may lag, and the next item action or server acceptance can differ.
 
+## Block observations
+
+`mc_get_block` only reads chunks received in the current client dimension. `loaded: false` means no observation,
+not air; move into range and retry after chunks arrive. Updates may lag the server or reflect client prediction.
+Block-entity data is only the existing client instance's update tag, never full server NBT. Empty or missing tags
+do not imply empty server data. Chest inventories require opening the container and using `mc_read_container`.
+Update SNBT longer than 16,384 characters is omitted with `status: "too_large"`. Modded update tags determine which
+fields are exposed. Multi-block queries and reads in other dimensions are not supported.
+
 ## Player status effects
 
 `mc_read_effects` returns at most 100 active effects, sorted by registry identifier. Check `total` and `truncated`
