@@ -83,7 +83,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_disconnect` | Leave the current world or server |
 | `mc_set_key` | Hold or release a movement key; press `inventory` |
 | `mc_look` | Rotate the view by yaw and pitch deltas in degrees |
-| `mc_look_at` | Face a world position |
+| `mc_look_at` | Face coordinates or a loaded entity's eyes or bounding-box center |
 | `mc_select_hotbar_slot` | Select the held hotbar slot by index 0-8; returns its item |
 | `mc_use` | Right click what is under the crosshair, then the held item; `hold_ticks` finishes eating, drinking or drawing a bow |
 | `mc_attack` | One vanilla attack press; optionally hold on a block for up to 200 client ticks, returning after release |
@@ -94,7 +94,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_read_messages` | Chat and system messages since a sequence number |
 | `mc_read_log` | The game's log lines since a sequence number, filtered by level and text |
 | `mc_wait_for` | Block until a message or screen appears, or time out |
-| `mc_list_entities` | Filter client-visible entities by type/name, radius and limit; nearest first with truncation metadata |
+| `mc_list_entities` | Filter client-visible entities; nearest first with eye positions, bounding boxes and truncation metadata |
 | `mc_screenshot` | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | `mc_list_instances` | Every running client with this mod; the gateway adds health and auth/version status |
 | `mc_wait_for_instance` | Wait for a selected gateway endpoint |

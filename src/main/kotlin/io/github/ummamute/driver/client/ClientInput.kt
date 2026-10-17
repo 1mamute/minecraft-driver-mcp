@@ -1,6 +1,8 @@
 package io.github.ummamute.driver.client
 
 import com.mojang.blaze3d.platform.InputConstants
+import io.github.ummamute.driver.tools.EntityAimPoint
+import io.github.ummamute.driver.tools.LookAtTarget
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
@@ -105,12 +107,27 @@ object ClientInput {
         player.xRot = (player.xRot + pitch).coerceIn(-MAX_PITCH, MAX_PITCH).toFloat()
     }
 
-    fun lookAt(x: Double, y: Double, z: Double) {
+    /** Resolves entity targets against the current client level without loading entities or checking reach. */
+    internal fun lookAt(target: LookAtTarget) {
         val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
-        val delta = Vec3(x, y, z).subtract(player.eyePosition)
+        val position = when (target) {
+            is LookAtTarget.Position -> Vec3(target.x, target.y, target.z)
+            is LookAtTarget.Entity -> entityAimPosition(target)
+        }
+        val delta = position.subtract(player.eyePosition)
         val horizontal = sqrt(delta.x * delta.x + delta.z * delta.z)
         player.yRot = Math.toDegrees(atan2(-delta.x, delta.z)).toFloat()
         player.xRot = Math.toDegrees(-atan2(delta.y, horizontal)).toFloat()
+    }
+
+    private fun entityAimPosition(target: LookAtTarget.Entity): Vec3 {
+        val level = mc.level ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
+        val entity = level.getEntity(target.id)?.takeUnless { it.isRemoved }
+            ?: error("Entity ${target.id} is no longer loaded. Call mc_list_entities and retry with a current entity_id")
+        return when (target.aimPoint) {
+            EntityAimPoint.EYE -> entity.eyePosition
+            EntityAimPoint.CENTER -> entity.boundingBox.center
+        }
     }
 
     /**

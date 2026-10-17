@@ -1,6 +1,8 @@
 package io.github.ummamute.driver.tools
 
+import io.github.ummamute.driver.client.EntityBounds
 import io.github.ummamute.driver.client.EntitySummary
+import io.github.ummamute.driver.client.TargetPosition
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -119,5 +121,15 @@ class EntityQueryTest {
     private fun args(json: String): JsonObject = Json.parseToJsonElement(json).jsonObject
 
     private fun entity(id: Int, type: String, name: String, distance: Double) =
-        EntitySummary(id = id, type = type, name = name, x = distance, y = 0.0, z = 0.0, distance = distance)
+        EntitySummary(
+            id = id,
+            type = type,
+            name = name,
+            x = distance,
+            y = 0.0,
+            z = 0.0,
+            distance = distance,
+            eyePosition = TargetPosition(x = distance, y = 1.5, z = 0.0),
+            boundingBox = EntityBounds(minX = distance - 0.5, minY = 0.0, minZ = -0.5, maxX = distance + 0.5, maxY = 2.0, maxZ = 0.5),
+        )
 }

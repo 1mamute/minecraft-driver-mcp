@@ -163,6 +163,25 @@ exact/prefix type and literal name semantics, combined filters before limiting, 
 boundaries, default and maximum bounds, truncation metadata, and unchanged player/inventory state during reads.
 For modded entities, also compare names and registry IDs with the mod's client synchronization contract.
 
+### Entity aiming
+
+Start the development client at the title screen, then run against a disposable saved world with cheats enabled:
+
+```bash
+node scripts/check-entity-aim.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
+```
+
+The check changes difficulty, time, game mode, player position and blocks near `(0, 260, 0)`, summons tagged adult
+and baby zombies, temporarily force-loads one remote server chunk to keep a fixture available for cleanup while
+unloading it from the client, removes fixtures and disconnects. It checks
+`initialize`, `tools/list`, title-screen/disconnect errors, eye positions and world-space bounding boxes for different
+sizes, default/explicit eye and center aiming, preserved coordinate aiming, repeated calls and updated geometry after
+movement. It also checks mixed/incomplete inputs, invalid types and nonfinite coordinates, removed/unloaded IDs, and
+successful aiming through a wall or beyond reach while the renderer still reports a block or miss.
+
+For modded entities, compare eyes and bounds with their pose and size implementation; eye positions may lie outside
+collision bounds. Also repeat with pose changes and dedicated-server entity tracking.
+
 ### Player effects
 
 For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run

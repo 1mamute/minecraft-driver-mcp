@@ -45,6 +45,10 @@ call, with a default timeout of 10 seconds and a cap of 60 seconds. Keep it belo
 at 1,000; defaults are 64 and 100. Increasing the radius does not load chunks or make the server send more entities.
 Read the second text block's `total` and `truncated` to detect omitted matches, then narrow the type/name filters.
 
+`mc_look_at` resolves an `entity_id` only while that entity is loaded in the current client level. List entities
+again after an unload, removal or world change. Aiming at its eyes or bounding-box center does not ensure reach
+or visibility, and does not keep tracking it. Allow a rendered frame and inspect `mc_get_target` before interacting.
+
 ## Screens and widgets
 
 - **Tooltips need a hovering cursor.** The tools do not move the real cursor, so a tooltip appears only if the real

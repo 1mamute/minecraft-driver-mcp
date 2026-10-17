@@ -29,7 +29,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_messages`](#mc_read_messages) | read | Chat and system messages |
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
 | [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
-| [`mc_list_entities`](#mc_list_entities) | read | Filter entities near the player with bounds and truncation metadata |
+| [`mc_list_entities`](#mc_list_entities) | read | Filter nearby entities with eye positions, bounding boxes and truncation metadata |
 | [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
 | [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
@@ -40,7 +40,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_press_key`](#mc_press_key) | act | Press a key on the open screen |
 | [`mc_set_key`](#mc_set_key) | act | Hold or release a movement key |
 | [`mc_look`](#mc_look) | act | Rotate the view by yaw and pitch deltas in degrees |
-| [`mc_look_at`](#mc_look_at) | act | Face a world position |
+| [`mc_look_at`](#mc_look_at) | act | Face coordinates or a loaded entity's eyes or bounding-box center |
 | [`mc_select_hotbar_slot`](#mc_select_hotbar_slot) | act | Select the held hotbar slot by index 0-8 |
 | [`mc_use`](#mc_use) | act | Right click, then use the held item |
 | [`mc_attack`](#mc_attack) | act | One vanilla attack press, with an optional bounded block hold |
@@ -250,7 +250,11 @@ the limit. Type filters do not add a namespace; names and types do not expand wi
 An empty prefix or name substring imposes no restriction; an empty or unknown exact type matches nothing.
 
 The first text block remains a JSON array with `id`, registry `type`, `name`, feet position `x`, `y`, `z`, and
-`distance` from the player's feet. A second JSON text block contains `{total,truncated,radius,limit}`: `total`
+`distance` from the player's feet. Each summary also includes `eyePosition: {x,y,z}` and
+`boundingBox: {minX,minY,minZ,maxX,maxY,maxZ}`, both in world coordinates and measured in blocks. These describe
+the entity's current pose and size. The box is its collision bounds, not rendered model extents or inflated pick
+bounds; subtract its minimum from its maximum to obtain width, height and depth. A second JSON text block contains
+`{total,truncated,radius,limit}`: `total`
 counts matching client-visible entities before limiting, and `truncated` is true when matches were omitted.
 It does not count entities outside the radius or entities unknown to the client.
 
@@ -452,7 +456,24 @@ continue rotating. For example, `{"yaw":90,"pitch":0}` turns right by a quarter 
 
 ### mc_look_at
 
-Turn the player to face the world position `x`, `y`, `z` (all required). Returns the new state. Idempotent.
+Turn the player toward coordinates or a loaded entity. Returns the new state. Idempotent for the current geometry;
+an entity can move between calls.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `x`, `y`, `z` | number | Finite world coordinates; all three are required for coordinate aiming. |
+| `entity_id` | integer | Runtime `id` from `mc_list_entities` or `mc_get_target`, instead of coordinates. |
+| `aim_point` | string | Requires `entity_id`: `eye` (default) or `center` (bounding-box center). |
+
+Choose one complete form: `{"x":10,"y":65,"z":20}` or `{"entity_id":42,"aim_point":"center"}`.
+JSON `null` means omitted. Mixing entity and coordinate arguments, incomplete coordinates or an unsupported
+aim point returns an error. Entity position and pose are resolved when the call runs; summary coordinates are
+snapshots. If the entity is unloaded or removed, call `mc_list_entities` again and retry with a current ID.
+IDs belong to the current client level and can change when entities reload or the world changes.
+
+Aiming does not guarantee reach, visibility or a successful interaction. It does not load entities, move the player
+or track a moving target afterward. Allow a rendered frame, then call `mc_get_target` to inspect the crosshair
+before using or attacking. An eye point can lie outside a modded entity's box; try `center` when appropriate.
 
 ### mc_select_hotbar_slot
 
