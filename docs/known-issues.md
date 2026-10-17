@@ -93,6 +93,19 @@ distance describe an endpoint or rejected hit, not a successful interaction. Van
 can return a solid block behind or in water. Items such as buckets can use a separate fluid raycast. The target reflects
 modded targeting and client state; server updates may lag, and the next item action or server acceptance can differ.
 
+## Attacking
+
+`mc_attack` uses the cached crosshair target; allow a rendered frame after aiming. Only block attacks can be held
+(`hold_ticks` 0-200); an entity or miss receives one press even when a hold is requested. A block hold stops at the
+first observed change to the original block or target and never resumes automatically after an interruption.
+Other tools remain available during a hold, but another attack returns busy instead of replacing it.
+The wall-clock guard expires after 15 seconds; a stalled render loop must resume before input cleanup can run.
+
+The result describes client input and observations. `serverConfirmed` is always `false`; `blockChanged` can reflect
+client prediction and does not prove the server kept a change. It is `null` for an entity, miss or unavailable level.
+Neither a press nor a completed hold proves entity damage or a broken block. Check later observations and server-side
+evidence when testing acceptance.
+
 ## Block observations
 
 `mc_get_block` only reads chunks received in the current client dimension. `loaded: false` means no observation,

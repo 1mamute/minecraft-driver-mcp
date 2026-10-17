@@ -524,6 +524,28 @@
             }
         },
         {
+            "name": "mc_attack",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "hold_ticks": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 200,
+                        "default": 0,
+                        "description": "Maximum client ticks to hold attack for the original block after one press (0-200, default 0). Entity and miss targets receive one press only."
+                    }
+                }
+            },
+            "description": "Attack the latest rendered crosshair target with one vanilla left-click press. For a block, hold_ticks (0-200, default 0) optionally holds attack and waits for release. Stops at the tick limit, when the original block state or target changes, a screen opens, hands become busy, input releases or the world disconnects. Entity and miss targets receive one press only. Reports the initial target snapshot, requestedHoldTicks, elapsedTicks, outcome, blockChanged (null for non-block targets or unavailable world), and serverConfirmed:false. A local block change may be prediction; it does not confirm server acceptance or entity damage. One attack hold at a time; close screens and release using items before calling. Wait a rendered frame after aiming.",
+            "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": true,
+                "idempotentHint": false,
+                "openWorldHint": false
+            }
+        },
+        {
             "name": "mc_drop_item",
             "inputSchema": {
                 "type": "object",

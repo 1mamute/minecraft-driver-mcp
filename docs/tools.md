@@ -43,6 +43,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_look_at`](#mc_look_at) | act | Face a world position |
 | [`mc_select_hotbar_slot`](#mc_select_hotbar_slot) | act | Select the held hotbar slot by index 0-8 |
 | [`mc_use`](#mc_use) | act | Right click, then use the held item |
+| [`mc_attack`](#mc_attack) | act | One vanilla attack press, with an optional bounded block hold |
 | [`mc_drop_item`](#mc_drop_item) | act | Drop one held item or its stack |
 | [`mc_send_chat`](#mc_send_chat) | act | Send chat or a command |
 | [`mc_join_server`](#mc_join_server) | act | Connect to a multiplayer server |
@@ -68,7 +69,7 @@ foreground state at launch.
 
 ### mc_get_target
 
-The crosshair target most recently computed by the renderer, also consumed by `mc_use`. Takes no arguments and
+The crosshair target most recently computed by the renderer, also consumed by `mc_use` and `mc_attack`. Takes no arguments and
 changes no game state. Annotations are `readOnlyHint: true`, `destructiveHint: false`, `idempotentHint: true` and
 `openWorldHint: false`.
 
@@ -459,6 +460,45 @@ nothing, the held item is used (main hand, then off hand).
 A single press only starts eating, drinking, drawing a bow or raising a shield, and the game ends it on the next tick.
 Use `hold_ticks` to finish: eating or drinking takes 32 ticks, a bow reaches full draw at 20. Aim first with
 `mc_look_at`. The result is the interaction result such as `CONSUME`, `SUCCESS` or `PASS`.
+
+### mc_attack
+
+Press vanilla attack once against the renderer's cached crosshair target. Aim first with `mc_look_at` and allow a
+rendered frame before attacking. For a block, optionally keep attack held for a bounded number of client ticks.
+An entity or miss receives only one press; its `hold_ticks` is ignored. This does not repeatedly swing at entities.
+Owned attack input does not require physical mouse capture, so it can progress with the window behind another application.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `hold_ticks` | integer | Maximum held client ticks for a block, 0 to 200. Default 0, a single press |
+
+The call waits until attack is released. Other tools can run while it waits. A second `mc_attack` fails busy;
+it does not replace the active call. The tool refuses calls without a world, with a screen or overlay open,
+while the player is using an item or has busy hands, in spectator mode, when attack is already held, or when the
+held item is disabled. Close screens, release attack or finish the conflicting action before retrying.
+
+A block hold ends when its duration expires, the initial block's client state changes, the target position or type
+changes, a screen or overlay opens, the player starts using an item or becomes busy, the player or world is replaced
+or disconnected, the attack key releases, the request is cancelled, or a 15-second wall-clock timeout expires. Attack is released and never resumes
+automatically. An early stop does not continue breaking a replacement block.
+Release runs on the render thread; a stalled render loop must resume before queued cleanup and the response can finish.
+
+The JSON result has these fields:
+
+| Field | Meaning |
+| --- | --- |
+| `target` | Initial crosshair snapshot, with the same `target`, `origin`, `blockReach` and `entityReach` shape as [`mc_get_target`](#mc_get_target) |
+| `requestedHoldTicks` | Requested duration, including when ignored for an entity or miss |
+| `elapsedTicks` | Client ticks spent holding attack |
+| `outcome` | `pressed`, `hold_complete`, `block_changed`, `target_changed`, `screen_opened`, `disconnected`, `hands_busy`, `input_released`, `timed_out` or `cancelled` |
+| `blockChanged` | Whether the initial block's client state changed; `null` for an entity, miss or unavailable level |
+| `serverConfirmed` | Always `false` |
+
+`pressed` means a single press finished; `hold_complete` means the requested block hold duration finished.
+The other outcomes describe why holding stopped. Cancellation can end the MCP request before a result is delivered;
+input is still released. Neither a completed press nor `block_changed` confirms server acceptance, a broken block,
+or entity damage. A block change can be client prediction, and a server may restore it. Read the target or block again
+after updates, and use server-side evidence when testing acceptance.
 
 ### mc_drop_item
 

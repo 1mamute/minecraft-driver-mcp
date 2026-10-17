@@ -86,6 +86,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_look_at` | Face a world position |
 | `mc_select_hotbar_slot` | Select the held hotbar slot by index 0-8; returns its item |
 | `mc_use` | Right click what is under the crosshair, then the held item; `hold_ticks` finishes eating, drinking or drawing a bow |
+| `mc_attack` | One vanilla attack press; optionally hold on a block for up to 200 client ticks, returning after release |
 | `mc_drop_item` | Drop one held item or the selected stack without opening inventory |
 | `mc_send_chat` | Send chat or a `/command` as the player |
 | `mc_type_text` | Type into the focused widget |
