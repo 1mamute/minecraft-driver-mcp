@@ -69,6 +69,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | --- | --- |
 | `mc_get_state` | Open screen, connection, window focus, player position |
 | `mc_get_target` | Cached crosshair block, entity or miss, hit position, distance and interaction ranges |
+| `mc_get_block` | Block ID, state properties and limited client block-entity data at one loaded position |
 | `mc_read_effects` | Active player status effects, amplifier and remaining ticks |
 | `mc_list_widgets` | Widgets of the open screen with index, type, label and bounds |
 | `mc_read_screen_text` | Text the open screen drew, with coordinates |

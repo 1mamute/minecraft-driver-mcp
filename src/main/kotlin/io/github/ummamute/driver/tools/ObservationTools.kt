@@ -1,5 +1,6 @@
 package io.github.ummamute.driver.tools
 
+import io.github.ummamute.driver.client.ClientBlocks
 import io.github.ummamute.driver.client.ClientEffects
 import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientScreens
@@ -32,6 +33,7 @@ internal object ObservationTools {
     fun register(server: Server, instanceName: String, screenshotEvidence: ScreenshotEvidence = ScreenshotEvidence(null)) {
         registerState(server)
         registerTarget(server)
+        registerBlock(server)
         registerEffects(server)
         registerScreen(server)
         registerScreenText(server)
@@ -50,6 +52,16 @@ internal object ObservationTools {
 
     private fun registerTarget(server: Server) {
         server.addGuardedTool(BuiltInTools["mc_get_target"]) { _ -> onRenderThread(ClientTarget::snapshot) { jsonResult(it) } }
+    }
+
+    private fun registerBlock(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_get_block"]) { request ->
+            val args = ToolSupport.arguments(request)
+            val x = args.int("x") ?: error("Argument \"x\" is required. Pass integer x, y and z to mc_get_block")
+            val y = args.int("y") ?: error("Argument \"y\" is required. Pass integer x, y and z to mc_get_block")
+            val z = args.int("z") ?: error("Argument \"z\" is required. Pass integer x, y and z to mc_get_block")
+            onRenderThread({ ClientBlocks.snapshot(x = x, y = y, z = z) }) { jsonResult(it) }
+        }
     }
 
     private fun registerScreen(server: Server) {
