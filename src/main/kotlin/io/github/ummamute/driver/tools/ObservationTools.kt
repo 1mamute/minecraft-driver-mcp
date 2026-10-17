@@ -4,6 +4,7 @@ import io.github.ummamute.driver.client.ClientEffects
 import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientState
+import io.github.ummamute.driver.client.ClientTarget
 import io.github.ummamute.driver.client.LogBuffer
 import io.github.ummamute.driver.client.LogCapture
 import io.github.ummamute.driver.client.LogQuery
@@ -30,6 +31,7 @@ internal object ObservationTools {
 
     fun register(server: Server, instanceName: String, screenshotEvidence: ScreenshotEvidence = ScreenshotEvidence(null)) {
         registerState(server)
+        registerTarget(server)
         registerEffects(server)
         registerScreen(server)
         registerScreenText(server)
@@ -44,6 +46,10 @@ internal object ObservationTools {
 
     private fun registerState(server: Server) {
         server.addGuardedTool(BuiltInTools["mc_get_state"]) { _ -> onRenderThread(ClientState::snapshot) { jsonResult(it) } }
+    }
+
+    private fun registerTarget(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_get_target"]) { _ -> onRenderThread(ClientTarget::snapshot) { jsonResult(it) } }
     }
 
     private fun registerScreen(server: Server) {
