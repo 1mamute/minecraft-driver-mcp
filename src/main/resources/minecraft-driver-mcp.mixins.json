@@ -9,6 +9,8 @@
 		"ClientTextTooltipMixin",
 		"GameRendererMixin",
 		"GuiGraphicsMixin",
+		"MinecraftAttackAccessor",
+		"MinecraftAttackMixin",
 		"MultiPlayerGameModeAccessor",
 		"ScreenMixin",
 		"WindowMixin"

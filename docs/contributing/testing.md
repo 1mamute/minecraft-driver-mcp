@@ -157,6 +157,47 @@ For `mc_read_effects`, check the title-screen error and an empty in-world list. 
 `/effect clear @s` and confirm the list becomes empty. For modded effects, verify namespaced IDs and, when more
 than 100 are active, a sorted 100-entry list with `total` and `truncated: true`.
 
+### Attacking
+
+Start the client at the title screen, then run against a disposable saved world with cheats enabled:
+
+```bash
+node scripts/check-attack.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
+```
+
+Use a dedicated test world: the check changes blocks near `(0, 280, 0)`, game mode and player position,
+clears inventory, and summons entities. It temporarily sets the tick rate to 1 and restores it to 20.
+Keep the game window behind another application and avoid physical game input while the check runs, so mouse
+movement cannot change the aimed targets between assertions.
+The runtime check must cover `initialize`, `tools/list`, schema/annotations and the following scenarios. Record the
+actual results in [Verification status](known-issues.md); these instructions alone do not establish a passing run.
+
+1. Check no-world errors and integer bounds: omitted/default 0, 0, 200, -1, 201, fractional and wrong-type values.
+2. In creative, press once at a nearby block, then test a positive hold. In survival, use a breakable block and an
+   unbreakable block to distinguish `block_changed` from duration expiry. Compare the initial `target` with
+   `mc_get_target`, check `requestedHoldTicks`, held `elapsedTicks` and outcome, and confirm `serverConfirmed:false`.
+   Do not treat a client-predicted block change as server acceptance.
+3. Aim at an entity and then the sky. For each, compare hold 0 and 200: only one press should occur, without an
+   entity attack loop, and `blockChanged` must be null. Do not infer entity damage from the result.
+4. During a long block hold, call observation tools and a second attack. Observations must continue; the second
+   attack must fail busy without replacing the first. Change the aimed block or aim away and verify prompt release.
+   Change the original block state separately and verify `block_changed` stops before a replacement is attacked.
+5. Open a screen or overlay mid-hold, start item use or otherwise make hands busy, disconnect, and replace the
+   player/world (for example through respawn or dimension travel). Verify the applicable stop outcome and no
+   automatic resume after closing the screen, finishing item use or rejoining.
+6. Cancel a pending request and exercise the wall-clock timeout with client ticks slowed or stalled. Verify release even if
+   cancellation prevents result delivery. After every stop, wait longer than the requested hold and verify no
+   continued block breaking or entity swings; start a fresh attack to check ownership was cleared.
+7. Check refusal with an existing screen/overlay, busy hands, spectator mode, an already-down attack key and a
+   disabled held item. Verify rejected calls do not acquire or release somebody else's attack input.
+
+Repeat survival mining with the window behind another application and the mouse released. With
+`driver.unfocused=true`, the owned hold must progress without requiring physical mouse capture. Change aim to
+an instantly breakable block during a hold and verify that block remains intact: Minecraft refreshes its pick
+inside the tick, so checking only at the start of the tick misses that change.
+
+Also test dedicated-server rejection and mod interception separately; record those as unverified until exercised.
+
 ### Dropping held items
 
 In survival and creative mode, put a known stack in the selected hotbar slot. Call `mc_drop_item`, then
