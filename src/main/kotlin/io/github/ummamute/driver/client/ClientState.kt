@@ -1,5 +1,7 @@
 package io.github.ummamute.driver.client
 
+import io.github.ummamute.driver.tools.EntityQuery
+import io.github.ummamute.driver.tools.EntityQueryResult
 import kotlinx.serialization.Serializable
 import net.minecraft.client.Minecraft
 import net.minecraft.core.registries.BuiltInRegistries
@@ -34,8 +36,6 @@ data class EntitySummary(
 
 /** Reads client state. Call on the render thread. */
 object ClientState {
-    private const val ENTITY_RANGE = 64.0
-    private const val ENTITY_LIMIT = 100
     private val mc: Minecraft get() = Minecraft.getInstance()
 
     fun snapshot(): ClientStateSnapshot {
@@ -48,16 +48,14 @@ object ClientState {
         )
     }
 
-    /** Entities within [ENTITY_RANGE] blocks, nearest first, at most [ENTITY_LIMIT]. */
-    fun entitiesNearby(): List<EntitySummary> {
+    /** Client-visible entities matching [query], nearest first, excluding the local player. */
+    fun entitiesNearby(query: EntityQuery): EntityQueryResult {
         val player = mc.player ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
         val level = mc.level ?: error("Not in a world. Join or create one with mc_join_world or mc_join_server, then call again")
-        return level.entitiesForRendering()
+        val entities = level.entitiesForRendering().asSequence()
             .filter { it !== player }
             .map { summarize(it, it.distanceTo(player).toDouble()) }
-            .filter { it.distance < ENTITY_RANGE }
-            .sortedBy { it.distance }
-            .take(ENTITY_LIMIT)
+        return query.select(entities)
     }
 
     private fun summarize(entity: Entity, distance: Double) = EntitySummary(

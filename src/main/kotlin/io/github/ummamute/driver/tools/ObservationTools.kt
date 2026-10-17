@@ -127,7 +127,11 @@ internal object ObservationTools {
     }
 
     private fun registerEntities(server: Server) {
-        server.addGuardedTool(BuiltInTools["mc_list_entities"]) { _ -> onRenderThread(ClientState::entitiesNearby) { jsonResult(it) } }
+        server.addGuardedTool(BuiltInTools["mc_list_entities"]) { request ->
+            val query = EntityQuery.from(ToolSupport.arguments(request))
+            val result = RenderThread.call { ClientState.entitiesNearby(query) }
+            result.toToolResult()
+        }
     }
 
     private fun registerScreenshot(server: Server, instanceName: String, evidence: ScreenshotEvidence) {

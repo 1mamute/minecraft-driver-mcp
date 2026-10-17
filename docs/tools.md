@@ -29,7 +29,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_messages`](#mc_read_messages) | read | Chat and system messages |
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
 | [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
-| [`mc_list_entities`](#mc_list_entities) | read | Entities near the player |
+| [`mc_list_entities`](#mc_list_entities) | read | Filter entities near the player with bounds and truncation metadata |
 | [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
 | [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
@@ -234,8 +234,29 @@ runs out. Keep `timeout_ms` below the MCP client's request timeout.
 
 ### mc_list_entities
 
-Entities within 64 blocks of the player, nearest first and at most 100, with id, registry type, name, feet position and
-distance. Requires a world.
+Lists client-visible entities, excluding the local player, nearest first. Requires a world. Defaults remain an
+exclusive radius of 64 blocks and at most 100 results.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `radius` | number | Exclusive distance from the player's feet, in blocks. Greater than 0 and at most 256; default 64. |
+| `limit` | integer | Maximum results after filtering and sorting. 1–1000; default 100. |
+| `type` | string | Case-sensitive exact full registry ID, such as `minecraft:zombie` or `cobblemon:pokemon`. |
+| `type_prefix` | string | Case-sensitive literal prefix of the full registry ID, such as `minecraft:`. |
+| `name_contains` | string | Case-insensitive literal substring of the returned name: custom name, or localized type name. |
+
+All arguments are optional; JSON `null` means omitted. Filters combine with AND **before** sorting and applying
+the limit. Type filters do not add a namespace; names and types do not expand wildcards or regular expressions.
+An empty prefix or name substring imposes no restriction; an empty or unknown exact type matches nothing.
+
+The first text block remains a JSON array with `id`, registry `type`, `name`, feet position `x`, `y`, `z`, and
+`distance` from the player's feet. A second JSON text block contains `{total,truncated,radius,limit}`: `total`
+counts matching client-visible entities before limiting, and `truncated` is true when matches were omitted.
+It does not count entities outside the radius or entities unknown to the client.
+
+For example, `{"type":"cobblemon:pokemon","name_contains":"Rotom","radius":32,"limit":1}` returns the nearest
+matching named entity, with metadata indicating whether more matches exist. Only entities already tracked by the
+client are available; increasing the radius does not load chunks or request additional server entities.
 
 ### mc_screenshot
 

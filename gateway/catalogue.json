@@ -241,9 +241,37 @@
         {
             "name": "mc_list_entities",
             "inputSchema": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                    "radius": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 256,
+                        "default": 64,
+                        "description": "Exclusive distance from player feet in blocks. Only client-tracked entities are available."
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1000,
+                        "default": 100,
+                        "description": "Maximum matching results, after nearest-first sorting."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Case-sensitive exact full registry ID, for example minecraft:zombie. No implicit namespace or wildcard expansion."
+                    },
+                    "type_prefix": {
+                        "type": "string",
+                        "description": "Case-sensitive literal prefix of the full registry ID, for example minecraft: or cobblemon:pokemon. Combined with type if both are supplied."
+                    },
+                    "name_contains": {
+                        "type": "string",
+                        "description": "Case-insensitive literal substring of the returned name (custom name or localized type name). No regex or wildcard expansion."
+                    }
+                }
             },
-            "description": "List entities within 64 blocks of the player, nearest first and at most 100, with id, registry type, name, feet position and distance.",
+            "description": "List client-visible entities nearest first, excluding the local player. Optional filters combine with AND before limiting. Defaults: radius 64 blocks, limit 100; caps: 256 blocks and 1000 results. First text block is the entity array; second is JSON with total matching, truncated, radius and limit.",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,

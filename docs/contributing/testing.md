@@ -149,6 +149,20 @@ update tags, subsequent block updates and unchanged player/inventory state durin
 For modded block entities, also compare returned update tags with the mod's client synchronization contract. Verify
 a block awaiting its client entity reports `not_available`.
 
+### Nearby entities
+
+Start the development client at the title screen, then run against a disposable saved world with cheats enabled:
+
+```bash
+node scripts/check-entities.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
+```
+
+The check changes blocks and the player's position/game mode near `(0, 260, 0)`, summons tagged armor stands,
+removes its fixtures and disconnects. It verifies the handshake, schema/annotations, no-world and argument errors,
+exact/prefix type and literal name semantics, combined filters before limiting, nearest-first ordering, radius
+boundaries, default and maximum bounds, truncation metadata, and unchanged player/inventory state during reads.
+For modded entities, also compare names and registry IDs with the mod's client synchronization contract.
+
 ### Player effects
 
 For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run
