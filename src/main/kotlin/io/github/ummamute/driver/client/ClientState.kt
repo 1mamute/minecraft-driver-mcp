@@ -32,7 +32,15 @@ data class EntitySummary(
     val z: Double,
     /** Distance in blocks from the player's feet. */
     val distance: Double,
+    /** Current eye position in world coordinates, including pose and size effects. */
+    val eyePosition: TargetPosition,
+    /** Current collision bounds in world coordinates, not rendered model extents or inflated pick bounds. */
+    val boundingBox: EntityBounds,
 )
+
+/** Axis-aligned entity bounds in world coordinates, measured in blocks. */
+@Serializable
+data class EntityBounds(val minX: Double, val minY: Double, val minZ: Double, val maxX: Double, val maxY: Double, val maxZ: Double)
 
 /** Reads client state. Call on the render thread. */
 object ClientState {
@@ -66,5 +74,9 @@ object ClientState {
         y = entity.y,
         z = entity.z,
         distance = distance,
+        eyePosition = entity.eyePosition.let { TargetPosition(x = it.x, y = it.y, z = it.z) },
+        boundingBox = entity.boundingBox.let {
+            EntityBounds(minX = it.minX, minY = it.minY, minZ = it.minZ, maxX = it.maxX, maxY = it.maxY, maxZ = it.maxZ)
+        },
     )
 }

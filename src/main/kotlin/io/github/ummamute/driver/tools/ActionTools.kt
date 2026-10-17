@@ -99,9 +99,11 @@ internal object ActionTools {
     private fun registerLookAt(server: Server) {
         server.addGuardedTool(BuiltInTools["mc_look_at"]) { request ->
             val args = arguments(request)
-            onRenderThread({ ClientInput.lookAt(args.requireDouble("x"), args.requireDouble("y"), args.requireDouble("z")) }) {
-                jsonResult(ClientState.snapshot())
-            }
+            val target = LookAtTarget.from(args)
+            onRenderThread({
+                ClientInput.lookAt(target)
+                ClientState.snapshot()
+            }) { jsonResult(it) }
         }
     }
 

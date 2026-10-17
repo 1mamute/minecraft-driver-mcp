@@ -132,7 +132,7 @@ try {
   )
   assert.equal(defaults.items[0].type, 'minecraft:armor_stand')
   assert.equal(defaults.items[0].name, 'Alpha [Target]!')
-  assert.deepEqual(Object.keys(defaults.items[0]).sort(), ['distance', 'id', 'name', 'type', 'x', 'y', 'z'])
+  assert.deepEqual(Object.keys(defaults.items[0]).sort(), ['boundingBox', 'distance', 'eyePosition', 'id', 'name', 'type', 'x', 'y', 'z'])
   assert.ok(Number.isInteger(defaults.items[0].id))
   assert.equal(defaults.items[0].x, 2.5)
   assert.equal(defaults.items[0].y, 260)

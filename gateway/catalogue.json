@@ -271,7 +271,7 @@
                     }
                 }
             },
-            "description": "List client-visible entities nearest first, excluding the local player. Optional filters combine with AND before limiting. Defaults: radius 64 blocks, limit 100; caps: 256 blocks and 1000 results. First text block is the entity array; second is JSON with total matching, truncated, radius and limit.",
+            "description": "List client-visible entities nearest first, excluding the local player. Optional filters combine with AND before limiting. Defaults: radius 64 blocks, limit 100; caps: 256 blocks and 1000 results. First text block is the entity array; second is JSON with total matching, truncated, radius and limit. Each summary includes eyePosition {x,y,z} and boundingBox {minX,minY,minZ,maxX,maxY,maxZ} in world coordinates. Pass its id to mc_look_at as entity_id to aim without guessing height offsets.",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,
@@ -491,16 +491,23 @@
                     "z": {
                         "type": "number",
                         "description": "World z"
+                    },
+                    "entity_id": {
+                        "type": "integer",
+                        "description": "Runtime entity ID from mc_list_entities or mc_get_target. Use instead of x, y, z; must still be loaded in the current client level."
+                    },
+                    "aim_point": {
+                        "type": "string",
+                        "enum": [
+                            "eye",
+                            "center"
+                        ],
+                        "description": "Entity aim point: current eye position (default) or current bounding-box center. Requires entity_id."
                     }
                 },
-                "required": [
-                    "x",
-                    "y",
-                    "z"
-                ],
                 "type": "object"
             },
-            "description": "Turn the player to face a world position.",
+            "description": "Turn the player to face either world coordinates x, y, z or a loaded entity_id from mc_list_entities. Do not combine the two forms. Entity aiming resolves the current eye position (default aim_point: eye) or bounding-box center (aim_point: center) at call time. Returns the new state. Aiming does not guarantee reach or visibility; allow a rendered frame, then use mc_get_target to check the crosshair.",
             "annotations": {
                 "readOnlyHint": false,
                 "destructiveHint": false,

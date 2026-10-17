@@ -69,7 +69,10 @@ what a mod did to an item.
 
 1. `mc_join_world` with a test world, then `mc_wait_for` with `{"screen": "none"}`.
 2. Place or summon it with a command: `/setblock`, `/summon`, `/give`.
-3. `mc_look_at` it and `mc_use` it. `mc_list_entities` finds entities with their registry type and position.
+3. Find it with `mc_list_entities`, then pass its `id` to `mc_look_at` as `entity_id` and call `mc_use`.
+   Entity summaries include registry type, feet and eye positions, and bounding-box bounds. Use
+   `aim_point: "center"` to aim at the box center. Aiming alone does not establish reach or visibility;
+   allow a rendered frame and check `mc_get_target` before interacting.
 4. Check the result with `mc_read_messages`, `mc_read_inventory` and `mc_read_log`.
 5. For items that need to be held down, such as food or bows, use `mc_use` with `hold_ticks`.
 
