@@ -104,6 +104,36 @@ slot; selection should stay stable and the empty slot should return `item: null`
 `mc_use` and verify the server observes that item (for example, a placeable block in slot 8). Check `isError`
 for a missing slot, a non-integer slot, -1, 9, and a call from the title screen. The error should explain how to retry.
 
+### Crosshair target
+
+Start the development client at the title screen, then run the repeatable check against a disposable saved world
+with cheats enabled. It changes blocks near `(0, 200, 0)`, summons and removes a tagged entity, and changes the player's
+position, game mode and interaction-range attributes. Use a dedicated test world, not a normal playthrough:
+
+```bash
+node scripts/check-target.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
+```
+
+The script checks the direct endpoint without authentication, prints each passing scenario, disconnects after the
+in-world checks, and exits unsuccessfully on a failed assertion. It does not launch or close the client process.
+
+For `mc_get_target`, check the title-screen error directs the caller to join a world. In a world, allow a rendered
+frame after aiming or moving before each comparison:
+
+1. Aim at a known nearby block. Check `type: "block"`, namespaced block ID, integer coordinates and lowercase face.
+   Compare `location` with the face hit, `origin` with the current camera eye position, and `distance` with their
+   Euclidean distance in blocks.
+2. Aim at an entity. Check `type: "entity"`, integer runtime ID, UUID and namespaced registry type, with no `block` property.
+3. Aim at the sky and at a target beyond the applicable interaction range. Check `type: "miss"` and that both `block`
+   and `entity` are absent; the returned location and distance are not reported as a successful hit.
+4. Repeat in survival and creative, then change each interaction-range attribute. Check `blockReach` and `entityReach`
+   follow the player's current values and targeting follows the renderer's result at the changed ranges.
+5. Aim through fluid at a solid block in range. Check that the solid target is returned rather than the fluid; compare
+   a bucket's separate fluid action when relevant.
+6. Read the target repeatedly and verify no inventory, world, rotation or input state changes. Move or aim, then wait
+   a rendered frame and verify the updated cached result. Confirm `tools/list` advertises no arguments and the four
+   annotations: read-only and idempotent true, destructive and open-world false.
+
 ### Player effects
 
 For `mc_read_effects`, check the title-screen error and an empty in-world list. With cheats enabled, run

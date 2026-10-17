@@ -19,6 +19,7 @@ when the game is not in the required state, for example when no world is joined.
 | Tool | Kind | Does |
 | --- | --- | --- |
 | [`mc_get_state`](#mc_get_state) | read | Open screen, connection, window focus, player position |
+| [`mc_get_target`](#mc_get_target) | read | Cached crosshair block, entity or miss, hit position, distance and interaction ranges |
 | [`mc_read_effects`](#mc_read_effects) | read | Active player status effects, amplifier and remaining ticks |
 | [`mc_list_widgets`](#mc_list_widgets) | read | Widgets of the open screen |
 | [`mc_read_screen_text`](#mc_read_screen_text) | read | Text the open screen drew |
@@ -63,6 +64,40 @@ player's position and rotation (`null` outside a world).
 
 `windowFocused` turns `false` only after the window had focus and lost it; it does not report the operating system's
 foreground state at launch.
+
+### mc_get_target
+
+The crosshair target most recently computed by the renderer, also consumed by `mc_use`. Takes no arguments and
+changes no game state. Annotations are `readOnlyHint: true`, `destructiveHint: false`, `idempotentHint: true` and
+`openWorldHint: false`.
+
+```json
+{ "target": { "type": "block", "location": { "x": 10.5, "y": 65.5, "z": -2.0 }, "distance": 2.0,
+    "block": { "id": "minecraft:stone", "x": 10, "y": 65, "z": -2, "face": "north" } },
+  "origin": { "x": 10.5, "y": 65.5, "z": -4.0 }, "blockReach": 4.5, "entityReach": 3.0 }
+```
+
+`target.type` is `block`, `entity` or `miss`. Every variant has a world-space `location` and `distance`, the Euclidean
+distance in blocks from `origin` to that location. `origin` is the camera's current eye position. A block target adds
+`block` with its namespaced registry `id`, integer block coordinates and lowercase hit `face` (`down`, `up`, `north`,
+`south`, `west` or `east`). An entity target instead adds `entity` with its integer runtime `id`, string `uuid` and
+namespaced registry `type`. A miss has neither `block` nor `entity`; its location is the ray endpoint or a rejected hit,
+and its distance does not indicate a successful hit.
+
+`blockReach` and `entityReach` are the local player's current interaction ranges in blocks, including changes to the
+interaction-range attributes. They are not fixed survival or creative constants. The values in the example are illustrative.
+
+This reads the cached renderer result without recasting or refreshing it. After moving or aiming with `mc_look` or
+`mc_look_at`, allow a rendered frame before reading the target. Its cached location and the current camera origin may
+otherwise describe different moments. Modded targeting is reflected through that same cached result.
+
+Vanilla targeting uses block outline shapes and skips fluid shapes, so a solid block behind or in water may be returned.
+There is no extended raycast or fluid-selection argument. Items such as buckets can perform their own fluid raycast,
+so the actual item action can differ. A target is client state, which may lag the server; it neither confirms server
+acceptance nor guarantees the next interaction will succeed.
+
+Without a player, the tool returns an error directing the caller to join a world. If the level, camera or target is
+not available yet, wait for loading or a rendered frame as directed and retry.
 
 ### mc_read_effects
 

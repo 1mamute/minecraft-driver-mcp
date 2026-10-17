@@ -85,6 +85,14 @@ directories. The second client cannot open it and logs file-lock errors, but its
   item per click.
 - The returned slot state is the client's prediction. Read the container again to see what the server kept.
 
+## Crosshair targeting
+
+`mc_get_target` reads the renderer's cached target. Allow a rendered frame after moving or aiming before reading it;
+the reported origin is the current camera eye position, so it can be newer than the cached hit. A miss's location and
+distance describe an endpoint or rejected hit, not a successful interaction. Vanilla targeting skips fluid shapes and
+can return a solid block behind or in water. Items such as buckets can use a separate fluid raycast. The target reflects
+modded targeting and client state; server updates may lag, and the next item action or server acceptance can differ.
+
 ## Player status effects
 
 `mc_read_effects` returns at most 100 active effects, sorted by registry identifier. Check `total` and `truncated`
