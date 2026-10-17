@@ -4,6 +4,22 @@ Versions follow [Semantic Versioning](https://semver.org). While the project is 
 properties, the instance registry format and the extension API can change in any minor version, and each change is
 listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version>.jar`.
 
+## 0.4.0
+
+<!-- changelog:0.4.0 -->
+### Features
+
+- Inspect the current crosshair target
+- Read client-visible blocks and block-entity data ([#98](https://github.com/1mamute/minecraft-driver-mcp/pull/98))
+- Add attack and held block-breaking input ([#99](https://github.com/1mamute/minecraft-driver-mcp/pull/99))
+- Filter nearby entity queries ([#100](https://github.com/1mamute/minecraft-driver-mcp/pull/100))
+- Aim at entities without guessed height offsets ([#101](https://github.com/1mamute/minecraft-driver-mcp/pull/101))
+
+### Chores
+
+- Release 0.4.0
+<!-- /changelog:0.4.0 -->
+
 ## 0.3.0
 
 <!-- changelog:0.3.0 -->
