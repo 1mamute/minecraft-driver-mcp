@@ -39,6 +39,12 @@ machine's LAN address is answered with `403 Invalid Host`.
 The server keeps no session, so it cannot push notifications to the assistant. `mc_wait_for` blocks inside a single
 call, with a default timeout of 10 seconds and a cap of 60 seconds. Keep it below the MCP client's request timeout.
 
+## Nearby entities
+
+`mc_list_entities` sees only entities already tracked by the client. Its radius is capped at 256 blocks and results
+at 1,000; defaults are 64 and 100. Increasing the radius does not load chunks or make the server send more entities.
+Read the second text block's `total` and `truncated` to detect omitted matches, then narrow the type/name filters.
+
 ## Screens and widgets
 
 - **Tooltips need a hovering cursor.** The tools do not move the real cursor, so a tooltip appears only if the real
