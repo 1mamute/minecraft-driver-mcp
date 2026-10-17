@@ -26,6 +26,19 @@
     }
   },
   {
+    "name": "mc_get_target",
+    "inputSchema": {
+      "type": "object"
+    },
+    "description": "Inspect the latest rendered crosshair target: block (registry id, integer position, face), entity (network id, UUID, registry type), or miss. Includes world hit location, distance from the current camera eye, and the player's current blockReach and entityReach. Takes no arguments and requires a world. Reads the actual cached target used by mc_use; wait a rendered frame after aiming. No extended raycast. Vanilla ignores fluid shapes, so buckets may target differently. A miss location is an endpoint or rejected hit. Client observation only; does not confirm server acceptance.",
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "mc_read_effects",
     "description": "Read the local player's active status effects: registry id, zero-based amplifier and remainingTicks (-1 for infinite). Returns up to 100 effects sorted by id, with total and truncated. Fails outside a world; join one first.",
     "inputSchema": {
