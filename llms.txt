@@ -34,7 +34,7 @@ codex mcp add minecraft-driver -- minecraft-driver-mcp
 ```
 
 For released versions, `npx -y minecraft-driver-mcp@<matching-release>` can replace
-the installed executable as the stdio command. The current release version is 0.3.0.
+the installed executable as the stdio command. The current release version is 0.4.0.
 
 The gateway's forwarded request timeout is 70000 ms. Set `MCP_TOOL_TIMEOUT=75000` in
 Claude Code's own launch environment, or `"timeout":75000` in its `.mcp.json` server

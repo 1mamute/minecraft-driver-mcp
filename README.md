@@ -44,12 +44,12 @@ used, so the window can stay behind other windows. The server binds to `127.0.0.
    libraries are bundled. Requires Fabric Loader 0.19.5+ and Java 21+.
 2. Install Node.js 22 or later and use a gateway release matching the mod. For source builds, follow
    [Build and install](docs/gateway.md#build-and-install) to install the local archive.
-3. Register the gateway once in your coding agent (examples use release `0.3.0`):
+3. Register the gateway once in your coding agent (examples use release `0.4.0`):
 
    ```bash
-   claude mcp add --transport stdio minecraft-driver -- npx -y minecraft-driver-mcp@0.3.0
+   claude mcp add --transport stdio minecraft-driver -- npx -y minecraft-driver-mcp@0.4.0
    # Or, for Codex:
-   codex mcp add minecraft-driver -- npx -y minecraft-driver-mcp@0.3.0
+   codex mcp add minecraft-driver -- npx -y minecraft-driver-mcp@0.4.0
    ```
 
 4. Start an agent session, then launch Minecraft. Ask the assistant to call `mc_list_instances` or
@@ -178,7 +178,7 @@ into the mod jar; building the mod requires JDK 21 and does not require Node.js.
 
 ## Status
 
-Version 0.3.0 targets Minecraft 1.21.1. The tools above are checked against a running client, both in a development
+Version 0.4.0 targets Minecraft 1.21.1. The tools above are checked against a running client, both in a development
 environment and in a regular launcher-managed install with other mods, before each change merges. Other Minecraft
 versions and operating systems other than Windows have not been tested, and tool names and schemas can change between
 minor versions. Limits and unverified areas are listed in [Known issues](docs/known-issues.md).
