@@ -10,6 +10,7 @@ import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientSlots
 import io.github.ummamute.driver.client.ClientState
 import io.github.ummamute.driver.client.RenderThread
+import io.github.ummamute.driver.client.ScreenText
 import io.github.ummamute.driver.client.SlotClickArgs
 import io.github.ummamute.driver.client.SlotClickPlanner
 import io.github.ummamute.driver.tools.ToolSupport.addGuardedTool
@@ -18,6 +19,7 @@ import io.github.ummamute.driver.tools.ToolSupport.boolean
 import io.github.ummamute.driver.tools.ToolSupport.double
 import io.github.ummamute.driver.tools.ToolSupport.int
 import io.github.ummamute.driver.tools.ToolSupport.jsonResult
+import io.github.ummamute.driver.tools.ToolSupport.long
 import io.github.ummamute.driver.tools.ToolSupport.onRenderThread
 import io.github.ummamute.driver.tools.ToolSupport.requireDouble
 import io.github.ummamute.driver.tools.ToolSupport.requireString
@@ -31,6 +33,7 @@ internal object ActionTools {
 
     fun register(server: Server) {
         registerClick(server)
+        registerClickText(server)
         registerClickSlot(server)
         registerCloseScreen(server)
         registerKey(server)
@@ -53,7 +56,8 @@ internal object ActionTools {
             val x = args.double("x")
             val y = args.double("y")
             val button = args.int("button") ?: 0
-            onRenderThread({ ClientScreens.click(index, label, x, y, button) }) { jsonResult(it) }
+            val path = args.string("path")
+            onRenderThread({ ClientScreens.click(index, label, x, y, button, path) }) { jsonResult(it) }
         }
     }
 
@@ -68,6 +72,17 @@ internal object ActionTools {
                 hotbar = args.int("hotbar"),
             )
             onRenderThread({ ClientSlots.click(click) }) { jsonResult(it) }
+        }
+    }
+
+    private fun registerClickText(server: Server) {
+        server.addGuardedTool(BuiltInTools["mc_click_text"]) { request ->
+            val args = arguments(request)
+            val frameId = args.long("frame_id") ?: error("frame_id is required; call mc_read_screen_text and use its frameId")
+            val text = args.requireString("text")
+            val textIndex = args.int("text_index")
+            val button = args.int("button") ?: 0
+            onRenderThread({ ScreenText.click(frameId, text, textIndex, button) }) { jsonResult(it) }
         }
     }
 

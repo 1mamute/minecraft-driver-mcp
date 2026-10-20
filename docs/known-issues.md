@@ -54,6 +54,14 @@ or visibility, and does not keep tracking it. Allow a rendered frame and inspect
 - **Tooltips need a hovering cursor.** The tools do not move the real cursor, so a tooltip appears only if the real
   cursor is over its target. Item tooltips in containers cannot be read this way; `mc_read_inventory` and
   `mc_read_container` give the item data instead.
+- **Text bounds and clicking.** `mc_click_text` uses a measured text rectangle, which does not prove the text is
+  clickable. Bounds are unavailable for unsupported transforms or scissor-clipped text. Verify the resulting screen;
+  when bounds are null, use `mc_screenshot` and an explicit point click. `mc_click_text` is limited to the latest frame.
+- **Widget bounds.** `boundsStatus: "screen"` means rendered geometry and ancestor hit-tests agree; it does not prove
+  the event handlers route the click or perform an action. Automatic clicks require a fresh vanilla render with
+  untransformed coordinates and a successful ancestor hit-test. Custom widgets always have null `renderedBounds`
+  because transforms inside `renderWidget` cannot be inferred. Transformed, clipped or unrendered widgets have
+  uncertain bounds; use a screenshot or point click. Nested paths last only while child structure is unchanged.
 - **Text drawn directly by a mod.** `mc_read_screen_text` captures text drawn through the standard `GuiGraphics` and
   tooltip paths. Text drawn by calling `Font.drawInBatch` directly, or text drawn in the world, is not captured.
   `mc_screenshot` is the fallback.

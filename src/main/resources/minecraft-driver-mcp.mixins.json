@@ -6,11 +6,13 @@
 	"client": [
 		"AbstractContainerScreenAccessor",
 		"AbstractWidgetAccessor",
+		"AbstractWidgetMixin",
 		"ClientTextTooltipMixin",
 		"GameRendererMixin",
 		"GuiGraphicsMixin",
 		"MinecraftAttackAccessor",
 		"MinecraftAttackMixin",
+		"MinecraftScreenMixin",
 		"MultiPlayerGameModeAccessor",
 		"ScreenMixin",
 		"WindowMixin"

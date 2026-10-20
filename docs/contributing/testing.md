@@ -55,6 +55,12 @@ PR when it was not done.
 ./gradlew :1.21.1:runClient
 ```
 
+After the title screen appears, run the vanilla-only screen check. It navigates vanilla screens and makes no world changes:
+
+```bash
+node scripts/check-screen.mjs http://127.0.0.1:25890/mcp
+```
+
 `runClient` seeds `run/options.txt` (once) with the settings below and sets
 `-Ddriver.unfocused=true`. The log prints the endpoint, normally
 `http://127.0.0.1:25890/mcp`.
@@ -335,8 +341,8 @@ Run this check when you touch ports, the registry or names.
 - **Widgets react to hover.** Hover comes from the real cursor, so `mc_click` marks the
   target hovered before it clicks.
 - **Some buttons are not in `children()`.** Screens that draw their own tiles (for
-  example a mod's battle menu) need the screen class inspected; the tool lists them
-  separately when it can.
+  example a mod's battle menu) are not exposed by standard child traversal. Use captured text or a screenshot and
+  explicit GUI coordinates; mod-specific inspection belongs in an adapter.
 - **Replies are asynchronous.** A command's chat reply arrives after the command returns.
   Send with `mc_send_chat`, then poll `mc_read_messages` with the last `latest` as `since`.
   `mc_wait_for` with `message` and `since` set to the last `latest` replaces that manual polling.
@@ -358,6 +364,28 @@ Run this check when you touch ports, the registry or names.
 - **Screen text** is captured while the screen renders, so call `mc_read_screen_text` after the
   screen has been open for a frame. A tooltip shows only while the real
   cursor hovers its target, so the tool cannot reach one the agent cannot hover.
+
+### Screen text and widgets
+
+Run `node scripts/check-screen.mjs <endpoint>` after the title screen appears. The check navigates vanilla screens only
+and does not change a world. It checks measured text clicks, Controls to Key Binds nested paths, preserved root indexes,
+inactive-widget refusal, repeated Reset text disambiguation, single-use capture, expired/replaced captures, returning
+to a previous screen instance, and screenshots. Use the English language and default key bindings; the repeated Reset
+fixture clicks the first disabled reset button. Both the development run and the packaged-driver run with Cobblemon
+1.8.1 passed. Record observed results in [Verification status](known-issues.md).
+
+For the original modded-screen reproduction, prepare a disposable two-player Cobblemon 1.8.1 battle with English
+labels, keep the first client on its initial battle menu, then run:
+
+```bash
+node scripts/check-cobblemon-screen.mjs <endpoint> [evidence-directory]
+```
+
+The check opens Forfeit through measured text, verifies the confirmation's raw `(0, 0, 113, 45)` bounds are uncertain,
+and saves a screenshot and JSON evidence (default `build/check-screen/`). It cancels, reopens through a fresh text
+capture and accepts, ending the disposable battle. The explicit confirmation coordinates in this test fixture come
+from Cobblemon 1.8.1's layout; they are not generic driver logic. This check passed against the packaged driver.
+The private accept/decline fields are not `ContainerEventHandler.children`; generic traversal does not inspect them.
 
 ## Debugging
 

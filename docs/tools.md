@@ -34,6 +34,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
 | [`mc_wait_for_instance`](#mc_wait_for_instance) | read | Wait for a gateway client endpoint |
 | [`mc_click`](#mc_click) | act | Click a widget or a point |
+| [`mc_click_text`](#mc_click_text) | act | Click text using bounds from the latest rendered frame |
 | [`mc_click_slot`](#mc_click_slot) | act | Click a container slot |
 | [`mc_close_screen`](#mc_close_screen) | act | Close the open screen |
 | [`mc_type_text`](#mc_type_text) | act | Type into the focused widget |
@@ -156,15 +157,27 @@ is truncated.
 
 ### mc_list_widgets
 
-The clickable widgets of the open screen, each with `index`, `type`, `label` and bounds. Pass the index or the label to
-`mc_click`. Vanilla widgets report a stable type (`Button`, `EditBox`, `Slider`, `StringWidget`, and so on); a widget
+Lists widgets reachable through the screen's public child hierarchy. Root widgets keep their existing indexes; nested
+descendants follow them in depth-first order. Each entry includes `index`, `type`, `label`, the existing raw rectangle
+(`x`, `y`, `width`, `height`), and `inspection` with `path`, `boundsStatus` (`screen` or `uncertain`), nullable
+`boundsReason`, and nullable `renderedBounds` (`x`, `y`, `width`, `height`) in GUI coordinates. Paths such as `0/2/1`
+can be passed to `mc_click`; they remain valid only while the child structure is unchanged. Re-list after a screen
+change. Vanilla widgets report a stable type (`Button`, `EditBox`, `Slider`, `StringWidget`, and so on); a widget
 from another mod keeps its own class name.
+
+Automatic widget clicks are allowed only when the widget was freshly rendered with untransformed coordinates and
+passes the ancestor hit-test. `boundsStatus: "screen"` means the rendered geometry and ancestor hit-tests agree; it
+does not establish that the screen's event handlers route the click to the widget or perform an action. Custom widgets
+always have null `renderedBounds`, because transforms inside their `renderWidget` implementation cannot be inferred.
+Transformed, clipped or unrendered widgets also have uncertain bounds. Use a screenshot or a point click instead.
 
 ### mc_read_screen_text
 
-The text the open screen drew in its last frame: title, labels, body text and any tooltip showing, with coordinates.
-This includes text that has no widget. A tooltip appears only while the real cursor hovers its target. Call it after
-the screen has been open for a frame.
+The text the open screen drew in its last frame: title, labels, body text and any tooltip showing. Each `texts` entry
+retains `text`, `x` and `y` in raw drawing coordinates for compatibility and adds nullable `bounds` (`x`, `y`,
+`width`, `height`) measured in GUI coordinates. Bounds use font metrics and positive axis-aligned pose transforms;
+unsupported transforms and scissor-clipped text have null bounds. Tooltips are reported separately and are not
+selectable. A tooltip appears only while the real cursor hovers its target. Call after the screen has rendered.
 
 ### mc_read_inventory
 
@@ -415,11 +428,28 @@ Click a widget of the open screen, or a point. Runs through the screen's click h
 | --- | --- | --- |
 | `label` | string | Part of the widget label, case-insensitive |
 | `index` | integer | Widget index from `mc_list_widgets` |
+| `path` | string | Nested widget path from `mc_list_widgets`, for example `0/2/1`; valid only while child structure is unchanged |
 | `x`, `y` | number | A point in GUI coordinates, used together |
 | `button` | integer | `0` left (default) or `1` right |
 
-Give `label`, `index` or `x` and `y`. A click by point is how to reach elements that are not widgets, such as the tabs
+Give `label`, `index`, `path` or `x` and `y`. A click by point is how to reach elements that are not widgets, such as the tabs
 of the creative inventory.
+
+### mc_click_text
+
+Clicks the center of text through the open screen's handlers, using the newest `mc_read_screen_text.frameId`.
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `frame_id` | integer | Required frame ID returned by `mc_read_screen_text` |
+| `text` | string | Required exact, case-sensitive text |
+| `text_index` | integer | Optional zero-based global index in `texts`, to disambiguate repeated text |
+| `button` | integer | `0` left (default) or `1` right |
+
+The frame is single-use after a successful dispatch and expires after five seconds. The call fails if the screen
+instance, dimensions or content changed, or if no rendered frame arrives within one second. A text rectangle does not
+prove the area is clickable; verify the resulting screen. If bounds are null, use `mc_screenshot` and an explicit
+`mc_click` point.
 
 ### mc_click_slot
 
