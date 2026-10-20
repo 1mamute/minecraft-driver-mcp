@@ -17,11 +17,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class GuiGraphicsMixin {
     @Inject(method = "drawString(Lnet/minecraft/client/gui/Font;Ljava/lang/String;IIIZ)I", at = @At("HEAD"))
     private void recordString(Font font, String text, int x, int y, int color, boolean shadow, CallbackInfoReturnable<Integer> cir) {
-        ScreenText.text(text, x, y);
+        ScreenText.text((GuiGraphics) (Object) this, font, text, x, y);
     }
 
     @Inject(method = "drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;IIIZ)I", at = @At("HEAD"))
     private void recordSequence(Font font, FormattedCharSequence text, int x, int y, int color, boolean shadow, CallbackInfoReturnable<Integer> cir) {
-        ScreenText.text(text, x, y);
+        ScreenText.text((GuiGraphics) (Object) this, font, text, x, y);
     }
 }

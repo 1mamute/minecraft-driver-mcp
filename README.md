@@ -71,11 +71,12 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_get_target` | Cached crosshair block, entity or miss, hit position, distance and interaction ranges |
 | `mc_get_block` | Block ID, state properties and limited client block-entity data at one loaded position |
 | `mc_read_effects` | Active player status effects, amplifier and remaining ticks |
-| `mc_list_widgets` | Widgets of the open screen with index, type, label and bounds |
-| `mc_read_screen_text` | Text the open screen drew, with coordinates |
+| `mc_list_widgets` | Widgets of the open screen with index, type, label, hierarchy paths and rendered bounds when reliable |
+| `mc_read_screen_text` | Text the open screen drew, with raw drawing coordinates and measured bounds when reliable |
 | `mc_read_inventory` | The player's slots with item id, name, count, durability, enchantments and lore, plus the cursor stack |
 | `mc_read_container` | The open container screen with every slot and, for merchants, the offers |
-| `mc_click` | Click a widget by label or index, or a point |
+| `mc_click` | Click a widget by label, index or hierarchy path, or a point |
+| `mc_click_text` | Click text from the latest screen-text frame when its measured bounds are reliable |
 | `mc_click_slot` | Click a container slot: pick up, quick move, swap, throw, clone, gather, or drop the cursor stack |
 | `mc_close_screen` | Close the open screen as Escape does |
 | `mc_join_server` | Connect to a multiplayer server |

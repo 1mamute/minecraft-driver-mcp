@@ -90,7 +90,7 @@
             "inputSchema": {
                 "type": "object"
             },
-            "description": "List the clickable widgets of the open screen with index, type, label and bounds. Use the index or label with mc_click.",
+            "description": "List top-level widgets followed by nested public child containers. Each widget retains its raw rectangle and adds inspection with path, boundsStatus, boundsReason and renderedBounds. Only boundsStatus screen has a supported GUI click center; uncertain bounds need mc_read_screen_text or mc_screenshot. Use index, label or inspection.path with mc_click. Private mod tiles are not inspected.",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,
@@ -103,7 +103,7 @@
             "inputSchema": {
                 "type": "object"
             },
-            "description": "Read the text the open screen drew in its last frame: the title, labels, body text and any tooltip showing, with coordinates. Includes text that mc_list_widgets cannot see. A tooltip appears only while the cursor hovers its target.",
+            "description": "Read the open screen's last rendered text and tooltips. Returns frameId and texts with raw draw x/y plus nullable measured bounds in GUI units after supported transforms. Null bounds mean unsupported or clipped text. Use the newest frameId within five seconds with mc_click_text; text bounds do not prove clickability. Tooltips are separate and not selectable. A tooltip appears only while the cursor hovers its target.",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,
@@ -419,6 +419,10 @@
                         "type": "integer",
                         "description": "Widget index from mc_list_widgets"
                     },
+                    "path": {
+                        "type": "string",
+                        "description": "Widget inspection.path from mc_list_widgets, such as 0/2/1; re-list after the child structure changes"
+                    },
                     "x": {
                         "type": "number",
                         "description": "Screen x coordinate, used with y"
@@ -434,7 +438,41 @@
                 },
                 "type": "object"
             },
-            "description": "Click a widget of the open screen by `label` (case-insensitive substring) or `index` from mc_list_widgets, or a point with `x` and `y`. Runs through the screen click handlers; the real cursor is untouched.",
+            "description": "Click an open-screen widget by label (case-insensitive substring), index or path from mc_list_widgets, or an explicit GUI point with x and y. Widget selectors require fresh supported bounds; uncertain custom, transformed, clipped or unrendered widgets need mc_read_screen_text or mc_screenshot and explicit coordinates. Runs through screen click handlers; the real cursor is untouched.",
+            "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+            }
+        },
+        {
+            "name": "mc_click_text",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "frame_id": {
+                        "type": "integer",
+                        "description": "frameId from the most recent mc_read_screen_text, at most five seconds old"
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Exact case-sensitive text from that capture"
+                    },
+                    "text_index": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Zero-based index in the captured texts array; required to disambiguate repeated text"
+                    },
+                    "button": {
+                        "type": "integer",
+                        "enum": [0, 1],
+                        "description": "Mouse button: 0 left (default), 1 right"
+                    }
+                },
+                "required": ["frame_id", "text"]
+            },
+            "description": "Click the center of measured screen text from the newest mc_read_screen_text frameId. Exact case-sensitive text is required; repeated labels need text_index from its texts array. Rejects missing matches, expired captures, changed screens, sizes or frame content, and unsupported/clipped bounds. A dispatched click consumes the capture. Text bounds do not prove a clickable area; inspect handled and re-read the screen to verify the action. Tooltips are not selectable.",
             "annotations": {
                 "readOnlyHint": false,
                 "destructiveHint": false,

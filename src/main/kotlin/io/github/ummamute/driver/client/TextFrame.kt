@@ -4,18 +4,33 @@ import kotlinx.serialization.Serializable
 
 /** A piece of text a screen drew, at the coordinates it was drawn to. */
 @Serializable
-data class DrawnText(val text: String, val x: Int, val y: Int)
+data class DrawnText(val text: String, val x: Int, val y: Int, val bounds: TextBounds? = null)
+
+/** Measured text layout rectangle in GUI units; it does not establish a clickable area. */
+@Serializable
+data class TextBounds(val x: Double, val y: Double, val width: Double, val height: Double) {
+    val centerX: Double get() = x + width / 2
+    val centerY: Double get() = y + height / 2
+}
 
 /** What the open screen showed in its last rendered frame. */
 @Serializable
-data class ScreenTextResult(val screen: String, val title: String, val texts: List<DrawnText>, val tooltips: List<String>)
+data class ScreenTextResult(
+    val screen: String,
+    val title: String,
+    val texts: List<DrawnText>,
+    val tooltips: List<String>,
+    val frameId: Long,
+)
 
 /** Collects the text of one render pass. Has no Minecraft types so it can be tested on its own. */
 class TextFrame {
     private val drawn = LinkedHashSet<DrawnText>()
     private val tooltipLines = LinkedHashSet<DrawnText>()
 
-    fun addText(text: String, x: Int, y: Int) = add(drawn, text, x, y)
+    fun addText(text: String, x: Int, y: Int, bounds: TextBounds? = null) {
+        if (text.isNotBlank()) drawn.add(DrawnText(text, x, y, bounds))
+    }
 
     fun addTooltipLine(text: String, x: Int, y: Int) = add(tooltipLines, text, x, y)
 
