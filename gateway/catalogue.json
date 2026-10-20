@@ -225,12 +225,96 @@
                     },
                     "timeout_ms": {
                         "type": "integer",
-                        "description": "How long to wait. Defaults to 10000, at most 60000"
+                        "description": "How long to wait in milliseconds. Defaults to 10000; clamped to 1..60000. Leave request timeout headroom for polling and snapshot reads",
+                        "default": 10000
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "any",
+                            "all"
+                        ],
+                        "default": "any",
+                        "description": "any succeeds on the first matching condition in message, screen, inventory, entity, health order; all requires every condition in the same poll"
+                    },
+                    "inventory": {
+                        "type": "object",
+                        "description": "Wait for an exact item count in player inventory slots including armor and offhand, excluding the carried stack and containers. Requires a world",
+                        "properties": {
+                            "item": {
+                                "type": "string",
+                                "description": "Case-sensitive exact full item registry ID, such as minecraft:diamond; no namespace expansion or wildcards"
+                            },
+                            "min_count": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "default": 1,
+                                "description": "Inclusive minimum count; must not exceed max_count"
+                            },
+                            "max_count": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "description": "Optional inclusive maximum count; use min_count:0,max_count:0 to wait for absence"
+                            }
+                        },
+                        "required": [
+                            "item"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "entity": {
+                        "type": "object",
+                        "description": "Count all matching client-tracked entities within an exclusive distance from player feet, excluding the local player. Requires a world",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "description": "Case-sensitive exact full entity registry ID, such as minecraft:zombie; no namespace expansion or wildcards"
+                            },
+                            "radius": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "maximum": 256,
+                                "default": 64,
+                                "description": "Exclusive distance from player feet in blocks"
+                            },
+                            "min_count": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "default": 1,
+                                "description": "Inclusive minimum count; must not exceed max_count"
+                            },
+                            "max_count": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "description": "Optional inclusive maximum count; use min_count:0,max_count:0 to wait for absence"
+                            }
+                        },
+                        "required": [
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "health": {
+                        "type": "object",
+                        "description": "Wait for player health in an inclusive range; provide at least one bound, with min <= max. Health points (2 per heart), excludes absorption; no 20-point cap. Requires a world",
+                        "properties": {
+                            "min": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": "Optional inclusive minimum health, finite and nonnegative"
+                            },
+                            "max": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": "Optional inclusive maximum health, finite and nonnegative"
+                            }
+                        },
+                        "additionalProperties": false
                     }
                 },
                 "type": "object"
             },
-            "description": "Block until a chat or system message contains `message`, or the open screen's class name contains `screen` (use `none` to wait for no screen), whichever happens first. Returns `matched` false with reason `timeout` when `timeout_ms` passes. Pass `since` (a `latest` from mc_read_messages) to also see messages that arrived before this call; by default only newer messages count. Keep `timeout_ms` below your MCP client's request timeout.",
+            "description": "Block until chat/system message text or screen class name contains the supplied case-insensitive substring (screen none means no screen), or inventory, entity or health bounds match. Supply at least one condition. mode defaults to any; a matching message returns immediately without game reads, with state null and only the message observation even if other conditions are supplied. Otherwise observations include each supplied condition. all requires every condition in the same poll. Messages remain buffered after since; screen/player conditions are not latched. Pass since (a latest from mc_read_messages) to include earlier messages; by default only newer messages count. Returns matched, reason, message, latest, state and per-condition observations; timeout returns matched false, reason timeout and an actionable nextStep. Without a world, player conditions remain unmet even for zero counts and their values are null; waiting can resume after joining. Polls every 50 ms and supports cancellation. State reflects the latest completed poll and may be null if the render thread is unavailable; message-only timeouts attempt a final snapshot with up to 250 ms grace. Keep timeout_ms below the MCP request timeout with headroom.",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,
