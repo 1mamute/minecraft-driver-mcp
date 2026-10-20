@@ -149,6 +149,34 @@ update tags, subsequent block updates and unchanged player/inventory state durin
 For modded block entities, also compare returned update tags with the mod's client synchronization contract. Verify
 a block awaiting its client entity reports `not_available`.
 
+### Condition waits
+
+Start the development client at the title screen, then run against a disposable saved world with cheats enabled:
+
+```bash
+node scripts/check-wait.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
+```
+
+Use a dedicated test world. The script clears inventory, changes game mode and player position, disables natural
+regeneration, applies and removes effects, damages and heals the player, and places a platform near
+`(16000, 240, 16000)`. It summons a uniquely tagged armor stand, removes its fixtures and disconnects.
+It does not restore the disposable world's inventory, blocks, game rules or player state. Keep the client running
+without physical game input while the check runs. The endpoint must permit direct calls without authentication.
+
+The check covers `initialize`, `tools/list`, nested schemas and annotations, invalid argument shapes and bounds,
+title-screen matching, and no-world timeouts with null player observations even for zero-count predicates.
+In the world it checks exact registry IDs, inclusive inventory/entity count bounds, absence, exclusive feet-distance
+radius boundaries, health points excluding absorption, and changes while waits are active. Commands use message
+markers with `since` to synchronize server execution. Combined checks exercise default and explicit `any`, ordered
+success reasons, `all` with buffered messages and current player/screen conditions, and disconnect during a wait.
+Timeouts must include an actionable `nextStep`; disconnect must clear numeric observations to null.
+
+The script also checks conditions that become true at different times without overlapping. Unit tests provide
+precise coverage of same-poll `all` behavior, stalled snapshot deadlines and coroutine cancellation; this script
+does not establish MCP transport cancellation. For a separate cancellation check, cancel an active long wait through
+an MCP client, verify other observations still respond, and confirm a fresh wait can complete. Record actual runtime
+results in [Verification status](known-issues.md); the presence of this script does not establish a passing run.
+
 ### Nearby entities
 
 Start the development client at the title screen, then run against a disposable saved world with cheats enabled:

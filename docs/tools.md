@@ -28,7 +28,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_container`](#mc_read_container) | read | The open container screen |
 | [`mc_read_messages`](#mc_read_messages) | read | Chat and system messages |
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
-| [`mc_wait_for`](#mc_wait_for) | read | Block until a message or screen appears |
+| [`mc_wait_for`](#mc_wait_for) | read | Wait for any or all message, screen, inventory, entity or health conditions |
 | [`mc_list_entities`](#mc_list_entities) | read | Filter nearby entities with eye positions, bounding boxes and truncation metadata |
 | [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
@@ -219,18 +219,59 @@ The buffer holds the last 1000 lines and cuts messages at 2000 characters. Captu
 
 ### mc_wait_for
 
-Block until a chat or system message contains `message`, or the open screen's class name contains `screen`
-(`none` waits for no screen), whichever happens first.
+Wait for chat or system message text, an open screen, inventory counts, nearby entity counts or player health.
+Supply at least one condition. This read-only tool observes client state; it does not confirm server acceptance.
 
 | Argument | Type | Meaning |
 | --- | --- | --- |
 | `message` | string | Text a message must contain, ignoring case |
-| `screen` | string | Text the screen class name must contain, or `none` |
+| `screen` | string | Text the screen class name must contain, ignoring case, or `none` for no screen |
 | `since` | integer | Only messages with a higher sequence number count. Default: the latest at call time |
-| `timeout_ms` | integer | How long to wait. Default 10000, at most 60000 |
+| `timeout_ms` | integer | Milliseconds to wait. Default 10000; clamped to 1–60000 |
+| `mode` | string | `any` (default) or `all` |
+| `inventory` | object | Required `item`: exact full item registry ID. Optional inclusive `min_count` (integer, default 1) and `max_count` (integer) |
+| `entity` | object | Required `type`: exact full entity registry ID. Optional `radius` (number, default 64; greater than 0, at most 256), inclusive `min_count` (integer, default 1) and `max_count` (integer) |
+| `health` | object | Inclusive `min` and/or `max` health points; at least one is required |
 
-Give `message`, `screen` or both. The result reports `matched` and a `reason`, plus `latest` (pass it as `since` later); `matched: false` with reason `timeout` when time
-runs out. Keep `timeout_ms` below the MCP client's request timeout.
+Item and entity IDs match case-sensitively, with no namespace expansion, wildcards or prefixes. Inventory counts
+include all player inventory slots, armor and offhand, excluding the carried stack and container contents. Entity
+counts include all matching client-tracked entities, excluding the local player, at a distance strictly less than
+`radius` from the player's feet. Counts are nonnegative integers; `min_count` must not exceed `max_count`.
+Set both to zero to wait for absence. Health bounds must be finite and nonnegative, with `min <= max` when both
+are present. Health uses points (two per heart), excludes absorption and has no 20-point cap for modded players.
+
+In `any` mode, the first matching condition wins in this order: message, screen, inventory, entity, health.
+A matching message returns immediately without game reads, even when other conditions are supplied; `state` is
+`null` and `observations` contains only the matching message observation.
+In `all` mode, every supplied condition must match in the same poll. Messages after `since` remain eligible while
+buffered; screen and player conditions are evaluated again each poll and are not latched. Without a world, inventory,
+entity and health conditions remain unmet, including zero-count checks, and their numeric observations are `null`.
+The wait can continue after joining a world.
+
+The result retains `matched`, `reason`, `message`, `latest` and `state`, and adds `observations`, an array of
+`{condition, matched, value}` for each supplied condition, except for the immediate `any` message return above.
+`value` is the observed inventory count, entity count or
+health points, or `null` when unavailable; message and screen values are always `null`. Successful reasons are
+`message`, `screen`, `inventory`, `entity` or `health`; `all` mode with multiple conditions returns `all`, while a
+single condition keeps its own reason. A timeout returns `matched:false`, `reason:"timeout"` and an actionable
+`nextStep`, such as joining a world or inspecting current state. Pass `latest` as `since` on a later call.
+
+Polling runs every 50 ms with coroutine cancellation and brief render-thread reads. State and observations reflect
+the latest completed poll. A message-only timeout attempts a final state snapshot with up to 250 ms grace; `state`
+may be `null` if the render thread is unavailable. Leave headroom above `timeout_ms` in the MCP client's request
+timeout for polling, snapshot reads and transport.
+
+Wait until the screen is closed, at least three diamonds are held and health is at least nine hearts:
+
+```json
+{"mode":"all","screen":"none","inventory":{"item":"minecraft:diamond","min_count":3},"health":{"min":18},"timeout_ms":10000}
+```
+
+Wait for no zombies within 32 blocks of the player's feet:
+
+```json
+{"entity":{"type":"minecraft:zombie","radius":32,"min_count":0,"max_count":0},"timeout_ms":10000}
+```
 
 ### mc_list_entities
 

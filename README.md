@@ -93,7 +93,7 @@ Direct HTTP access remains available for specialized setups, extension tools and
 | `mc_press_key` | Press enter, escape, tab, backspace, arrows and similar on the open screen |
 | `mc_read_messages` | Chat and system messages since a sequence number |
 | `mc_read_log` | The game's log lines since a sequence number, filtered by level and text |
-| `mc_wait_for` | Block until a message or screen appears, or time out |
+| `mc_wait_for` | Wait for any or all message, screen, inventory, entity or health conditions, or time out |
 | `mc_list_entities` | Filter client-visible entities; nearest first with eye positions, bounding boxes and truncation metadata |
 | `mc_screenshot` | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | `mc_list_instances` | Every running client with this mod; the gateway adds health and auth/version status |

@@ -6,6 +6,7 @@ import io.github.ummamute.driver.client.ClientInventory
 import io.github.ummamute.driver.client.ClientScreens
 import io.github.ummamute.driver.client.ClientState
 import io.github.ummamute.driver.client.ClientTarget
+import io.github.ummamute.driver.client.ClientWait
 import io.github.ummamute.driver.client.LogBuffer
 import io.github.ummamute.driver.client.LogCapture
 import io.github.ummamute.driver.client.LogQuery
@@ -114,15 +115,10 @@ internal object ObservationTools {
     private fun registerWaitFor(server: Server) {
         server.addGuardedTool(BuiltInTools["mc_wait_for"]) { request ->
             val args = ToolSupport.arguments(request)
-            val message = args.string("message")
-            val screen = args.string("screen")
-            if (message == null && screen == null) {
-                return@addGuardedTool ToolSupport.failure("Give `message`, `screen` or both. Example: {\"message\": \"Teleported\"} or {\"screen\": \"none\"}")
-            }
-            val since = args.long("since") ?: MessageLog.latest()
+            val condition = WaitArguments.condition(args, MessageLog.latest())
             val timeout = (args.long("timeout_ms") ?: DEFAULT_WAIT_MILLIS).coerceIn(1L, MAX_WAIT_MILLIS)
-            val waiter = ConditionWaiter(readState = { RenderThread.call(ClientState::snapshot) }, readMessages = MessageLog::since)
-            jsonResult(waiter.await(WaitCondition(messageContains = message, screenContains = screen, sinceSeq = since), timeout))
+            val waiter = ConditionWaiter(readSnapshot = { RenderThread.call { ClientWait.snapshot(it) } }, readMessages = MessageLog::since)
+            jsonResult(waiter.await(condition, timeout))
         }
     }
 
