@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { processStartTimes } from "./process-identity.js";
 
 /** Public registry metadata. Authentication secrets are never registry data. */
 export interface Instance {
@@ -10,6 +11,8 @@ export interface Instance {
     minecraftVersion: string;
     gameDirectory: string;
     authRequired: boolean;
+    /** Optional whole Unix seconds; absent or null in older registrations. */
+    processStartEpochSeconds?: number | null;
 }
 
 export function isAlive(pid: number): boolean {
@@ -17,7 +20,7 @@ export function isAlive(pid: number): boolean {
         process.kill(pid, 0);
         return true;
     } catch (error) {
-        return (error as NodeJS.ErrnoException).code === "EPERM";
+        return (error as NodeJS.ErrnoException).code !== "ESRCH";
     }
 }
 
@@ -32,7 +35,12 @@ export function isEndpoint(instance: Instance): boolean {
 }
 
 /** Read valid live records, retaining unsafe endpoints so selection cannot silently change. */
-export async function listInstances(directory: string): Promise<Instance[]> {
+export async function listInstances(
+    directory: string,
+    signal?: AbortSignal,
+    inspectStarts = processStartTimes,
+): Promise<Instance[]> {
+    signal?.throwIfAborted();
     let files: string[];
     try {
         files = await readdir(directory);
@@ -48,7 +56,7 @@ export async function listInstances(directory: string): Promise<Instance[]> {
                     if (
                         !value ||
                         typeof value.name !== "string" ||
-                        !value.name ||
+                        !value.name.trim() ||
                         !Number.isSafeInteger(value.pid) ||
                         value.pid < 1
                     )
@@ -57,6 +65,11 @@ export async function listInstances(directory: string): Promise<Instance[]> {
                     if (typeof value.url !== "string" || !Number.isSafeInteger(value.port)) return;
                     if (typeof value.minecraftVersion !== "string" || typeof value.gameDirectory !== "string") return;
                     if (value.authRequired !== undefined && typeof value.authRequired !== "boolean") return;
+                    if (
+                        value.processStartEpochSeconds != null &&
+                        (!Number.isSafeInteger(value.processStartEpochSeconds) || value.processStartEpochSeconds < 1)
+                    )
+                        return;
                     const instance: Instance = {
                         name: value.name,
                         pid: value.pid,
@@ -65,6 +78,9 @@ export async function listInstances(directory: string): Promise<Instance[]> {
                         minecraftVersion: value.minecraftVersion,
                         gameDirectory: value.gameDirectory,
                         authRequired: value.authRequired ?? false,
+                        ...(value.processStartEpochSeconds == null
+                            ? {}
+                            : { processStartEpochSeconds: value.processStartEpochSeconds }),
                     };
                     return instance;
                 } catch {
@@ -72,7 +88,23 @@ export async function listInstances(directory: string): Promise<Instance[]> {
                 }
             }),
     );
-    return instances.filter((instance): instance is Instance => instance !== undefined).sort((a, b) => a.port - b.port);
+    const live = instances.filter((instance): instance is Instance => instance !== undefined);
+    const starts = await inspectStarts(
+        live.filter((instance) => instance.processStartEpochSeconds != null).map((instance) => instance.pid),
+        signal,
+    );
+    signal?.throwIfAborted();
+    return live
+        .filter((instance) => {
+            const actual = starts.get(instance.pid);
+            return (
+                isAlive(instance.pid) &&
+                (instance.processStartEpochSeconds == null ||
+                    actual === undefined ||
+                    actual === instance.processStartEpochSeconds)
+            );
+        })
+        .sort((a, b) => a.port - b.port);
 }
 
 export function selectInstance(instances: Instance[], name?: string, pid?: number): Instance {

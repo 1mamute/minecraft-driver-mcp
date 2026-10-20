@@ -15,6 +15,13 @@ The gateway requires a matching mod release. If testing an unreleased source bui
 use a locally packed gateway archive. See [Local gateway](gateway.md) for installation and
 [gateway verification status](contributing/known-issues.md#gateway) for checks performed.
 
+## Instance discovery
+
+Process-start checks require a recent record and available operating-system metadata. Older records and readers,
+missing OS tools, access restrictions and inspection timeouts retain PID-only discovery. Whole-second precision
+cannot distinguish PID reuse within the same second. Use `mc_list_instances` with `check_ready:true` through the
+gateway to diagnose an unavailable endpoint; readiness failures preserve the registration and selection ambiguity.
+
 ## modLocalRuntime crashes the client
 
 Adding the jar to a mod's development run with `modLocalRuntime(files(...))` crashes the client with

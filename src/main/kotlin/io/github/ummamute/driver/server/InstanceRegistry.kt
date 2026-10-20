@@ -26,6 +26,8 @@ data class DriverInstance(
     val gameDirectory: String,
     /** True when the endpoint needs `Authorization: Bearer <token>`. The token itself is never stored. */
     val authRequired: Boolean = false,
+    /** Process start time in positive whole Unix epoch seconds, when the operating system provides it. */
+    val processStartEpochSeconds: Long? = null,
 )
 
 /**
@@ -33,7 +35,10 @@ data class DriverInstance(
  * without knowing which port it got. Files of crashed clients are ignored by [list] and removed on the next write.
  * A file that cannot be parsed may be another client's write in progress, so it is left alone.
  */
-class InstanceRegistry(private val directory: Path) {
+class InstanceRegistry(
+    private val directory: Path,
+    private val inspectProcess: (Long) -> ProcessIdentity = ::inspectProcessIdentity,
+) {
     private val logger = LoggerFactory.getLogger(InstanceRegistry::class.java)
     private val json = Json {
         prettyPrint = true
@@ -43,7 +48,12 @@ class InstanceRegistry(private val directory: Path) {
     fun register(instance: DriverInstance) {
         Files.createDirectories(directory)
         removeStale()
-        write(instance)
+        val registered = if (instance.processStartEpochSeconds == null) {
+            instance.copy(processStartEpochSeconds = inspectProcess(instance.pid).startEpochSeconds)
+        } else {
+            instance
+        }
+        write(registered)
     }
 
     /** Writes to a temporary file first so a reader never sees a half-written `<pid>.json`. */
@@ -63,16 +73,16 @@ class InstanceRegistry(private val directory: Path) {
         fileOf(pid).deleteIfExists()
     }
 
-    /** Running clients only, ordered by port. */
+    /** Clients without confirmed stale process identities, ordered by port. */
     fun list(): List<DriverInstance> {
         if (!Files.isDirectory(directory)) return emptyList()
-        return files().mapNotNull(::read).filter { isAlive(it.pid) }.sortedBy { it.port }
+        return files().mapNotNull(::read).filterNot(::isStale).sortedBy { it.port }
     }
 
     private fun removeStale() {
         files().forEach { file ->
             val instance = read(file)
-            if (instance != null && !isAlive(instance.pid)) file.deleteIfExists()
+            if (instance != null && isStale(instance)) file.deleteIfExists()
         }
     }
 
@@ -81,19 +91,37 @@ class InstanceRegistry(private val directory: Path) {
     } catch (exception: IOException) {
         logger.debug("Cannot list instance directory {}", directory, exception)
         emptyList()
+    } catch (exception: SecurityException) {
+        logger.debug("Cannot access instance directory {}", directory, exception)
+        emptyList()
     }
 
     private fun read(file: Path): DriverInstance? = try {
-        json.decodeFromString(DriverInstance.serializer(), file.readText())
+        json.decodeFromString(DriverInstance.serializer(), file.readText()).takeIf { isValid(it, file) }
     } catch (exception: SerializationException) {
         logger.debug("Ignoring unreadable instance file {}", file, exception)
         null
     } catch (exception: IOException) {
         logger.debug("Ignoring instance file {} that vanished or cannot be read", file, exception)
         null
+    } catch (exception: SecurityException) {
+        logger.debug("Ignoring instance file {} that cannot be accessed", file, exception)
+        null
     }
 
-    private fun isAlive(pid: Long): Boolean = ProcessHandle.of(pid).map { it.isAlive }.orElse(false)
+    private fun isValid(instance: DriverInstance, file: Path): Boolean {
+        if (instance.pid <= 0 || instance.name.isBlank()) return false
+        if (file.fileName.toString() != "${instance.pid}.json") return false
+        return instance.processStartEpochSeconds == null || instance.processStartEpochSeconds > 0
+    }
+
+    private fun isStale(instance: DriverInstance): Boolean {
+        val process = inspectProcess(instance.pid)
+        if (process.isAlive == false) return true
+        val recordedStart = instance.processStartEpochSeconds ?: return false
+        val actualStart = process.startEpochSeconds ?: return false
+        return recordedStart != actualStart
+    }
 
     private fun fileOf(pid: Long): Path = directory.resolve("$pid.json")
 }

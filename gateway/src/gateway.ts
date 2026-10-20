@@ -69,7 +69,7 @@ export class Gateway {
             if (name === "mc_list_instances") return await this.list(args, signal);
             const selector = this.selector(args);
             if (name === "mc_wait_for_instance") return await this.wait(args, selector, signal);
-            const instances = await listInstances(this.config.registryDirectory);
+            const instances = await listInstances(this.config.registryDirectory, signal);
             const instance = selectInstance(instances, selector.name, selector.pid);
             const { instance_name, instance_pid, ...forwarded } = args;
             return (await this.upstream.use(instance, instances, signal, { name, arguments: forwarded }))!;
@@ -102,7 +102,7 @@ export class Gateway {
     private async list(args: Record<string, unknown>, signal: AbortSignal): Promise<CallToolResult> {
         if (args.check_ready !== undefined && typeof args.check_ready !== "boolean")
             throw new Error("check_ready must be boolean.");
-        const instances = await listInstances(this.config.registryDirectory);
+        const instances = await listInstances(this.config.registryDirectory, signal);
         const result = await Promise.all(
             instances.map(async (instance) => {
                 const listed = { ...instance, selector: { instance_name: instance.name, instance_pid: instance.pid } };
@@ -139,12 +139,15 @@ export class Gateway {
         let reason = "No matching live instance.";
         do {
             signal.throwIfAborted();
-            const instances = await listInstances(this.config.registryDirectory);
             try {
+                const instances = await listInstances(
+                    this.config.registryDirectory,
+                    timeout === 0 && args.ready === false ? signal : bounded,
+                );
                 const instance = selectInstance(instances, selector.name, selector.pid);
                 if (args.ready !== false) await this.upstream.use(instance, instances, bounded);
                 signal.throwIfAborted();
-                if (args.ready !== false) bounded.throwIfAborted();
+                if (args.ready !== false || timeout !== 0) bounded.throwIfAborted();
                 return json({
                     instance,
                     selector: { instance_name: instance.name, instance_pid: instance.pid },

@@ -107,6 +107,14 @@ a local-registry view:
   `timeout_ms` defaults to 10000, with a maximum of 60000. Set `ready:false` for
   discovery without waiting for endpoint readiness. The result includes the selector.
 
+Discovery accepts canonical `<pid>.json` files whose positive PID matches the record.
+It skips invalid records without deleting files. When a record includes
+`processStartEpochSeconds`, discovery compares it with the operating system's process
+start time and hides confirmed mismatches caused by PID reuse. Older records with a
+missing or `null` start time, and failed or unavailable process metadata, use PID
+liveness. The gateway never deletes registry files. Readiness failures preserve
+registrations and do not resolve duplicate names.
+
 Game tools accept optional `instance_name` and `instance_pid` selectors. Omission
 works with exactly one live registered instance. With multiple live instances,
 explicit selection is required even if only one endpoint is ready. If both selectors

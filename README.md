@@ -150,6 +150,10 @@ The gateway reads `~/.minecraft-driver-mcp/gateway.json` (override with
 `instance_name` and `instance_pid`; multiple live clients require explicit selection,
 even if only one endpoint is ready. See
 [Local gateway](docs/gateway.md).
+
+Registry records include optional `processStartEpochSeconds` to detect a reused PID.
+Confirmed mismatches are hidden; older records and unavailable process metadata use
+PID liveness. Endpoint failures preserve registrations and never select another client.
 <!-- #endregion site-top -->
 
 ## Documentation

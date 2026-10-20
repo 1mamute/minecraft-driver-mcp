@@ -66,7 +66,15 @@ processes that do not know it, not against other local accounts.
 ### Registry
 
 Each running client writes `<pid>.json` into the registry directory and removes it on exit. `mc_list_instances` reads
-it. Files of crashed clients are ignored because their process is gone.
+it. The filename must contain a positive PID matching the record. Invalid or unreadable files are skipped and kept.
+Files of crashed clients are ignored because their process is gone.
+
+New records include `processStartEpochSeconds` when the operating system supplies the process start time: a positive
+whole number of seconds since the Unix epoch. A confirmed start-time mismatch hides a stale record after PID reuse;
+the mod removes confirmed stale records during the next registration. Missing or `null` start times in older records,
+and unavailable operating-system metadata, retain PID-only liveness checks. The gateway never deletes registry files.
+Endpoint readiness is a separate, optional check: a timeout, authentication error or connection failure does not
+delete a registration or redirect a call to another client. Duplicate names still require selection by PID.
 
 ### Unfocused window
 

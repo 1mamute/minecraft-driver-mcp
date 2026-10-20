@@ -336,6 +336,22 @@ Run this check when you touch ports, the registry or names.
 4. Repeat with fixed ports (`-Ddriver.port`), and check that starting a second client on a
    taken fixed port fails with a clear message.
 
+For the repeatable process-identity check, start two disposable development clients with distinct
+`driver.name` values, no `driver.token`, separate game directories and the same isolated
+`-Ddriver.registry=<isolated-registry-directory>`. Leave both on the English title screen.
+Build the gateway first, then run:
+
+```sh
+node scripts/check-registry.mjs <isolated-registry-directory>
+```
+
+The check compares direct `mc_list_instances` with gateway discovery, routing and optional readiness.
+It temporarily changes the second client's record to simulate a stale process identity and restores
+the original record afterward. It checks the second client's widgets and clicks `Quit Game` with
+`mc_click`, then verifies registry cleanup. The second client's shutdown is expected; use disposable
+clients with no unsaved work. The first client stays running.
+Record the OS and results when running this check; repeat on Linux and macOS to validate their OS lookups.
+
 ## Behavior learned while driving the client
 
 - **Widgets react to hover.** Hover comes from the real cursor, so `mc_click` marks the
