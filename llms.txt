@@ -484,6 +484,9 @@ Missing/null identity in older records and unavailable OS start metadata retain 
 files are skipped and kept; the gateway never deletes files. Its asynchronous batched OS lookup uses `ps` on Linux/macOS
 with `LC_ALL=C` and `TZ=UTC0`, or PowerShell calling .NET `Process.GetProcessById` on Windows with module autoloading
 disabled, with a five-second bound and request cancellation.
+Windows prefers `pwsh.exe` and falls back to `powershell.exe` only if the preferred executable is missing or cannot
+start. Lookup errors and timeouts do not start a second shell. `scripts/check-process-start.mjs` diagnoses startup
+separately from inspection; run it after gateway tests to avoid warming the runtime before cold-start checks.
 Unsupported systems and lookup failures fall back to PID liveness. Readiness remains optional: endpoint failures never
 delete records or redirect calls, and duplicate names still require PID selection. Whole-second identity cannot detect
 same-second PID reuse; older readers check only PIDs. Linux boot-time clock adjustments can affect identity comparisons.

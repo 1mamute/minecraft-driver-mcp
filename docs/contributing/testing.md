@@ -29,6 +29,11 @@ The gateway uses Node.js 22 or later. Run its TypeScript build and unit tests wi
 npm --prefix gateway test
 ```
 
+On Windows, `node scripts/check-process-start.mjs` measures startup and process inspection separately for `pwsh.exe`
+and `powershell.exe`. Use it to investigate lookup timeouts. It is a diagnostic probe, not a benchmark; each shell
+starts once per operation, and the later lookup can benefit from startup caches. Run the gateway tests before the
+probe when checking cold startup behavior. CI deliberately does not run the probe before its tests.
+
 For a manual host check, in `gateway/` run `npm ci`, `npm test` and `npm pack`, then
 install the local package into Claude Code and Codex using their stdio MCP
 configuration. Start each host session before either game and verify tools are

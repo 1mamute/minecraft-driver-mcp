@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, type ExecFileOptions } from "node:child_process";
 import { promisify } from "node:util";
 
 const execute = promisify(execFile);
@@ -19,11 +19,7 @@ export async function processStartTimes(pids: number[], signal?: AbortSignal): P
                 "$process = [System.Diagnostics.Process]::GetProcessById($processId); " +
                 '"{0} {1}" -f $processId, ([DateTimeOffset]$process.StartTime.ToUniversalTime()).ToUnixTimeSeconds() ' +
                 "} catch {} finally { if ($null -ne $process) { $process.Dispose() } } }; exit 0";
-            const { stdout } = await execute(
-                "powershell.exe",
-                ["-NoProfile", "-NonInteractive", "-Command", command],
-                options,
-            );
+            const { stdout } = await executePowerShell(command, options);
             for (const line of stdout.trim().split(/\r?\n/)) {
                 const match = /^(\d+)\s+(\d+)$/.exec(line.trim());
                 if (!match) continue;
@@ -48,4 +44,18 @@ export async function processStartTimes(pids: number[], signal?: AbortSignal): P
         // Access restrictions, missing OS tools and timeouts cannot establish a stale process.
     }
     return starts;
+}
+
+async function executePowerShell(command: string, options: ExecFileOptions) {
+    const args = ["-NoProfile", "-NonInteractive", "-Command", command];
+    try {
+        return await execute("pwsh.exe", args, { ...options, encoding: "utf8" });
+    } catch (error) {
+        const unavailable =
+            error instanceof Error && "code" in error &&
+            ["ENOENT", "EACCES", "EPERM"].includes(String(error.code));
+        if (!unavailable) throw error;
+    }
+    options.signal?.throwIfAborted();
+    return execute("powershell.exe", args, { ...options, encoding: "utf8" });
 }
