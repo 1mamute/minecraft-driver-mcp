@@ -18,9 +18,19 @@ listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version
 - Avoid PowerShell module loading during process lookup ([#106](https://github.com/1mamute/minecraft-driver-mcp/pull/106))
 - Prefer PowerShell 7 for Windows process inspection ([#107](https://github.com/1mamute/minecraft-driver-mcp/pull/107))
 
+### Documentation
+
+- Keep maintainer setup instructions in chat
+- Focus agent guide on debugging Fabric mods
+
 ### Build
 
 - Publish gateway releases to npm
+
+### Chores
+
+- Update version to 0.5.0 and documentation
+- Release 0.5.0
 <!-- /changelog:0.5.0 -->
 
 ## 0.4.0
