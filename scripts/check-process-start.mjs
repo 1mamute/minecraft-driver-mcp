@@ -11,9 +11,24 @@ async function inspect(shell, operation, command) {
             timeout: 20000,
             windowsHide: true,
         });
-        console.log(JSON.stringify({ shell, operation, elapsedMs: Math.round(performance.now() - started), output: stdout.trim() }));
+        console.log(
+            JSON.stringify({
+                shell,
+                operation,
+                elapsedMs: Math.round(performance.now() - started),
+                output: stdout.trim(),
+            }),
+        );
     } catch (error) {
-        console.log(JSON.stringify({ shell, operation, elapsedMs: Math.round(performance.now() - started), code: error.code, killed: error.killed }));
+        console.log(
+            JSON.stringify({
+                shell,
+                operation,
+                elapsedMs: Math.round(performance.now() - started),
+                code: error.code,
+                killed: error.killed,
+            }),
+        );
     }
 }
 

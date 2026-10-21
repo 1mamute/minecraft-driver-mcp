@@ -183,6 +183,8 @@ machine except the registry:
   It batches asynchronous OS lookups (`ps` with `LC_ALL=C` and `TZ=UTC0` on Linux/macOS,
   PowerShell calling .NET `Process.GetProcessById` on Windows), bounds lookup to five seconds and respects cancellation.
   The Windows lookup disables module autoloading so inspecting a PID does not trigger PowerShell module discovery.
+  It prefers `pwsh.exe` to avoid legacy PowerShell's cold startup cost, falling back to `powershell.exe` only when
+  the preferred executable is missing or cannot be started. An inspection failure or timeout does not launch a second shell.
   Unsupported systems and lookup failures retain PID liveness. Optional readiness checks
   never supply stale-process evidence or change selection; duplicate names remain ambiguous.
 - **Game directories.** Each client needs its own run directory; Minecraft requires it.
