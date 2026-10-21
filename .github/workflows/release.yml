@@ -3,6 +3,7 @@ name: Release
 # Keeps the release notes in step with `main` without committing to it. Every push to `main` rebuilds the notes from the
 # commit history with scripts/changelog.mjs and stores them in a draft release tagged `unreleased`. Pushing a `v*` tag
 # builds the jar and publishes a release whose body is the notes of that version, then deletes the draft.
+# A separate tag-only job publishes the release's gateway archive to npm through trusted publishing.
 # docs/release-notes.md is regenerated with `node scripts/changelog.mjs` in the release pull request.
 on:
   push:
@@ -31,6 +32,9 @@ jobs:
           node-version: 22
       - name: Build the notes
         run: node scripts/changelog.mjs --notes "$RUNNER_TEMP/notes.md"
+      - name: Check npm publication behavior
+        if: github.ref_type == 'tag'
+        run: npm run test:release
 
       - name: Update the draft release
         if: github.ref_type == 'branch'
@@ -81,3 +85,28 @@ jobs:
           if [ -n "$id" ]; then
             gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"
           fi
+
+  publish-npm:
+    needs: notes
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Download the tested gateway archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" \
+            --pattern "minecraft-driver-mcp-${GITHUB_REF_NAME#v}.tgz" \
+            --dir "$RUNNER_TEMP/npm-release"
+      - name: Publish the gateway to npm
+        run: npm run publish:gateway -- "$RUNNER_TEMP/npm-release/minecraft-driver-mcp-${GITHUB_REF_NAME#v}.tgz"

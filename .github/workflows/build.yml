@@ -70,6 +70,7 @@ jobs:
         working-directory: gateway
       - run: npm test
         working-directory: gateway
+      - run: npm run test:release
       - run: npm pack
         working-directory: gateway
       - uses: actions/upload-artifact@v7

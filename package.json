@@ -7,7 +7,9 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "changelog": "node scripts/changelog.mjs"
+    "changelog": "node scripts/changelog.mjs",
+    "test:release": "node --test scripts/publish-gateway.test.mjs",
+    "publish:gateway": "node scripts/publish-gateway.mjs"
   },
   "devDependencies": {
     "@fontsource-variable/fira-code": "5.3.0",
