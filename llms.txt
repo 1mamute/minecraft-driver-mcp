@@ -6,8 +6,8 @@
 > read the game log and take screenshots. Its purpose is to let an agent test and debug Fabric mods by driving the
 > actual modded client. Repository: https://github.com/1mamute/minecraft-driver-mcp. License: MIT.
 
-This file is self-contained. It covers three jobs: (1) connect an agent and discover game clients, (2) use the tools to
-test and debug another mod, (3) change this mod itself. Unverified behavior is called out as such.
+This self-contained brief is for agents using Minecraft Driver MCP to test and debug Fabric mods. It covers
+installation, connecting to game clients, tool usage, debugging workflows and extensions from another mod.
 
 ## 1. Connect
 
@@ -22,11 +22,8 @@ built-in tools to a selected local HTTP endpoint; it does not launch or stop gam
 does not discover extension tools. Gateway and mod releases must match, ignoring the
 Minecraft suffix on the mod jar (for example `+1.21.1`).
 
-Built-in definitions are maintained in `gateway/catalogue.json`. Gradle bundles the
-same file into the mod; there is no separate catalogue module or export step. In
-`gateway/`, run `npm ci`, `npm test`, and `npm pack` for a local build. Install the local archive with
-`npm install --global ./minecraft-driver-mcp-<matching-release>.tgz` from `gateway/`,
-then register the installed executable as stdio:
+Install the gateway archive from the matching release with
+`npm install --global ./minecraft-driver-mcp-<matching-release>.tgz`, then register the installed executable as stdio:
 
 ```bash
 claude mcp add --transport stdio minecraft-driver -- minecraft-driver-mcp
@@ -61,9 +58,7 @@ readiness by default (`ready:true`), times out after 10000 ms by default (maximu
 60000), and returns the selector. `ready:false` is discovery-only. This does not mean
 a world has loaded; use the mod's existing `mc_wait_for` for in-game state. The gateway
 makes no automatic retry, and canceling a forwarded request does not undo an action
-already received by Minecraft. Both hosts have been checked in uninterrupted sessions
-started without a game, with two clients using separate tokens and one client restarted;
-name-based routing continued and the expired PID was rejected.
+already received by Minecraft.
 
 Start each session with `mc_list_instances` or `mc_wait_for_instance`, then call
 `mc_get_state` on the selected ready client. No game is needed to initialize the
@@ -373,123 +368,15 @@ exceptions become error results; tools are collected once at startup. `ToolArgum
 getBoolean/get` (null when missing) and `require*` (throws a readable message). The API is 0.x and may change in any minor
 release.
 
-## 6. Changing this mod
+## Further reading
 
-### Layout
-
-`src/main/kotlin/io/github/ummamute/driver/`:
-- `DriverBootstrap.kt` reads properties, wires everything, hooks client start/stop. `ExtensionLoader.kt` loads extension
-  entrypoints.
-- `client/` talks to Minecraft; one object per concern: `ClientState`, `ClientScreens`, `ClientInput`, `ClientKeyboard`,
-  `ClientInventory`, `ClientSlots`, `ClientChat`, `ClientConnection`, `Screenshots`, `ScreenText`, `RenderThread`,
-  `MessageLog`, `LogCapture`/`LogBuffer`, `ClassNames`; pure helpers `SlotClickPlanner`, `TextFrame`, `InventoryModel`.
-- `gateway/` is the recommended TypeScript stdio connection for coding agents, at the repository root.
-  Its `catalogue.json` owns the built-in
-  definitions (names, descriptions, schemas, four annotations); Gradle copies that file into the mod as a resource.
-  No catalogue project or code generation is needed. The gateway routes tools to selected local client endpoints
-  and is tested independently with Node.js 22+ (`npm test` from `gateway/`). Dynamic extensions remain separate.
-- `tools/` attaches MCP handlers: `ObservationTools`, `ActionTools`, `ConnectionTools`, `InstanceTools`, `ExtensionTools`,
-  `ExtensionRegistry`, `ToolNames`, `ToolSupport` (schema builder, argument readers, `addGuardedTool`, `onRenderThread`),
-  `ConditionWaiter`, `BuiltInTools` (loads the bundled catalogue).
-- `server/` is the Ktor + MCP SDK endpoint (`McpEndpoint`), `PortSelector`, `EndpointBinder`, `InstanceRegistry`,
-  `TokenAuthenticator`, `HostAllowList`.
-- `api/` is the public extension API.
-- `src/main/java/.../DriverMod.java` (entrypoint) and `mixin/` (screen text capture, unfocused window, accessors).
-- Tests in `src/test/kotlin`; Stonecutter versions in `versions/<mc>/gradle.properties`.
-
-### Rules
-
-- Minecraft imports only in `client/` and mixins. `tools/` and `server/` stay version-independent.
-- Every game call goes through `RenderThread.call` (or `onRenderThread` in a tool); never touch screens, the player or the
-  level from a Ktor thread. Waiting tools suspend between short reads and never hold the render thread.
-- Tools: name `mc_<verb>_<noun>`; set all four annotations; return JSON built from `@Serializable` data classes; register
-  with `addGuardedTool`; errors say what to do next; prefer text over images.
-- Bind to `127.0.0.1` only. No fixed ports without an opt-in. No shared mutable files except the instance registry.
-- One jar: Kotlin stdlib, MCP SDK and Ktor are jar-in-jar (`bundled` in `build.gradle.kts`). Do not depend on Fabric
-  Language Kotlin. The catalogue is a JSON resource in the mod jar; building the mod does not require Node.js.
-- Version differences: Stonecutter conditionals (`//? if >=1.21.5 {`); past a few lines, a class per version.
-- Mappings: official Mojang names with Parchment parameter names. Translate Yarn examples against the resolved sources.
-- Code style: one statement per line, one job per function, guard clauses, constructor injection, `object` for stateless
-  helpers, parameterized logging, KDoc on public types, backtick test names. `./gradlew lint` (ktlint, detekt) limits:
-  complexity < 15, functions < 60 lines, nesting < 4, 160 columns. Split functions rather than suppress or baseline.
-
-### Add a tool (checklist)
-
-1. Add a function to the right `client/` object that runs on the render thread, guards against a missing player/level
-   with a message that says what to do next, and returns a `@Serializable` data class.
-2. Add the definition (name, description, schema, four annotations) to `gateway/catalogue.json`. Add
-   `register<Name>` in the matching `tools/*Tools` object and call it from its `register`; pass the catalogue definition
-   to `addGuardedTool` and dispatch game calls through `onRenderThread`.
-3. Unit test pure logic (`src/test/kotlin`, same package).
-4. Update `README.md` tool table, `docs/tools.md`, `llms.txt`, and `docs/known-issues.md` if limits exist.
-5. Run the checks below.
-
-### Build, test, run
-
-- JDK 21 and the Gradle wrapper. `./gradlew build` = compile + unit tests + lint + jar in `versions/<mc>/build/libs`.
-- Built-in contract tests live in `src/test/kotlin/.../tools/`, with the compatibility fixture in
-  `src/test/resources/built-in-tools.json`. Gateway builds validate schemas, annotations, names and release versions.
-- `./gradlew lint`, `./gradlew ktlintFormat`, `./gradlew detekt`.
-- CI (`.github/workflows/build.yml`) runs `./gradlew build` on Linux and Windows for pull requests and `main`; it does not
-  run the runtime check.
-- Runtime check (required for changes to `tools/`, `client/`, mixins or packaging): `./gradlew :1.21.1:runClient`, read the
-  endpoint from the log, then `initialize`, `tools/list`, the changed tool on the title screen and in a world, and its
-  error path. Test with two clients when touching ports or the registry. Say in the change when the runtime check was
-  not done. `runClient` seeds `options.txt` and sets `-Ddriver.unfocused=true`.
-- Screen text and widget runtime check: after the title screen appears, run `node scripts/check-screen.mjs
-  http://127.0.0.1:25890/mcp`. The development and packaged-driver checks passed: nested Controls/Key Binds paths,
-  preserved root indexes, measured text clicks, repeated Reset disambiguation, inactive-widget refusal, single-use,
-  expired/replaced captures, screen-instance reuse and screenshots. Use English and default key bindings.
-  `node scripts/check-cobblemon-screen.mjs <endpoint> [evidence-directory]` also passed in a disposable Cobblemon 1.8.1
-  battle: private Forfeit text click, centered confirmation with raw `(0,0,113,45)` bounds reported uncertain with
-  null rendered bounds, automatic-click refusal, explicit cancel/reopen/accept and battle exit. Saves screenshot/JSON
-  evidence; ends the test battle. Its version-specific point clicks stay in the test, not generic driver logic.
-  Private confirmation buttons are not public `ContainerEventHandler.children`; no reflection is used.
-- Two Gradle builds at the same time can corrupt the Kotlin cache; start clients one after another. Two development
-  clients need `--gameDir` and `--username` in the run's program arguments.
-- Debug: `./gradlew :1.21.1:runClient --debug-jvm` attaches JDWP.
-
-### Commits and versions
-
-Conventional Commits, subject `<type>: <description>`, lowercase types (`feat fix docs refactor perf test build ci chore`),
-no scope, no `!`; describe breaking changes in the body. Branches `<type>/<short-description>`. `mod_version` in
-`gradle.properties` is SemVer; for 0.x a breaking change advances MINOR; bump only for requested releases. Supported
-contracts: tool names and schemas, system properties, the instance registry format, the endpoint path.
-
-The Release workflow automatically publishes the tested gateway archive to npm with provenance on `v<mod_version>`
-tag pushes. `npm run test:release` checks publication behavior without publishing.
-
-### Documentation map
-
-- User docs: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/README.md
+- Installation: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/installation.md
+- Getting started: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/getting-started.md
+- Local gateway: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/gateway.md
+- Debugging mods: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/debugging-mods.md
 - Tool reference: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/tools.md
 - Configuration: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/configuration.md
+- Several clients: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/multiple-clients.md
 - Known issues: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/known-issues.md
 - Extension API: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/extension-api.md
 - Release notes: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/release-notes.md
-- Contributor guide: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/README.md
-- Architecture: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/architecture.md
-- Testing: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/testing.md
-- Code style: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/contributing/code-style.md
-
-## Optional: how it works
-
-An HTTP request reaches `McpEndpoint` (Ktor CIO, `mcpStatelessStreamableHttp` at `/mcp`), which dispatches to a tool in
-`tools/`. The tool parses arguments on the Ktor worker, calls `RenderThread.call { ... }` (suspends, queues on
-`Minecraft.execute`, resumes with the result or exception), and encodes JSON. Chat and log lines are captured on their own
-threads into bounded buffers (`MessageLog` 200 messages, `LogBuffer` 1000 lines) with sequence numbers, which is why
-`since`/`latest` exist. Screen text is captured by mixins into `TextFrame` while a screen renders. Clicks and slot clicks
-go through the open screen's own handlers, never the OS mouse. Held keys live in `ClientInput` and are applied each client
-tick. The instance registry is a directory of atomically written canonical `<pid>.json` files, with positive filenames
-matching payload PIDs. Records optionally include positive whole Unix `processStartEpochSeconds`, from the JVM process
-start time. Confirmed dead processes and start-time mismatches are hidden and cleaned up at the next mod registration.
-Missing/null identity in older records and unavailable OS start metadata retain PID-only liveness. Invalid or unreadable
-files are skipped and kept; the gateway never deletes files. Its asynchronous batched OS lookup uses `ps` on Linux/macOS
-with `LC_ALL=C` and `TZ=UTC0`, or PowerShell calling .NET `Process.GetProcessById` on Windows with module autoloading
-disabled, with a five-second bound and request cancellation.
-Windows prefers `pwsh.exe` and falls back to `powershell.exe` only if the preferred executable is missing or cannot
-start. Lookup errors and timeouts do not start a second shell. `scripts/check-process-start.mjs` diagnoses startup
-separately from inspection; run it after gateway tests to avoid warming the runtime before cold-start checks.
-Unsupported systems and lookup failures fall back to PID liveness. Readiness remains optional: endpoint failures never
-delete records or redirect calls, and duplicate names still require PID selection. Whole-second identity cannot detect
-same-second PID reuse; older readers check only PIDs. Linux boot-time clock adjustments can affect identity comparisons.

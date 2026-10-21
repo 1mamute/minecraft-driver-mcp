@@ -41,5 +41,5 @@ The [contributor guide](contributing/README.md) covers how the mod is built and 
 
 ## For LLM agents
 
-[llms.txt](../llms.txt) is a single self-contained brief for an agent: how to connect, every tool, debugging recipes,
-and how to change the mod itself.
+[llms.txt](../llms.txt) is a self-contained brief for agents using the driver to debug Fabric mods: installation,
+connection, tool usage, debugging recipes and extensions from another mod.

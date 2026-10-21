@@ -51,8 +51,8 @@ Then connect an MCP client to the endpoint printed in the log and call `tools/li
 - Several clients must coexist: no fixed ports unless requested, no shared mutable files except the instance registry.
 - Do not depend on Fabric Language Kotlin; Kotlin and the MCP libraries ship inside the jar.
 - Version differences use Stonecutter conditionals; extract a class per version when a difference grows past a few lines.
-- Changes to tools, system properties, packaging, ports or the build update the matching documentation, the tables in
-  `README.md`, and `llms.txt`, in the same change.
+- Changes to tools, system properties, packaging, ports or the build update the matching documentation in the same
+  change. User-visible changes also update the relevant tables in `README.md` and usage guidance in `llms.txt`.
 
 ## Documentation site
 
