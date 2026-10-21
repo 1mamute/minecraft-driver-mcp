@@ -14,7 +14,7 @@ Compile against the driver jar and keep it out of your own jar. In a Loom projec
 
 ```kotlin
 dependencies {
-    modCompileOnly(files("libs/minecraft-driver-mcp-0.4.0+1.21.1.jar"))
+    modCompileOnly(files("libs/minecraft-driver-mcp-0.5.0+1.21.1.jar"))
 }
 ```
 

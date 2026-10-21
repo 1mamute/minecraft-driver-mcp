@@ -4,6 +4,25 @@ Versions follow [Semantic Versioning](https://semver.org). While the project is 
 properties, the instance registry format and the extension API can change in any minor version, and each change is
 listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version>.jar`.
 
+## 0.5.0
+
+<!-- changelog:0.5.0 -->
+### Features
+
+- Extend waits with inventory and player conditions
+- Add captured text clicks and reliable widget inspection
+
+### Fixes
+
+- Bind instance discovery to process start identity
+- Avoid PowerShell module loading during process lookup ([#106](https://github.com/1mamute/minecraft-driver-mcp/pull/106))
+- Prefer PowerShell 7 for Windows process inspection ([#107](https://github.com/1mamute/minecraft-driver-mcp/pull/107))
+
+### Build
+
+- Publish gateway releases to npm
+<!-- /changelog:0.5.0 -->
+
 ## 0.4.0
 
 <!-- changelog:0.4.0 -->
