@@ -181,7 +181,8 @@ machine except the registry:
   Missing or `null` identity and unavailable process metadata preserve PID-only checks.
   Invalid and unreadable files are skipped and kept. The gateway never deletes files.
   It batches asynchronous OS lookups (`ps` with `LC_ALL=C` and `TZ=UTC0` on Linux/macOS,
-  PowerShell `Get-Process` on Windows), bounds lookup to five seconds and respects cancellation.
+  PowerShell calling .NET `Process.GetProcessById` on Windows), bounds lookup to five seconds and respects cancellation.
+  The Windows lookup disables module autoloading so inspecting a PID does not trigger PowerShell module discovery.
   Unsupported systems and lookup failures retain PID liveness. Optional readiness checks
   never supply stale-process evidence or change selection; duplicate names remain ambiguous.
 - **Game directories.** Each client needs its own run directory; Minecraft requires it.

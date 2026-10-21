@@ -71,6 +71,24 @@ test("OS process-start lookup discovers the current process and rejects stale id
     assert.deepEqual(await listInstances(directory), []);
 });
 
+test("Windows process-start lookup retains live results when another PID is unavailable", async (t) => {
+    if (process.platform !== "win32") return t.skip("Windows process inspection");
+    const before = Math.floor(Date.now() / 1000 - process.uptime()) - 1;
+    const missingPid = 2_147_483_647;
+    const starts = await processStartTimes([missingPid, process.pid, missingPid]);
+    const actual = starts.get(process.pid);
+    assert.equal(starts.size, 1);
+    assert.ok(actual >= before && actual <= Math.floor(Date.now() / 1000), `Missing or invalid start time: ${actual}`);
+});
+
+test("Windows process-start lookup propagates cancellation while PowerShell is starting", async (t) => {
+    if (process.platform !== "win32") return t.skip("Windows process inspection");
+    const controller = new AbortController();
+    const lookup = processStartTimes([process.pid], controller.signal);
+    controller.abort();
+    await assert.rejects(lookup, { name: "AbortError" });
+});
+
 test("cancelling process inspection does not turn unknown metadata into a successful listing", async (t) => {
     const { directory } = await fixture(t);
     const controller = new AbortController();
