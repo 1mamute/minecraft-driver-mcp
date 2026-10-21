@@ -99,8 +99,12 @@ published package in one uninterrupted session per host, without MCP reconfigura
 - **Class-name tables.** `ClassNames` maps vanilla screens and widgets to official simple names because reflection
   returns intermediary names in a normal install. Add a class to the table when `mc_list_widgets` shows `Component` for a
   vanilla widget that matters.
-- **No `modLocalRuntime`.** Loom drops the `jars` list from `fabric.mod.json` when it remaps a file dependency. Publishing
-  the jar to a Maven repository with a POM listing the bundled libraries would fix it.
+- **File-based `modLocalRuntime`.** Loom drops the `jars` list from `fabric.mod.json` when it remaps a file dependency.
+  The Maven publication supplies bundled libraries transitively. A standalone Loom consumer compiled against the
+  extension API and loaded driver, Kotlin, Ktor and MCP classes using both Gradle metadata and POM-only resolution.
+  On Windows, its repository-based `runClient` answered `initialize`, `tools/list` and `mc_get_state` without a copied
+  driver jar. The consumer jar contains only the fixture class and no driver classes or nested libraries.
+  Local artifact signing was verified with a disposable test key; Central upload and release remain unverified.
 
 ## Tooling
 

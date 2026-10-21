@@ -35,6 +35,7 @@ The [contributor guide](contributing/README.md) covers how the mod is built and 
 | [Gateway architecture](contributing/architecture.md#local-gateway) | Shared catalogue, routing and lifecycle |
 | [Extending the mod](contributing/extending.md) | Adding a tool, a client concern or a mixin; supporting a Minecraft version |
 | [Testing](contributing/testing.md) | Unit tests, the runtime check, driving a client by hand |
+| [Publication verification](../verification/README.md) | Standalone Maven consumer fixture and dependency checks |
 | [Code style](contributing/code-style.md) | Naming, readability limits, tool conventions, linting |
 | [Dependencies](contributing/dependencies.md) | Where versions live, upgrading, adding a Minecraft version |
 | [Verification status](contributing/known-issues.md) | What has been verified, what has not, and design limits |

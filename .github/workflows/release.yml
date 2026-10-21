@@ -79,7 +79,7 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
             --notes-file "$RUNNER_TEMP/notes.md" \
-            $(ls versions/*/build/libs/*.jar | grep -v -- '-sources.jar') gateway/*.tgz
+            $(ls versions/*/build/libs/*.jar | grep -Ev -- '-(sources|javadoc).jar$') gateway/*.tgz
           id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
             --jq '.[] | select(.draft and .tag_name == "unreleased") | .id' | head -n 1)
           if [ -n "$id" ]; then

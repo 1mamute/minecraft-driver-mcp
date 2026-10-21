@@ -98,5 +98,26 @@ replaced, so the intro and known limits stay hand-written.
   `unreleased` with the same notes. Pushing a `v<mod_version>` tag builds the jar and publishes a release with those
   notes, mod jars and the gateway npm archive attached, then deletes the draft. The same gateway archive is
   automatically published to npm with provenance.
+- Maven Central is staged separately with the manual `Stage Maven Central` workflow. Select an existing
+  `v<mod_version>` tag containing the publication configuration. The workflow checks the tag, builds and checks
+  the Maven artifacts, signs them and uploads a deployment for manual review and publication in Central Portal.
+  It does not automatically release the deployment or change the GitHub/npm release process.
 - Release pull requests align `mod_version`, `gateway/package.json`, its lockfile and `gateway/catalogue.json`,
   and include generated release notes. Gateway builds reject a package/catalogue version mismatch.
+
+### Verify Maven publication
+
+With JDK 21 and Node.js 22+, these commands publish only to an ignored local build directory and need no credentials:
+
+```bash
+./gradlew build publishMavenPublicationToVerificationRepository
+node scripts/check-maven-publication.mjs
+./gradlew -p verification/maven-consumer compileJava jar verifyDriverRuntime
+./gradlew -p verification/maven-consumer compileJava jar verifyDriverRuntime -PpomOnly --rerun-tasks
+```
+
+The consumer checks extension API compilation and runtime classes using both Gradle module metadata and the POM.
+The publication includes the remapped standalone mod, sources and Java Javadoc; Kotlin API usage is documented in
+the [extension API](../extension-api.md). For the [runtime check](testing.md#runtime-check), launch the repository
+consumer with `./gradlew -p verification/maven-consumer runClient` and exercise the endpoint.
+Remote signing and staging are enabled only by `-PcentralPublishing=true`; ordinary builds do not need credentials.

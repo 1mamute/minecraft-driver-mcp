@@ -63,6 +63,7 @@ export default defineConfig({
           { text: 'Architecture', link: '/contributing/architecture' },
           { text: 'Extending the mod', link: '/contributing/extending' },
           { text: 'Testing', link: '/contributing/testing' },
+          { text: 'Publication verification', link: `${repo}/tree/main/verification#readme` },
           { text: 'Code style', link: '/contributing/code-style' },
           { text: 'Dependencies', link: '/contributing/dependencies' },
           { text: 'Verification status', link: '/contributing/known-issues' },

@@ -85,6 +85,10 @@ the endpoint printed in its log:
   Loader 0.19.5+, Java 21+.
 - In a mod's dev environment copy the jar into `run/mods/` and run `gradlew runClient`. Never add it with
   `modLocalRuntime(files(...))`: it crashes with `NoClassDefFoundError: kotlin/...`.
+- For a version available on Maven Central, a Loom project can use `mavenCentral()` and
+  `modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")` instead of copying the jar.
+  Repository metadata supplies Kotlin, MCP and Ktor transitively. Replace `<version>` with an available version;
+  publication support does not publish earlier releases. Never bundle the driver into the mod being tested.
 - Put `onboardAccessibility:false` and `pauseOnLostFocus:false` in the client's `options.txt` (the first skips a first-launch
   screen that eats the first click; the second keeps the game running behind other windows). `-Ddriver.unfocused=true`
   replaces the second without editing the file.
@@ -344,6 +348,8 @@ non-default file.
 
 Package `io.github.ummamute.driver.api` (no Minecraft types). Compile with `modCompileOnly(files("libs/<driver jar>"))`,
 run by copying the jar to `run/mods/`; do not list it in `depends`.
+For a Maven Central version, use `mavenCentral()`, `modCompileOnly("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")`
+and optionally `modLocalRuntime` with the same coordinate instead. The API package stays `io.github.ummamute.driver.api`.
 
 `fabric.mod.json`: `"entrypoints": {"minecraft-driver-mcp": ["com.example.MyDriverExtension"]}`.
 

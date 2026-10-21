@@ -60,6 +60,9 @@ For a mod's development environment, copy the jar into `run/mods/` and run `grad
 `modLocalRuntime(files(...))`: the client crashes with `NoClassDefFoundError: kotlin/...`. A fresh game directory opens
 the accessibility screen first; close it once with `mc_click` or set `onboardAccessibility:false` in `options.txt`.
 See [Installation](docs/installation.md) and [Getting started](docs/getting-started.md).
+For versions available on Maven Central, use `mavenCentral()` and
+`modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")` instead of copying the jar.
+Its dependency metadata supplies Kotlin, MCP and Ktor. Publication support does not publish earlier releases.
 Direct HTTP access remains available for specialized setups, extension tools and endpoint debugging; see
 [Direct HTTP alternative](docs/getting-started.md#direct-http-alternative).
 

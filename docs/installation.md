@@ -37,6 +37,22 @@ The usual case is testing a mod under development with `gradlew runClient`.
 
 Fabric Loader remaps the jar to the project's mappings (Yarn or Mojang) at launch.
 
+For versions published to Maven Central, a Loom project can instead resolve the driver and its runtime libraries:
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")
+}
+```
+
+Replace `<version>` with a version available on Maven Central; publication support does not make earlier releases
+available there. Keep Fabric API installed. Use either this dependency or the copied jar, so the driver is loaded once.
+The repository dependency supplies the Kotlin, MCP and Ktor libraries that Loom removes from the nested jar list.
+
 > **Do not add the jar with `modLocalRuntime(files(...))`.** Loom drops the list of bundled libraries from a remapped
 > file dependency, and the game crashes with `NoClassDefFoundError: kotlin/...`. Copying the jar into `run/mods/`
 > works. See [Known issues](known-issues.md#modlocalruntime-crashes-the-client).
@@ -68,7 +84,7 @@ Requires JDK 21 and the Gradle wrapper.
 ./gradlew build
 ```
 
-The jar is written to `versions/<minecraft version>/build/libs/`. Use the jar without the `-sources` suffix.
+The jar is written to `versions/<minecraft version>/build/libs/`. Use the jar without a `-sources` or `-javadoc` suffix.
 The tool catalogue is bundled as a JSON resource inside the mod jar; no additional file is needed.
 
 ## Verify the installation

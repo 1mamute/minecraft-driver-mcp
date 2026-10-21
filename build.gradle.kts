@@ -6,6 +6,7 @@ plugins {
     java
     kotlin("jvm")
     kotlin("plugin.serialization")
+    id("com.vanniktech.maven.publish.base") version "0.37.0"
 }
 
 val minecraftVersion = property("minecraft_version") as String
@@ -114,6 +115,7 @@ tasks.withType<KotlinCompile> {
 
 java {
     withSourcesJar()
+    withJavadocJar()
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
@@ -126,4 +128,50 @@ tasks.jar {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = property("archives_base_name") as String
+            from(components["java"])
+            pom {
+                name.set("Minecraft Driver MCP")
+                description.set("A Fabric client mod that exposes Minecraft to AI assistants through MCP.")
+                url.set("https://github.com/1mamute/minecraft-driver-mcp")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/license/mit")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("1mamute")
+                        name.set("1mamute")
+                        url.set("https://github.com/1mamute")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/1mamute/minecraft-driver-mcp")
+                    connection.set("scm:git:https://github.com/1mamute/minecraft-driver-mcp.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/1mamute/minecraft-driver-mcp.git")
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "verification"
+            url = rootProject.layout.buildDirectory.dir("maven-verification").get().asFile.toURI()
+        }
+    }
+}
+
+// Remote publication is opt-in; builds and local artifact checks need no credentials.
+if (providers.gradleProperty("centralPublishing").getOrElse("false").toBoolean()) {
+    mavenPublishing {
+        publishToMavenCentral(automaticRelease = false)
+        signAllPublications()
+    }
 }

@@ -27,6 +27,8 @@ gateway to diagnose an unavailable endpoint; readiness failures preserve the reg
 Adding the jar to a mod's development run with `modLocalRuntime(files(...))` crashes the client with
 `NoClassDefFoundError: kotlin/collections/ArrayDeque`. Loom removes the list of bundled libraries from the remapped
 copy. **Workaround:** copy the jar into the project's `run/mods/` folder; Fabric Loader remaps it at launch.
+For a version published to Maven Central, use the [repository dependency](installation.md#install-in-a-mod-s-development-environment)
+instead; its metadata supplies the runtime libraries transitively. A file dependency has no such metadata.
 
 ## Launchers and JVM arguments
 

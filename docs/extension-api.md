@@ -12,6 +12,21 @@ gateway currently forwards built-in tools only.
 
 Compile against the driver jar and keep it out of your own jar. In a Loom project:
 
+For a version available on Maven Central, use `mavenCentral()` in `repositories` and:
+
+```kotlin
+dependencies {
+    modCompileOnly("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")
+    modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")
+}
+```
+
+Replace `<version>` with a published version. The group ID differs from the API package, which remains
+`io.github.ummamute.driver.api`. The runtime dependency brings Kotlin, MCP and Ktor transitively; omit it when only
+compiling. Do not bundle the driver in your mod.
+
+For a local jar or a release not published to Maven Central:
+
 ```kotlin
 dependencies {
     modCompileOnly(files("libs/minecraft-driver-mcp-0.5.0+1.21.1.jar"))
