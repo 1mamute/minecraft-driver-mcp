@@ -10,6 +10,7 @@ All checks below were made on Minecraft 1.21.1, in a development environment unl
 
 | Area | Checked |
 | --- | --- |
+| Process start identity | On Windows, the repeatable two-client registry check passed: handshake and discovery from both clients, PID routing and ambiguity, rejection of a simulated process-start mismatch without deletion on read, older-record compatibility, preserved records and ambiguity on endpoint failure, and graceful shutdown cleanup. |
 | Two clients | Two real clients on 25890 and 25891 both answered `initialize`, `tools/list` and `mc_get_state`; both appeared in `mc_list_instances`; closing one removed only its registry file. A fixed, taken `driver.port` logs an error and leaves the driver off while the game starts. |
 | Port race | Simultaneous launches got distinct ports. The `EndpointBinder` retry after a lost race is covered by unit tests only, because the window between probing and binding is a few milliseconds. |
 | Auth token | Without a token all calls work. With one, a missing header, a wrong token, a token one character short and a plain GET return 401 with `WWW-Authenticate: Bearer`; the correct header returns 200. The token is absent from the registry file and the log. |
@@ -38,6 +39,7 @@ All checks below were made on Minecraft 1.21.1, in a development environment unl
 
 | Area | Gap | How to close it |
 | --- | --- | --- |
+| Process start identity on Linux/macOS | The real-client process-identity check has not been run on Linux or macOS. | Run the [two-client registry check](testing.md#two-clients) on each system, including stale identity, readiness and shutdown cleanup. |
 | `mc_wait_for` | MCP transport cancellation, modded item/entity predicates and modded health ranges have not been checked against a running client. | Repeat the [condition-wait check](testing.md#condition-waits) with modded content and cancel a long wait from an MCP host. |
 | `mc_attack` | Cancellation cleanup, resource overlays, respawn/dimension travel, physical-key release, already-held key and disabled-item refusals, dedicated-server rejection and mod interception. | Exercise the remaining [attacking checklist](testing.md#attacking), then compare a rejected dedicated-server attack and an intercepted modded attack with server-side evidence. |
 | `mc_get_block` | The transient `not_available` case when a block entity is absent from the client map, modded update-tag contracts and reads on a dedicated server. | Read during a delayed block-entity update, compare modded data with its synchronization contract, and repeat on a dedicated server. |
@@ -76,6 +78,13 @@ published package in one uninterrupted session per host, without MCP reconfigura
 
 ## Design limits
 
+- **Process start identity.** `processStartEpochSeconds` has whole-second precision, so PID reuse within the same
+  second can go undetected. Older records and readers use PID-only liveness; unavailable OS start metadata also falls
+  back to that check. On Linux, JDK 21 caches `/proc/stat` boot time while a later `ps` invocation reads it again;
+  a wall-clock adjustment that changes boot time can produce a false start-time mismatch. This follows from the
+  [JDK Linux implementation](https://github.com/openjdk/jdk21u/blob/master/src/java.base/linux/native/libjava/ProcessHandleImpl_linux.c)
+  and [procps start-time calculation](https://gitlab.com/procps-ng/procps/-/blob/master/src/ps/output.c), and has not been
+  reproduced in a running client.
 - **Stateless HTTP.** `mcpStatelessStreamableHttp` keeps no session, so the server cannot push notifications.
   `mc_wait_for` blocks inside one call (default 10 s, cap 60 s). Revisit if streaming progress is needed
   (`mcpStreamableHttp`).

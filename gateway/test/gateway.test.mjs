@@ -212,6 +212,53 @@ test("stable name follows a restarted client while a stale PID never reroutes", 
     );
 });
 
+test("a confirmed reused PID cannot route to an endpoint or a different live client", async (t) => {
+    const { gateway, directory } = await setup(t);
+    const endpoint = await mock(t);
+    const other = await child(t);
+    await record(directory, endpoint, { processStartEpochSeconds: 1 });
+    await record(directory, endpoint, { pid: other.pid, name: "other" });
+    assert.match(
+        (await gateway.call("mc_get_state", { instance_pid: process.pid }, signal())).content[0].text,
+        /No matching/,
+    );
+    assert.equal(endpoint.calls.length, 0);
+    assert.equal(parsed(await gateway.call("mc_list_instances", {}, signal())).instances.length, 1);
+});
+
+test("readiness failure retains live identity records and ambiguity without deleting files", async (t) => {
+    const { gateway, directory } = await setup(t);
+    const { processStartTimes } = await import("../dist/process-identity.js");
+    const { readFile } = await import("node:fs/promises");
+    const endpoint = await mock(t);
+    const other = await child(t);
+    const starts = await processStartTimes([process.pid, other.pid]);
+    await record(directory, endpoint, { processStartEpochSeconds: starts.get(process.pid) });
+    const unavailable = await record(
+        directory,
+        { port: 1, url: "http://127.0.0.1:1/mcp" },
+        { pid: other.pid, processStartEpochSeconds: starts.get(other.pid) },
+    );
+    const listed = parsed(await gateway.call("mc_list_instances", { check_ready: true }, signal()));
+    assert.equal(listed.instances.length, 2);
+    assert.equal(listed.instances.find((instance) => instance.pid === other.pid).status, "connection_failed");
+    assert.deepEqual(JSON.parse(await readFile(join(directory, `${other.pid}.json`), "utf8")), unavailable);
+    assert.match((await gateway.call("mc_get_state", {}, signal())).content[0].text, /Multiple/);
+    assert.equal(endpoint.calls.filter((call) => call.body.method === "tools/call").length, 0);
+});
+
+test("discovery without readiness still respects a positive wait deadline", async (t) => {
+    const { gateway, directory } = await setup(t);
+    const { processStartTimes } = await import("../dist/process-identity.js");
+    const starts = await processStartTimes([process.pid]);
+    await record(directory, { port: 1, url: "http://127.0.0.1:1/mcp" }, {
+        processStartEpochSeconds: starts.get(process.pid) ?? 1,
+    });
+    const result = await gateway.call("mc_wait_for_instance", { ready: false, timeout_ms: 1 }, signal());
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /Timed out/);
+});
+
 test("readiness requires authentication and matching release but not a world", async (t) => {
     const { gateway, directory } = await setup(t);
     const endpoint = await mock(t, { version: "0.2.0+1.21.1" });

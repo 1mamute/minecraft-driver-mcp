@@ -477,4 +477,12 @@ An HTTP request reaches `McpEndpoint` (Ktor CIO, `mcpStatelessStreamableHttp` at
 threads into bounded buffers (`MessageLog` 200 messages, `LogBuffer` 1000 lines) with sequence numbers, which is why
 `since`/`latest` exist. Screen text is captured by mixins into `TextFrame` while a screen renders. Clicks and slot clicks
 go through the open screen's own handlers, never the OS mouse. Held keys live in `ClientInput` and are applied each client
-tick. The instance registry is a directory of atomically written `<pid>.json` files; dead pids are ignored.
+tick. The instance registry is a directory of atomically written canonical `<pid>.json` files, with positive filenames
+matching payload PIDs. Records optionally include positive whole Unix `processStartEpochSeconds`, from the JVM process
+start time. Confirmed dead processes and start-time mismatches are hidden and cleaned up at the next mod registration.
+Missing/null identity in older records and unavailable OS start metadata retain PID-only liveness. Invalid or unreadable
+files are skipped and kept; the gateway never deletes files. Its asynchronous batched OS lookup uses `ps` on Linux/macOS
+with `LC_ALL=C` and `TZ=UTC0`, or PowerShell `Get-Process` on Windows, with a five-second bound and request cancellation.
+Unsupported systems and lookup failures fall back to PID liveness. Readiness remains optional: endpoint failures never
+delete records or redirect calls, and duplicate names still require PID selection. Whole-second identity cannot detect
+same-second PID reuse; older readers check only PIDs. Linux boot-time clock adjustments can affect identity comparisons.

@@ -100,7 +100,7 @@ and the local machine must be trusted.
 
 On `CLIENT_STOPPING` the endpoint stops and the instance file is removed. A crashed
 client leaves its file behind; `InstanceRegistry.list` ignores files whose process is
-gone.
+gone or whose available process start time confirms a reused PID.
 
 ## Threading
 
@@ -174,8 +174,16 @@ machine except the registry:
 - **Discovery.** `InstanceRegistry` writes `<pid>.json` into
   `~/.minecraft-driver-mcp/instances` (`driver.registry` overrides it). `mc_list_instances`
   returns the live ones with their URLs. Files are written to a temporary file and moved
-  into place atomically, and only files that parse with a dead pid are deleted, so clients
-  starting together never remove each other's registration. Unreadable files are skipped.
+  into place atomically. Readers accept only canonical filenames with a positive PID matching
+  the payload. Registration includes optional `processStartEpochSeconds`, a positive whole
+  Unix second from `ProcessHandle.info().startInstant()`. Readers hide confirmed start-time
+  mismatches; registration cleans up valid records with a confirmed dead or reused PID.
+  Missing or `null` identity and unavailable process metadata preserve PID-only checks.
+  Invalid and unreadable files are skipped and kept. The gateway never deletes files.
+  It batches asynchronous OS lookups (`ps` with `LC_ALL=C` and `TZ=UTC0` on Linux/macOS,
+  PowerShell `Get-Process` on Windows), bounds lookup to five seconds and respects cancellation.
+  Unsupported systems and lookup failures retain PID liveness. Optional readiness checks
+  never supply stale-process evidence or change selection; duplicate names remain ambiguous.
 - **Game directories.** Each client needs its own run directory; Minecraft requires it.
 
 ## Packaging
