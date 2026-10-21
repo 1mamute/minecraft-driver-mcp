@@ -13,8 +13,12 @@ export async function processStartTimes(pids: number[], signal?: AbortSignal): P
     try {
         if (process.platform === "win32") {
             const command =
-                `Get-Process -Id ${pids.join(",")} -ErrorAction SilentlyContinue | ForEach-Object { ` +
-                'try { "{0} {1}" -f $_.Id, ([DateTimeOffset]$_.StartTime.ToUniversalTime()).ToUnixTimeSeconds() } catch {} }';
+                "$PSModuleAutoLoadingPreference = 'None'; " +
+                `foreach ($processId in @(${pids.join(",")})) { ` +
+                "$process = $null; try { " +
+                "$process = [System.Diagnostics.Process]::GetProcessById($processId); " +
+                '"{0} {1}" -f $processId, ([DateTimeOffset]$process.StartTime.ToUniversalTime()).ToUnixTimeSeconds() ' +
+                "} catch {} finally { if ($null -ne $process) { $process.Dispose() } } }; exit 0";
             const { stdout } = await execute(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", command],
