@@ -42,14 +42,14 @@ used, so the window can stay behind other windows. The server binds to `127.0.0.
 
 1. Put the jar for your Minecraft version in the client's `mods/` folder, next to Fabric API. Kotlin and the server
    libraries are bundled. Requires Fabric Loader 0.19.5+ and Java 21+.
-2. Install Node.js 22 or later and use a gateway release matching the mod. For source builds, follow
-   [Build and install](docs/gateway.md#build-and-install) to install the local archive.
-3. Register the gateway once in your coding agent (examples use release `0.4.0`):
+2. Install Node.js 22 or later, then install a gateway release matching the mod using
+   [Build and install](docs/gateway.md#build-and-install). Source builds use the local archive.
+3. Register the installed gateway once in your coding agent:
 
    ```bash
-   claude mcp add --transport stdio minecraft-driver -- npx -y minecraft-driver-mcp@0.4.0
+   claude mcp add --transport stdio minecraft-driver -- minecraft-driver-mcp
    # Or, for Codex:
-   codex mcp add minecraft-driver -- npx -y minecraft-driver-mcp@0.4.0
+   codex mcp add minecraft-driver -- minecraft-driver-mcp
    ```
 
 4. Start an agent session, then launch Minecraft. Ask the assistant to call `mc_list_instances` or

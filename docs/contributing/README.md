@@ -38,6 +38,7 @@ Requires JDK 21 and the Gradle wrapper.
 ./gradlew lint                   # ktlint and detekt
 ./gradlew :1.21.1:runClient      # start a client with the mod and the MCP endpoint
 npm --prefix gateway test       # compile and test the stdio gateway
+npm run test:release            # test archive publication logic without publishing
 ```
 
 Then connect an MCP client to the endpoint printed in the log and call `tools/list`.
@@ -95,11 +96,7 @@ replaced, so the intro and known limits stay hand-written.
 - `npm run changelog` updates `docs/release-notes.md`; `node scripts/changelog.mjs --check` fails when it is stale.
 - The `Release` workflow does not commit to `main`. On every push to `main` it refreshes a draft release tagged
   `unreleased` with the same notes. Pushing a `v<mod_version>` tag builds the jar and publishes a release with those
-  notes, mod jars and the gateway npm archive attached, then deletes the draft.
-- To release: bump `mod_version` in a pull request, align `gateway/package.json` and
-  its lockfile and `gateway/catalogue.json` with that version, run `npm run changelog`, review,
-  merge, then tag `main`. Gateway builds reject a package/catalogue version mismatch.
-- npm publication is separate from the GitHub release. With the intended publisher
-  authenticated (`npm whoami`), publish the reviewed gateway archive using
-  `npm publish <archive.tgz> --access public`. Verify the matching npm release before
-  recommending the registry-based `npx` command.
+  notes, mod jars and the gateway npm archive attached, then deletes the draft. The same gateway archive is
+  automatically published to npm with provenance.
+- Release pull requests align `mod_version`, `gateway/package.json`, its lockfile and `gateway/catalogue.json`,
+  and include generated release notes. Gateway builds reject a package/catalogue version mismatch.

@@ -55,6 +55,10 @@ already states. Unverified behavior and risks go in
 [docs/contributing/known-issues.md](docs/contributing/known-issues.md); limits a user can hit go in
 [docs/known-issues.md](docs/known-issues.md).
 
+Public docs (`README.md`, `docs/`, including contributor docs, and `llms.txt`) cover product usage and reusable
+contributor workflows. Give complete maintainer-only setup and one-time administrative steps in chat. Keep these
+instructions and pending setup reminders out of files; do not substitute links for steps unless explicitly requested.
+
 ## Dependency questions
 
 Load the relevant skill when answering questions or changing integrations:

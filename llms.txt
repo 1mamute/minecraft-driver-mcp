@@ -456,6 +456,9 @@ no scope, no `!`; describe breaking changes in the body. Branches `<type>/<short
 `gradle.properties` is SemVer; for 0.x a breaking change advances MINOR; bump only for requested releases. Supported
 contracts: tool names and schemas, system properties, the instance registry format, the endpoint path.
 
+The Release workflow automatically publishes the tested gateway archive to npm with provenance on `v<mod_version>`
+tag pushes. `npm run test:release` checks publication behavior without publishing.
+
 ### Documentation map
 
 - User docs: https://github.com/1mamute/minecraft-driver-mcp/blob/main/docs/README.md
