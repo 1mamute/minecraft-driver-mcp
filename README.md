@@ -40,8 +40,20 @@ used, so the window can stay behind other windows. The server binds to `127.0.0.
 
 ## Quick start
 
-1. Put the jar for your Minecraft version in the client's `mods/` folder, next to Fabric API. Kotlin and the server
-   libraries are bundled. Requires Fabric Loader 0.19.5+ and Java 21+.
+1. Add the driver from Maven Central to your mod's `build.gradle.kts` (recommended). Requires Fabric Loader 0.19.5+,
+   Fabric API for Minecraft 1.21.1 and Java 21+:
+
+   ```kotlin
+   repositories {
+       mavenCentral()
+   }
+
+   dependencies {
+       modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")
+   }
+   ```
+
+   Replace `<version>` with the driver release version. Gradle resolves Kotlin, MCP and Ktor automatically.
 2. Install Node.js 22 or later, then install a gateway release matching the mod using
    [Build and install](docs/gateway.md#build-and-install). Source builds use the local archive.
 3. Register the installed gateway once in your coding agent:
@@ -52,17 +64,14 @@ used, so the window can stay behind other windows. The server binds to `127.0.0.
    codex mcp add minecraft-driver -- minecraft-driver-mcp
    ```
 
-4. Start an agent session, then launch Minecraft. Ask the assistant to call `mc_list_instances` or
+4. Start an agent session, then launch the client with `gradlew runClient`. Ask the assistant to call `mc_list_instances` or
    `mc_wait_for_instance`, followed by `mc_get_state`, and describe what to test. Tools are available even when
    the game has not started; game calls work once a client is ready.
 
-For a mod's development environment, copy the jar into `run/mods/` and run `gradlew runClient`. Do not add it with
-`modLocalRuntime(files(...))`: the client crashes with `NoClassDefFoundError: kotlin/...`. A fresh game directory opens
-the accessibility screen first; close it once with `mc_click` or set `onboardAccessibility:false` in `options.txt`.
+Each new release is published to Maven Central. A normal client or a local build can use manual jar installation.
+A fresh game directory opens the accessibility screen first;
+close it once with `mc_click` or set `onboardAccessibility:false` in `options.txt`.
 See [Installation](docs/installation.md) and [Getting started](docs/getting-started.md).
-For versions available on Maven Central, use `mavenCentral()` and
-`modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")` instead of copying the jar.
-Its dependency metadata supplies Kotlin, MCP and Ktor. Publication support does not publish earlier releases.
 Direct HTTP access remains available for specialized setups, extension tools and endpoint debugging; see
 [Direct HTTP alternative](docs/getting-started.md#direct-http-alternative).
 

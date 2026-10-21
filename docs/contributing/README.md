@@ -98,10 +98,11 @@ replaced, so the intro and known limits stay hand-written.
   `unreleased` with the same notes. Pushing a `v<mod_version>` tag builds the jar and publishes a release with those
   notes, mod jars and the gateway npm archive attached, then deletes the draft. The same gateway archive is
   automatically published to npm with provenance.
-- Maven Central is staged separately with the manual `Stage Maven Central` workflow. Select an existing
+- Every new release includes publication to Maven Central. Stage it with the manual `Stage Maven Central` workflow. Select an existing
   `v<mod_version>` tag containing the publication configuration. The workflow checks the tag, builds and checks
   the Maven artifacts, signs them and uploads a deployment for manual review and publication in Central Portal.
-  It does not automatically release the deployment or change the GitHub/npm release process.
+  Complete the release by publishing the validated deployment in Central Portal. Staging does not automatically
+  publish it or change the GitHub/npm release process.
 - Release pull requests align `mod_version`, `gateway/package.json`, its lockfile and `gateway/catalogue.json`,
   and include generated release notes. Gateway builds reject a package/catalogue version mismatch.
 

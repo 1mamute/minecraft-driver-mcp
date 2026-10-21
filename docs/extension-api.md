@@ -10,22 +10,28 @@ gateway currently forwards built-in tools only.
 
 ## Add the dependency
 
-Compile against the driver jar and keep it out of your own jar. In a Loom project:
-
-For a version available on Maven Central, use `mavenCentral()` in `repositories` and:
+Use the Maven Central dependency in a Loom project's `build.gradle.kts`. Each new release is published there:
 
 ```kotlin
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     modCompileOnly("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")
     modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")
 }
 ```
 
-Replace `<version>` with a published version. The group ID differs from the API package, which remains
+Replace `<version>` with the driver release version. The group ID differs from the API package, which remains
 `io.github.ummamute.driver.api`. The runtime dependency brings Kotlin, MCP and Ktor transitively; omit it when only
 compiling. Do not bundle the driver in your mod.
 
-For a local jar or a release not published to Maven Central:
+Do not list the driver in `depends`: your mod keeps working without it, and the entrypoint is simply never called.
+
+### Local jar fallback
+
+For a local build or an older release available only as a jar:
 
 ```kotlin
 dependencies {
@@ -34,8 +40,6 @@ dependencies {
 ```
 
 To run with the driver, copy the same jar into `run/mods/`. Do not add it with `modLocalRuntime(files(...))`: Loom drops the bundled Kotlin and MCP libraries from a remapped file dependency, and the client crashes at startup (see [known issues](known-issues.md#modlocalruntime-crashes-the-client)).
-
-Do not list the driver in `depends`: your mod keeps working without it, and the entrypoint is simply never called.
 
 ## Declare the entrypoint
 

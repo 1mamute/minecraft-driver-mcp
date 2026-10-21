@@ -14,7 +14,7 @@ Read these to install the mod and drive a game with an assistant.
 | Page | Contents |
 | --- | --- |
 | [Introduction](introduction.md) | What the mod is, why it exists, what it can do and what it is not |
-| [Installation](installation.md) | Requirements, installing the jar, using it in a mod's development environment |
+| [Installation](installation.md) | Requirements, Maven Central setup for development clients, manual jar installation |
 | [Getting started](getting-started.md) | Recommended gateway setup, first calls, direct HTTP alternative |
 | [Local gateway](gateway.md) | Installation, registration, instance selection and authentication for coding agents |
 | [Debugging mods with an assistant](debugging-mods.md) | Workflows for testing screens, commands, containers and crashes |
