@@ -3,8 +3,11 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { setTimeout as delay } from 'node:timers/promises'
 
 const registry = 'https://registry.npmjs.org'
+const visibilityCheckIntervalMs = 10000
+const visibilityCheckAttempts = 13
 
 function publishToNpm(archive) {
   if (!process.env.npm_execpath) {
@@ -16,7 +19,7 @@ function publishToNpm(archive) {
   ], { stdio: 'inherit' })
 }
 
-export async function publishGateway(archive, tag, { fetch = globalThis.fetch, publish = publishToNpm } = {}) {
+export async function publishGateway(archive, tag, { fetch = globalThis.fetch, publish = publishToNpm, wait = delay } = {}) {
   const metadata = JSON.parse(execFileSync('tar', ['-xOf', archive, 'package/package.json'], { encoding: 'utf8' }))
   if (metadata.name !== 'minecraft-driver-mcp' || tag !== `v${metadata.version}`) {
     throw new Error('The gateway archive must be minecraft-driver-mcp at the release tag version.')
@@ -49,12 +52,19 @@ export async function publishGateway(archive, tag, { fetch = globalThis.fetch, p
     return
   }
   await publish(archive)
-  const published = await publishedIntegrity()
-  if (published === null) {
-    throw new Error(`npm accepted ${spec}, but it is not visible yet; rerun the failed publishing job.`)
+  for (let attempt = 0; attempt < visibilityCheckAttempts; attempt++) {
+    const published = await publishedIntegrity()
+    if (published !== null) {
+      verify(published)
+      console.log(`Verified ${spec} on npm against the release archive.`)
+      return
+    }
+    if (attempt < visibilityCheckAttempts - 1) {
+      console.log(`npm accepted ${spec}; waiting for registry visibility before verifying the archive.`)
+      await wait(visibilityCheckIntervalMs)
+    }
   }
-  verify(published)
-  console.log(`Verified ${spec} on npm against the release archive.`)
+  throw new Error(`npm accepted ${spec}, but it is still not visible after waiting; rerun the failed publishing job.`)
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

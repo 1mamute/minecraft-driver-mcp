@@ -97,7 +97,9 @@ replaced, so the intro and known limits stay hand-written.
 - The `Release` workflow does not commit to `main`. On every push to `main` it refreshes a draft release tagged
   `unreleased` with the same notes. Pushing a `v<mod_version>` tag builds the jar and publishes a release with those
   notes, mod jars and the gateway npm archive attached, then deletes the draft. The same gateway archive is
-  automatically published to npm with provenance.
+  automatically published to npm with provenance. After npm accepts an upload, verification retries missing-version
+  responses up to 12 times with 10-second pauses, then compares the registry's archive integrity with the release
+  archive. A rerun skips an already published matching archive; a different archive fails verification.
 - Every new release includes publication to Maven Central. Stage it with the manual `Stage Maven Central` workflow. Select an existing
   `v<mod_version>` tag containing the publication configuration. The workflow checks the tag, builds and checks
   the Maven artifacts, signs them and uploads a deployment for manual review and publication in Central Portal.

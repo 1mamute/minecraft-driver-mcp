@@ -74,10 +74,47 @@ test('verifies the registry archive after an upload', async () => {
   }), /differs from the release archive/)
 })
 
-test('a successful upload with delayed visibility can be retried safely', async () => {
+test('waits for registry visibility after one successful upload', async () => {
+  let uploads = 0
+  let missingLookups = 2
+  const waits = []
+  await publishGateway(archive, 'v0.5.0', {
+    fetch: async () => uploads && missingLookups-- <= 0 ? published() : new Response(null, { status: 404 }),
+    publish: () => { uploads++ },
+    wait: async (milliseconds) => { waits.push(milliseconds) },
+  })
+  assert.equal(uploads, 1)
+  assert.deepEqual(waits, [10000, 10000])
+})
+
+test('fails after a bounded visibility wait and can be retried safely', async () => {
+  let uploads = 0
+  let waited = 0
   await assert.rejects(publishGateway(archive, 'v0.5.0', {
     fetch: async () => new Response(null, { status: 404 }),
-    publish: () => {},
+    publish: () => { uploads++ },
+    wait: async (milliseconds) => { waited += milliseconds },
   }), /rerun the failed publishing job/)
+  assert.equal(uploads, 1)
+  assert.equal(waited, 120000)
   await publishGateway(archive, 'v0.5.0', { fetch: async () => published(), publish: noPublish })
+})
+
+test('checks archive integrity when delayed registry metadata becomes visible', async () => {
+  let uploaded = false
+  let missingLookups = 1
+  await assert.rejects(publishGateway(archive, 'v0.5.0', {
+    fetch: async () => uploaded && missingLookups-- <= 0 ? published('sha512-other') : new Response(null, { status: 404 }),
+    publish: () => { uploaded = true },
+    wait: async () => {},
+  }), /differs from the release archive/)
+})
+
+test('does not retry registry errors after an accepted upload', async () => {
+  let uploaded = false
+  await assert.rejects(publishGateway(archive, 'v0.5.0', {
+    fetch: async () => new Response(null, { status: uploaded ? 500 : 404 }),
+    publish: () => { uploaded = true },
+    wait: () => assert.fail('Must not wait after a registry error'),
+  }), /HTTP 500/)
 })
