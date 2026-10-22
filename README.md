@@ -195,7 +195,7 @@ into the mod jar; building the mod requires JDK 21 and does not require Node.js.
 
 ## Status
 
-Version 0.5.0 targets Minecraft 1.21.1. The tools above are checked against a running client, both in a development
+Version 0.6.0 targets Minecraft 1.21.1. The tools above are checked against a running client, both in a development
 environment and in a regular launcher-managed install with other mods, before each change merges. Other Minecraft
 versions and operating systems other than Windows have not been tested, and tool names and schemas can change between
 minor versions. Limits and unverified areas are listed in [Known issues](docs/known-issues.md).

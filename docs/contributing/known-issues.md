@@ -104,6 +104,8 @@ published package in one uninterrupted session per host, without MCP reconfigura
   extension API and loaded driver, Kotlin, Ktor and MCP classes using both Gradle metadata and POM-only resolution.
   On Windows, its repository-based `runClient` answered `initialize`, `tools/list` and `mc_get_state` without a copied
   driver jar. The consumer jar contains only the fixture class and no driver classes or nested libraries.
+  Startup and the same MCP checks also passed with Fabric Language Kotlin `1.14.1+kotlin.2.4.20` and driver
+  `0.6.0+1.21.1` installed together on Minecraft 1.21.1 with JDK 21.
   Local artifact signing was verified with a disposable test key; Central upload and release remain unverified.
 
 ## Tooling
