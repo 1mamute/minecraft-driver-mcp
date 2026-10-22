@@ -199,6 +199,10 @@ The mod ships in one jar and does not depend on Fabric Language Kotlin:
 - slf4j and the JetBrains annotations are not bundled; Minecraft provides them.
 - `implementation` extends `bundled`, so the code compiles against the same libraries.
 - `gateway/catalogue.json` is copied into the mod as a resource, with no additional jar.
+- Maven publications use `io.github.1mamute:minecraft-driver-mcp:<mod_version>+<minecraft_version>` and the remapped
+  mod artifact. The POM and Gradle metadata retain runtime dependencies because Loom strips nested libraries from
+  remapped repository dependencies. Source packages remain `io.github.ummamute.driver`; the publication group is
+  independent of Java package names. Sources and Java Javadoc accompany the mod artifact.
 
 A new library goes into `bundled`. Check the jar size and that it does not clash with a
 library Minecraft or another mod already provides.

@@ -10,7 +10,8 @@ clients, include the chosen `instance_name` or `instance_pid` on game calls.
 
 ## The basic loop
 
-1. Build the mod and start a client with it in `run/mods/` next to the driver jar.
+1. Add the [Maven Central dependency](installation.md#install-in-a-mod-s-development-environment) and start the mod's
+   development client with `gradlew runClient`.
 2. `mc_wait_for_instance` to wait for its endpoint, then `mc_get_state` to see the screen.
 3. Navigate to the feature under test: `mc_list_widgets` and `mc_click`, `mc_join_world`, `mc_send_chat`.
 4. Trigger the behavior.

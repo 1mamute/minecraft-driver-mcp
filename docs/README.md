@@ -14,7 +14,7 @@ Read these to install the mod and drive a game with an assistant.
 | Page | Contents |
 | --- | --- |
 | [Introduction](introduction.md) | What the mod is, why it exists, what it can do and what it is not |
-| [Installation](installation.md) | Requirements, installing the jar, using it in a mod's development environment |
+| [Installation](installation.md) | Requirements, Maven Central setup for development clients, manual jar installation |
 | [Getting started](getting-started.md) | Recommended gateway setup, first calls, direct HTTP alternative |
 | [Local gateway](gateway.md) | Installation, registration, instance selection and authentication for coding agents |
 | [Debugging mods with an assistant](debugging-mods.md) | Workflows for testing screens, commands, containers and crashes |
@@ -35,6 +35,7 @@ The [contributor guide](contributing/README.md) covers how the mod is built and 
 | [Gateway architecture](contributing/architecture.md#local-gateway) | Shared catalogue, routing and lifecycle |
 | [Extending the mod](contributing/extending.md) | Adding a tool, a client concern or a mixin; supporting a Minecraft version |
 | [Testing](contributing/testing.md) | Unit tests, the runtime check, driving a client by hand |
+| [Publication verification](../verification/README.md) | Standalone Maven consumer fixture and dependency checks |
 | [Code style](contributing/code-style.md) | Naming, readability limits, tool conventions, linting |
 | [Dependencies](contributing/dependencies.md) | Where versions live, upgrading, adding a Minecraft version |
 | [Verification status](contributing/known-issues.md) | What has been verified, what has not, and design limits |

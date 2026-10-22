@@ -31,7 +31,7 @@ codex mcp add minecraft-driver -- minecraft-driver-mcp
 ```
 
 For released versions, `npx -y minecraft-driver-mcp@<matching-release>` can replace
-the installed executable as the stdio command. The current release version is 0.5.0.
+the installed executable as the stdio command. The current release version is 0.6.0.
 
 The gateway's forwarded request timeout is 70000 ms. Set `MCP_TOOL_TIMEOUT=75000` in
 Claude Code's own launch environment, or `"timeout":75000` in its `.mcp.json` server
@@ -81,10 +81,15 @@ the endpoint printed in its log:
 
 ### Installing it for the user
 
-- Copy `minecraft-driver-mcp-<version>+1.21.1.jar` into the instance's `mods/` folder next to Fabric API. Needs Fabric
-  Loader 0.19.5+, Java 21+.
-- In a mod's dev environment copy the jar into `run/mods/` and run `gradlew runClient`. Never add it with
-  `modLocalRuntime(files(...))`: it crashes with `NoClassDefFoundError: kotlin/...`.
+- Recommended for a mod's development environment: add `mavenCentral()` to `repositories` in `build.gradle.kts` and
+  `modLocalRuntime("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")` to `dependencies`, then run
+  `gradlew runClient`. Each new release is published to Maven Central; replace `<version>` with the driver release
+  version. Repository metadata supplies Kotlin, MCP and Ktor transitively. Requires Fabric Loader 0.19.5+, Fabric API
+  for 1.21.1 and Java 21+. Never bundle the driver into the mod being tested or also copy it into `run/mods/`.
+- For a normal client, copy `minecraft-driver-mcp-<version>+1.21.1.jar` into its `mods/` folder next to Fabric API.
+  For a local build or an older jar-only release in a development environment, copying into `run/mods/` is a fallback.
+  Never use `modLocalRuntime(files(...))`: it crashes with missing Kotlin classes because file dependencies lack
+  transitive library metadata.
 - Put `onboardAccessibility:false` and `pauseOnLostFocus:false` in the client's `options.txt` (the first skips a first-launch
   screen that eats the first click; the second keeps the game running behind other windows). `-Ddriver.unfocused=true`
   replaces the second without editing the file.
@@ -282,8 +287,8 @@ Tools added by other mods are named `<modid>_<verb>_<noun>`; they appear in `too
 
 ## 3. Debugging another mod with the tools
 
-The loop: build the mod, launch a client with the mod and this jar in `run/mods/`, drive the game, read results, fix the
-code, repeat.
+The loop: add the driver as a Maven Central development runtime dependency, build the mod, launch with
+`gradlew runClient`, drive the game, read results, fix the code, repeat.
 
 Principles:
 1. Prefer text: `mc_list_widgets`, `mc_read_screen_text`, `mc_read_container`, `mc_read_messages`, `mc_read_log`.
@@ -342,8 +347,10 @@ non-default file.
 
 ## 5. Adding tools from another mod (extension API)
 
-Package `io.github.ummamute.driver.api` (no Minecraft types). Compile with `modCompileOnly(files("libs/<driver jar>"))`,
-run by copying the jar to `run/mods/`; do not list it in `depends`.
+Package `io.github.ummamute.driver.api` (no Minecraft types). Use `mavenCentral()` and
+`modCompileOnly("io.github.1mamute:minecraft-driver-mcp:<version>+1.21.1")` to compile against the API. Add
+`modLocalRuntime` with the same coordinate to run with the driver. Do not list it in `depends` or bundle it in your
+mod. For a local jar fallback, compile with `modCompileOnly(files("libs/<driver jar>"))` and copy it into `run/mods/`.
 
 `fabric.mod.json`: `"entrypoints": {"minecraft-driver-mcp": ["com.example.MyDriverExtension"]}`.
 
