@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { setTimeout as delay } from 'node:timers/promises'
 
@@ -19,8 +19,14 @@ function publishToNpm(archive) {
   ], { stdio: 'inherit' })
 }
 
+/** Reads package.json from the archive. The relative path keeps GNU tar on Windows from reading C: as a remote host. */
+function readArchivedPackage(archive) {
+  const json = execFileSync('tar', ['-xOf', basename(archive), 'package/package.json'], { cwd: dirname(archive), encoding: 'utf8' })
+  return JSON.parse(json)
+}
+
 export async function publishGateway(archive, tag, { fetch = globalThis.fetch, publish = publishToNpm, wait = delay } = {}) {
-  const metadata = JSON.parse(execFileSync('tar', ['-xOf', archive, 'package/package.json'], { encoding: 'utf8' }))
+  const metadata = readArchivedPackage(archive)
   if (metadata.name !== 'minecraft-driver-mcp' || tag !== `v${metadata.version}`) {
     throw new Error('The gateway archive must be minecraft-driver-mcp at the release tag version.')
   }

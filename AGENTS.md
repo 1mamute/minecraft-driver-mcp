@@ -75,7 +75,10 @@ Load the relevant skill when answering questions or changing integrations:
 
 Codex discovers `.agents/skills/`. Claude Code discovers `.claude/skills/`, which links to `.agents/skills/`
 (`../.agents/skills`; on Windows without symlink rights, create a directory junction with
-`mklink /J .claude\skills .agents\skills`). Edit skills only in `.agents/skills/`. The `.claude/settings.json`
+`mklink /J .claude\skills .agents\skills`, then hide the junction from Git with
+`git update-index --skip-worktree .claude/skills` and a `/.claude/skills/` line in `.git/info/exclude`; otherwise
+Git reports the tracked link as deleted and `git add -A` commits copies of the skills). Edit skills only in
+`.agents/skills/`. The `.claude/settings.json`
 enables the Kotlin language server plugin (`kotlin-lsp@claude-plugins-official`).
 
 For upstream repository source, follow [repository cache guidance](.agents/skills/references/repository-cache.md):

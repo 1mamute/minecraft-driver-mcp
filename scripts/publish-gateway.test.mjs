@@ -12,7 +12,8 @@ after(() => rmSync(directory, { recursive: true, force: true }))
 mkdirSync(join(directory, 'package'))
 writeFileSync(join(directory, 'package/package.json'), JSON.stringify({ name: 'minecraft-driver-mcp', version: '0.5.0' }))
 const archive = join(directory, 'gateway.tgz')
-execFileSync('tar', ['-czf', archive, '-C', directory, 'package'])
+// Relative paths, as in publish-gateway.mjs: GNU tar reads a drive letter such as C: as a remote host.
+execFileSync('tar', ['-czf', 'gateway.tgz', 'package'], { cwd: directory })
 const integrity = `sha512-${createHash('sha512').update(readFileSync(archive)).digest('base64')}`
 const published = (value = integrity) => Response.json({ dist: { integrity: value } })
 const noPublish = () => assert.fail('Must not publish an archive')

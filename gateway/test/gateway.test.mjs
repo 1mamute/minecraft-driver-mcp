@@ -20,7 +20,9 @@ const parsed = (result) => JSON.parse(result.content[0].text);
 async function setup(t) {
     const directory = await mkdtemp(join(tmpdir(), "driver-gateway-"));
     t.after(() => rm(directory, { recursive: true, force: true }));
-    const config = { registryDirectory: directory, tokens: {}, connectTimeoutMs: 300, requestTimeoutMs: 300 };
+    // Generous defaults: a cold Windows runner can take longer than 300 ms for the first handshake. Tests of the
+    // deadlines set their own values.
+    const config = { registryDirectory: directory, tokens: {}, connectTimeoutMs: 5000, requestTimeoutMs: 5000 };
     return { directory, config, gateway: new Gateway(config, catalogue) };
 }
 
