@@ -218,6 +218,54 @@ class ConditionWaiterTest {
         assertEquals(listOf(WaitObservation("inventory", false, 0.0), WaitObservation("health", true, 4.0)), result.observations)
     }
 
+    @Test
+    fun `widget waits until a disabled button becomes active`() = runBlocking {
+        val result = waiter(
+            snapshot(screen = "DeathScreen", widget = respawn(active = false)),
+            snapshot(screen = "DeathScreen", widget = respawn(active = true)),
+        ).await(WaitCondition(widget = WidgetPredicate(label = "respawn")), timeoutMillis = 2000)
+
+        assertTrue(result.matched)
+        assertEquals("widget", result.reason)
+        assertEquals(listOf(WaitObservation("widget", true, widget = respawn(active = true))), result.observations)
+    }
+
+    @Test
+    fun `widget that stays disabled times out with its last flags and a widget next step`() = runBlocking {
+        val result = waiter(snapshot(screen = "DeathScreen", widget = respawn(active = false), inWorld = false))
+            .await(WaitCondition(widget = WidgetPredicate(path = "0")), timeoutMillis = 40)
+
+        assertFalse(result.matched)
+        assertEquals("timeout", result.reason)
+        assertEquals(listOf(WaitObservation("widget", false, widget = respawn(active = false))), result.observations)
+        assertTrue(result.nextStep.orEmpty().contains("mc_list_widgets"))
+        assertFalse(result.nextStep.orEmpty().contains("No world"))
+    }
+
+    @Test
+    fun `widget is unmet after its screen closes`() = runBlocking {
+        val result = waiter(snapshot(screen = "DeathScreen", widget = respawn(active = false)), snapshot())
+            .await(WaitCondition(widget = WidgetPredicate(label = "respawn")), timeoutMillis = 40)
+
+        assertFalse(result.matched)
+        assertEquals(listOf(WaitObservation("widget", false)), result.observations)
+    }
+
+    @Test
+    fun `widget flags must both match and entries without flags never match`() = runBlocking {
+        val hidden = WidgetObservation("0", "Respawn", active = true, visible = false)
+        val noFlags = WidgetObservation("0", "Server list", active = null, visible = null)
+
+        assertFalse(WidgetPredicate(label = "respawn").matches(hidden))
+        assertTrue(WidgetPredicate(label = "respawn", visible = false).matches(hidden))
+        assertFalse(WidgetPredicate(index = 0, active = false).matches(respawn(active = true)))
+        assertTrue(WidgetPredicate(index = 0, active = false).matches(respawn(active = false)))
+        assertFalse(WidgetPredicate(label = "server").matches(noFlags))
+        assertFalse(WidgetPredicate(label = "respawn").matches(null))
+    }
+
+    private fun respawn(active: Boolean) = WidgetObservation("0", "Respawn", active = active, visible = true)
+
     private fun waiter(vararg snapshots: WaitSnapshot): ConditionWaiter {
         val values = snapshots.toList().ifEmpty { listOf(snapshot()) }
         var index = 0
@@ -234,7 +282,14 @@ class ConditionWaiterTest {
         mode = WaitMode.ALL,
     )
 
-    private fun snapshot(screen: String? = null, inventory: Int? = null, entities: Int? = null, health: Double? = null, inWorld: Boolean = true) = WaitSnapshot(
+    private fun snapshot(
+        screen: String? = null,
+        inventory: Int? = null,
+        entities: Int? = null,
+        health: Double? = null,
+        widget: WidgetObservation? = null,
+        inWorld: Boolean = true,
+    ) = WaitSnapshot(
         state = ClientStateSnapshot(
             screen = screen, connected = inWorld, windowFocused = true,
             player = if (inWorld) PlayerPosition(0.0, 64.0, 0.0, 0f, 0f) else null,
@@ -242,5 +297,6 @@ class ConditionWaiterTest {
         inventoryCount = inventory,
         entityCount = entities,
         health = health,
+        widget = widget,
     )
 }

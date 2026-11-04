@@ -18,15 +18,19 @@ data class WaitCondition(
     val inventory: InventoryPredicate? = null,
     val entity: EntityPredicate? = null,
     val health: HealthPredicate? = null,
+    val widget: WidgetPredicate? = null,
     val mode: WaitMode = WaitMode.ANY,
 ) {
     init {
-        require(listOfNotNull(messageContains, screenContains, inventory, entity, health).isNotEmpty()) {
-            "Give message, screen, inventory, entity or health. Example: {\"inventory\":{\"item\":\"minecraft:stone\"}}"
+        require(listOfNotNull(messageContains, screenContains, inventory, entity, health, widget).isNotEmpty()) {
+            "Give message, screen, inventory, entity, health or widget. Example: {\"inventory\":{\"item\":\"minecraft:stone\"}}"
         }
     }
 
-    val needsSnapshot: Boolean get() = screenContains != null || inventory != null || entity != null || health != null
+    val needsSnapshot: Boolean get() = screenContains != null || widget != null || needsWorld
+
+    /** Whether a condition reads the player, so a missing world explains a timeout. */
+    val needsWorld: Boolean get() = inventory != null || entity != null || health != null
 
     companion object {
         const val NO_SCREEN = "none"
@@ -39,11 +43,25 @@ data class WaitSnapshot(
     val inventoryCount: Int? = null,
     val entityCount: Int? = null,
     val health: Double? = null,
+    /** The awaited widget, or null when no screen is open or no widget matches the selector. */
+    val widget: WidgetObservation? = null,
 )
 
-/** Latest observed count or health for a supplied condition; messages and screens have no numeric value. */
+/** The awaited widget as last observed. Null flags mean the entry is not a widget that reports them. */
 @Serializable
-data class WaitObservation(val condition: String, val matched: Boolean, val value: Double? = null)
+data class WidgetObservation(val path: String, val label: String?, val active: Boolean?, val visible: Boolean?)
+
+/**
+ * Latest observation for a supplied condition: a count or health in [value], or the awaited [widget].
+ * Messages and screens have neither.
+ */
+@Serializable
+data class WaitObservation(
+    val condition: String,
+    val matched: Boolean,
+    val value: Double? = null,
+    val widget: WidgetObservation? = null,
+)
 
 /** Outcome of a bounded wait, including observations that explain an unmet predicate. */
 @Serializable
@@ -88,8 +106,9 @@ internal class ConditionWaiter(
         }
         val nextStep = when {
             state == null -> "No render-thread snapshot completed. Call mc_get_state to check client responsiveness, then retry"
-            state.player == null -> "No world is loaded. Join with mc_join_world or mc_join_server, then retry or adjust the conditions"
-            else -> "Inspect observations and state. Use mc_read_inventory, mc_list_entities or mc_get_state, then adjust the conditions or timeout_ms"
+            state.player == null && condition.needsWorld -> "No world is loaded. Join with mc_join_world or mc_join_server, then retry or adjust the conditions"
+            else -> "Inspect observations and state. Use mc_list_widgets, mc_read_inventory, mc_list_entities or mc_get_state, " +
+                "then adjust the conditions or timeout_ms"
         }
         return (last ?: WaitResult(false, "timeout", observations = observations(condition, null, null))).copy(
             matched = false,
@@ -143,6 +162,10 @@ internal class ConditionWaiter(
         condition.health?.let { predicate ->
             val health = snapshot?.health
             add(WaitObservation("health", health?.let(predicate::matches) == true, health))
+        }
+        condition.widget?.let { predicate ->
+            val widget = snapshot?.widget
+            add(WaitObservation("widget", predicate.matches(widget), widget = widget))
         }
     }
 

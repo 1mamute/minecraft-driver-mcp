@@ -106,14 +106,16 @@ const tools = await rpc('tools/list', {})
 const definition = tools.tools.find(tool => tool.name === 'mc_wait_for')
 assert.ok(definition, 'mc_wait_for is advertised')
 const properties = definition.inputSchema.properties
-assert.deepEqual(Object.keys(properties).sort(), ['entity', 'health', 'inventory', 'message', 'mode', 'screen', 'since', 'timeout_ms'])
+assert.deepEqual(Object.keys(properties).sort(), [
+  'entity', 'health', 'inventory', 'message', 'mode', 'screen', 'since', 'timeout_ms', 'widget',
+])
 assert.deepEqual(definition.inputSchema.required ?? [], [])
 for (const key of ['message', 'screen', 'mode']) assert.equal(properties[key].type, 'string')
 for (const key of ['since', 'timeout_ms']) assert.equal(properties[key].type, 'integer')
 assert.deepEqual(properties.mode.enum, ['any', 'all'])
 assert.equal(properties.mode.default, 'any')
 assert.equal(properties.timeout_ms.default, 10_000)
-for (const key of ['inventory', 'entity', 'health']) assert.equal(properties[key].type, 'object')
+for (const key of ['inventory', 'entity', 'health', 'widget']) assert.equal(properties[key].type, 'object')
 assert.deepEqual(properties.inventory.required, ['item'])
 assert.deepEqual(properties.entity.required, ['type'])
 assert.equal(properties.inventory.properties.item.type, 'string')
@@ -127,12 +129,29 @@ assert.equal(properties.entity.properties.radius.default, 64)
 assert.equal(properties.entity.properties.radius.exclusiveMinimum, 0)
 assert.equal(properties.entity.properties.radius.maximum, 256)
 for (const key of ['min', 'max']) assert.equal(properties.health.properties[key].type, 'number')
+for (const key of ['label', 'path']) assert.equal(properties.widget.properties[key].type, 'string')
+assert.equal(properties.widget.properties.index.type, 'integer')
+for (const key of ['active', 'visible']) {
+  assert.equal(properties.widget.properties[key].type, 'boolean')
+  assert.equal(properties.widget.properties[key].default, true)
+}
 assert.deepEqual(definition.annotations, {
   readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false,
 })
 assert.equal((await value('mc_get_state')).connected, false, 'Start at the title screen')
 matched(await value('mc_wait_for', { screen: 'titlescreen' }), 'screen')
 console.log('PASS initialize, advertised nested schemas and annotations, title-screen precondition')
+
+const singleplayer = matched(await wait({ widget: { label: 'singleplayer' } }), 'widget')
+const button = singleplayer.observations[0].widget
+assert.equal(button.active, true, JSON.stringify(singleplayer))
+assert.equal(button.visible, true, JSON.stringify(singleplayer))
+matched(await wait({ widget: { path: button.path } }), 'widget')
+timedOut(await wait({ widget: { label: 'singleplayer', active: false }, timeout_ms: 150 }))
+const missing = timedOut(await wait({ widget: { label: `${tag}_missing` }, timeout_ms: 150 }))
+assert.equal(missing.observations[0].widget, null, JSON.stringify(missing))
+assert.ok(!missing.nextStep.includes('No world'), 'A widget wait does not ask for a world')
+console.log('PASS widget waits by label and path without a world, unmet flags and missing widgets')
 
 const invalid = [
   {}, { mode: 'all' }, { message: 1 }, { screen: [] }, { message: 'x', mode: 'both' },
@@ -145,6 +164,9 @@ const invalid = [
   { health: {} }, { health: { min: -1 } }, { health: { max: '20' } },
   { health: { min: 20, max: 10 } }, { health: false },
   { inventory: { item: 'Minecraft:diamond' } }, { entity: { type: 'Minecraft:armor_stand' } },
+  { widget: {} }, { widget: { label: 'Done', index: 0 } }, { widget: { label: ' ' } }, { widget: { index: -1 } },
+  { widget: { path: '0/' } }, { widget: { label: 'Done', active: 'true' } }, { widget: { index: '0' } },
+  { widget: { label: 'Done', enabled: true } }, { widget: 'Done' },
 ]
 for (const args of invalid) {
   const result = await call('mc_wait_for', args)
@@ -202,6 +224,21 @@ try {
   observation(await transition({ health: { min: 16, max: 16 } }, () => command('/damage @s 4 minecraft:generic'), 'health'), 'health', true, 16)
   observation(await transition({ health: { min: 20 } }, () => command('/effect give @s minecraft:instant_health 1 5'), 'health'), 'health', true, 20)
   console.log('PASS inclusive health points, absorption excluded, damage and healing during active waits')
+
+  // The death screen enables its buttons 20 ticks after it opens.
+  await value('mc_send_chat', { text: '/kill @s' })
+  matched(await wait({ screen: 'DeathScreen' }), 'screen')
+  const early = await call('mc_click', { label: 'Respawn' })
+  assert.equal(early.isError, true, `Clicking a disabled button is an error: ${JSON.stringify(early)}`)
+  assert.match(early.content[0].text, /disabled/)
+  assert.match(early.content[0].text, /mc_wait_for/)
+  const enabled = matched(await wait({ widget: { label: 'Respawn' } }), 'widget')
+  assert.equal(enabled.observations[0].widget.active, true, JSON.stringify(enabled))
+  assert.equal((await value('mc_click', { label: 'Respawn' })).handled, true)
+  // Stay at the respawn point: teleporting back to the platform here left the integrated server spinning in
+  // ChunkMap.processUnloads when the world stopped. The remaining checks do not depend on position.
+  matched(await wait({ mode: 'all', screen: 'none', health: { min: 20 } }), 'all')
+  console.log('PASS disabled death-screen click error, widget wait for Respawn, respawn click')
 
   // A buffered message remains eligible when the other conditions change later.
   const messages = await value('mc_read_messages')

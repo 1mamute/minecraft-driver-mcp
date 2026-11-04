@@ -8,14 +8,16 @@ import net.minecraft.world.entity.player.Inventory
 
 /** Reads only the values required by a wait, without serializing stacks or entity lists. Call on the render thread. */
 object ClientWait {
-    /** Returns the requested counts and health from the same frame, or null values when a world is unavailable. */
+    /** Returns the requested counts, health and widget from the same frame; player values are null without a world. */
     fun snapshot(condition: WaitCondition): WaitSnapshot {
         val minecraft = Minecraft.getInstance()
         val state = ClientState.snapshot()
-        val player = minecraft.player ?: return WaitSnapshot(state)
-        val level = minecraft.level ?: return WaitSnapshot(state)
+        val widget = condition.widget?.let(ClientScreens::observe)
+        val player = minecraft.player ?: return WaitSnapshot(state, widget = widget)
+        val level = minecraft.level ?: return WaitSnapshot(state, widget = widget)
         return WaitSnapshot(
             state = state,
+            widget = widget,
             inventoryCount = condition.inventory?.let { countItems(player.inventory, it.item) },
             entityCount = condition.entity?.let { predicate ->
                 level.entitiesForRendering().count { entity ->

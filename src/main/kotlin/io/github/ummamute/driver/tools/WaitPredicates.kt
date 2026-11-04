@@ -60,6 +60,31 @@ data class HealthPredicate(val min: Double? = null, val max: Double? = null) {
     fun matches(health: Double): Boolean = (min == null || health >= min) && (max == null || health <= max)
 }
 
+/**
+ * A widget of the open screen, selected the way `mc_click` selects one, and the flags it must reach.
+ * The defaults wait until the widget can be clicked.
+ */
+@Serializable
+data class WidgetPredicate(
+    val label: String? = null,
+    val index: Int? = null,
+    val path: String? = null,
+    val active: Boolean = true,
+    val visible: Boolean = true,
+) {
+    init {
+        require(listOfNotNull(label, index, path).size == 1) {
+            "widget needs exactly one of label, index or path. Example: {\"widget\":{\"label\":\"Respawn\"}}"
+        }
+        require(label == null || label.isNotBlank()) { "widget.label must not be blank. Pass part of a label from mc_list_widgets" }
+        require(index == null || index >= 0) { "widget.index must be nonnegative. Pass an index from mc_list_widgets" }
+        require(path == null || WIDGET_PATH.matches(path)) { "widget.path must look like 0/2/1. Pass inspection.path from mc_list_widgets" }
+    }
+
+    /** Whether the observed widget exists and reports the requested flags; entries without flags never match. */
+    fun matches(widget: WidgetObservation?): Boolean = widget != null && widget.active == active && widget.visible == visible
+}
+
 /** How supplied predicates combine; the default preserves the original first-match behavior. */
 enum class WaitMode { ANY, ALL }
 
@@ -78,6 +103,7 @@ internal object WaitArguments {
             inventory = predicate<InventoryPredicate>(args, "inventory"),
             entity = predicate<EntityPredicate>(args, "entity"),
             health = predicate<HealthPredicate>(args, "health"),
+            widget = predicate<WidgetPredicate>(args, "widget"),
             mode = mode,
         )
     }
@@ -85,7 +111,7 @@ internal object WaitArguments {
     private inline fun <reified T> predicate(args: JsonObject, name: String): T? {
         val value = args[name]?.takeUnless { it is JsonNull } ?: return null
         require(value is JsonObject) { "$name must be an object. See mc_wait_for's input schema for its fields" }
-        requireNumberLiterals(value, name)
+        requireUnquotedLiterals(value, name)
         return try {
             ToolSupport.json.decodeFromJsonElement<T>(value)
         } catch (problem: IllegalArgumentException) {
@@ -93,14 +119,26 @@ internal object WaitArguments {
         }
     }
 
-    private fun requireNumberLiterals(value: JsonObject, name: String) {
-        for (field in listOf("min_count", "max_count", "radius", "min", "max")) {
-            val number = value[field]
-            require(number !is JsonPrimitive || !number.isString) {
-                "$name.$field must be a number. Pass a JSON number without quotes"
+    /** The decoder accepts quoted numbers and booleans, so reject them before decoding. */
+    private fun requireUnquotedLiterals(value: JsonObject, name: String) {
+        for ((field, kind) in UNQUOTED_FIELDS) {
+            val literal = value[field]
+            require(literal !is JsonPrimitive || !literal.isString) {
+                "$name.$field must be a $kind. Pass a JSON $kind without quotes"
             }
         }
     }
+
+    private val UNQUOTED_FIELDS = mapOf(
+        "min_count" to "number",
+        "max_count" to "number",
+        "radius" to "number",
+        "min" to "number",
+        "max" to "number",
+        "index" to "number",
+        "active" to "boolean",
+        "visible" to "boolean",
+    )
 }
 
 private fun requireRegistryId(value: String, field: String) {
@@ -114,3 +152,5 @@ private fun requireCountBounds(min: Int, max: Int?, field: String) {
 }
 
 private val REGISTRY_ID = Regex("[a-z0-9_.-]+:[a-z0-9/._-]+")
+
+private val WIDGET_PATH = Regex("\\d+(/\\d+)*")
