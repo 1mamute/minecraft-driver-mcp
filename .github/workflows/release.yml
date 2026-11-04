@@ -36,13 +36,16 @@ jobs:
         if: github.ref_type == 'tag'
         run: npm run test:release
 
+      # The draft is found by its title: an update without tag_name replaces its tag with untagged-<hash>, so the
+      # update passes the tag again.
       - name: Update the draft release
         if: github.ref_type == 'branch'
         run: |
           id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
-            --jq '.[] | select(.draft and .tag_name == "unreleased") | .id' | head -n 1)
+            --jq '.[] | select(.draft and .name == "Unreleased") | .id' | head -n 1)
           if [ -n "$id" ]; then
-            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" -F body=@"$RUNNER_TEMP/notes.md" > /dev/null
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" \
+              -f tag_name=unreleased -F body=@"$RUNNER_TEMP/notes.md" > /dev/null
           else
             gh release create unreleased --draft --title "Unreleased" --notes-file "$RUNNER_TEMP/notes.md"
           fi
@@ -80,11 +83,10 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
             --notes-file "$RUNNER_TEMP/notes.md" \
             $(ls versions/*/build/libs/*.jar | grep -Ev -- '-(sources|javadoc).jar$') gateway/*.tgz
-          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
-            --jq '.[] | select(.draft and .tag_name == "unreleased") | .id' | head -n 1)
-          if [ -n "$id" ]; then
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq '.[] | select(.draft and .name == "Unreleased") | .id'); do
             gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"
-          fi
+          done
 
   publish-npm:
     needs: notes
