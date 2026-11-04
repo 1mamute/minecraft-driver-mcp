@@ -22,11 +22,8 @@ import org.slf4j.LoggerFactory
 internal object ExtensionTools {
     private val logger = LoggerFactory.getLogger(ExtensionTools::class.java)
 
-    fun register(server: Server, tools: List<ToolDefinition>) {
-        tools.forEach { tool -> register(server, tool) }
-    }
-
-    private fun register(server: Server, tool: ToolDefinition) {
+    /** Adds [tool] to [server]. Safe while the server answers requests: the next `tools/list` includes it. */
+    fun register(server: Server, tool: ToolDefinition) {
         val annotations = ToolAnnotations(
             readOnlyHint = tool.readOnly,
             destructiveHint = tool.destructive,

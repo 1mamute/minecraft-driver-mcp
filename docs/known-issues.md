@@ -48,6 +48,10 @@ machine's LAN address is answered with `403 Invalid Host`.
 The server keeps no session, so it cannot push notifications to the assistant. `mc_wait_for` blocks inside a single
 call, with a default timeout of 10 seconds and a cap of 60 seconds. Keep it below the MCP client's request timeout.
 
+An [extension tool registered after startup](extension-api.md#register-tools-later) is not announced either. An
+assistant that already listed the tools sees it only after it lists them again, for example after reconnecting the
+server.
+
 ## Nearby entities
 
 `mc_list_entities` sees only entities already tracked by the client. Its radius is capped at 256 blocks and results
