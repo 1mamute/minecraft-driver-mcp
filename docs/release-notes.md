@@ -19,6 +19,10 @@ listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version
 ### Documentation
 
 - Add a release skill for agents
+
+### Chores
+
+- Release 0.7.0
 <!-- /changelog:0.7.0 -->
 
 ## 0.6.0
