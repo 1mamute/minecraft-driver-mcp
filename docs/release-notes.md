@@ -4,6 +4,27 @@ Versions follow [Semantic Versioning](https://semver.org). While the project is 
 properties, the instance registry format and the extension API can change in any minor version, and each change is
 listed here. The jar is named `minecraft-driver-mcp-<version>+<minecraft version>.jar`.
 
+## 0.7.0
+
+<!-- changelog:0.7.0 -->
+### Features
+
+- Allow extension tool registration after startup
+- Wait for widgets and report disabled clicks
+
+### Fixes
+
+- Wait for npm publication visibility
+
+### Documentation
+
+- Add a release skill for agents
+
+### Chores
+
+- Release 0.7.0
+<!-- /changelog:0.7.0 -->
+
 ## 0.6.0
 
 <!-- changelog:0.6.0 -->
