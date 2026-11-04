@@ -71,6 +71,7 @@ Load the relevant skill when answering questions or changing integrations:
 | Fabric | `.agents/skills/fabric/SKILL.md` | Loader, Loom, Stonecutter, lifecycle events, networking |
 | Mixin | `.agents/skills/mixin/SKILL.md` | Injection points, descriptors, remapping, MixinExtras, application failures |
 | Minecraft | `.agents/skills/minecraft/SKILL.md` | Vanilla client APIs, mappings, screens, input, world state |
+| Releases | `.agents/skills/release/SKILL.md` | Version choice, release pull request, tag, GitHub release, npm, Maven Central |
 
 Codex discovers `.agents/skills/`. Claude Code discovers `.claude/skills/`, which links to `.agents/skills/`
 (`../.agents/skills`; on Windows without symlink rights, create a directory junction with
