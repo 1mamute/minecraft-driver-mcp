@@ -43,7 +43,7 @@ class WaitArgumentsTest {
     @Test
     fun `top level nulls are absent and preserve defaults`() {
         val condition = parse(
-            """{"message":"ready","screen":null,"since":null,"mode":null,"inventory":null,"entity":null,"health":null}""",
+            """{"message":"ready","screen":null,"since":null,"mode":null,"inventory":null,"entity":null,"health":null,"widget":null}""",
         )
 
         assertEquals("ready", condition.messageContains)
@@ -69,7 +69,7 @@ class WaitArgumentsTest {
 
     @Test
     fun `requires at least one condition`() {
-        for (input in listOf("{}", """{"message":null,"screen":null,"inventory":null,"entity":null,"health":null}""")) {
+        for (input in listOf("{}", """{"message":null,"screen":null,"inventory":null,"entity":null,"health":null,"widget":null}""")) {
             assertFails(input) { parse(input) }
         }
     }
@@ -192,6 +192,37 @@ class WaitArgumentsTest {
 
         assertTrue(problem.message.orEmpty().contains("inventory"))
         assertTrue(problem.message.orEmpty().contains("min_count"))
+    }
+
+    @Test
+    fun `widget selects by label index or path and defaults to clickable`() {
+        assertEquals(WidgetPredicate(label = "Respawn", active = true, visible = true), parse("""{"widget":{"label":"Respawn"}}""").widget)
+        assertEquals(WidgetPredicate(index = 3), parse("""{"widget":{"index":3}}""").widget)
+        assertEquals(WidgetPredicate(path = "0/2/1", active = false), parse("""{"widget":{"path":"0/2/1","active":false}}""").widget)
+        assertEquals(WidgetPredicate(label = "Done", visible = false), parse("""{"widget":{"label":"Done","visible":false}}""").widget)
+    }
+
+    @Test
+    fun `widget needs exactly one valid selector`() {
+        for (input in listOf(
+            """{"widget":{}}""", """{"widget":{"active":true}}""",
+            """{"widget":{"label":"Respawn","index":0}}""", """{"widget":{"index":0,"path":"0"}}""",
+            """{"widget":{"label":" "}}""", """{"widget":{"index":-1}}""",
+            """{"widget":{"path":""}}""", """{"widget":{"path":"0/"}}""", """{"widget":{"path":"a/1"}}""",
+        )) {
+            assertFails(input) { parse(input) }
+        }
+    }
+
+    @Test
+    fun `widget rejects quoted flags and indexes unknown fields and wrong types`() {
+        for (input in listOf(
+            """{"widget":{"label":"Respawn","active":"true"}}""", """{"widget":{"label":"Respawn","visible":"false"}}""",
+            """{"widget":{"index":"0"}}""", """{"widget":{"index":1.5}}""", """{"widget":{"label":3}}""",
+            """{"widget":{"label":"Respawn","enabled":true}}""", """{"widget":"Respawn"}""",
+        )) {
+            assertFails(input) { parse(input) }
+        }
     }
 
     private fun parse(input: String): WaitCondition {

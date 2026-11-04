@@ -207,7 +207,7 @@
   },
   {
     "name": "mc_wait_for",
-    "description": "Block until chat/system message text or screen class name contains the supplied case-insensitive substring (screen none means no screen), or inventory, entity or health bounds match. Supply at least one condition. mode defaults to any; a matching message returns immediately without game reads, with state null and only the message observation even if other conditions are supplied. Otherwise observations include each supplied condition. all requires every condition in the same poll. Messages remain buffered after since; screen/player conditions are not latched. Pass since (a latest from mc_read_messages) to include earlier messages; by default only newer messages count. Returns matched, reason, message, latest, state and per-condition observations; timeout returns matched false, reason timeout and an actionable nextStep. Without a world, player conditions remain unmet even for zero counts and their values are null; waiting can resume after joining. Polls every 50 ms and supports cancellation. State reflects the latest completed poll and may be null if the render thread is unavailable; message-only timeouts attempt a final snapshot with up to 250 ms grace. Keep timeout_ms below the MCP request timeout with headroom.",
+    "description": "Block until chat/system message text or screen class name contains the supplied case-insensitive substring (screen none means no screen), inventory, entity or health bounds match, or an open-screen widget reports the requested active and visible flags. Supply at least one condition. mode defaults to any; a matching message returns immediately without game reads, with state null and only the message observation even if other conditions are supplied. Otherwise observations include each supplied condition. all requires every condition in the same poll. Messages remain buffered after since; screen/player conditions are not latched. Pass since (a latest from mc_read_messages) to include earlier messages; by default only newer messages count. Returns matched, reason, message, latest, state and per-condition observations; timeout returns matched false, reason timeout and an actionable nextStep. Widget observations include the matched widget's path, label, active and visible flags, or null when none matches. Without a world, player conditions remain unmet even for zero counts and their values are null; waiting can resume after joining. Polls every 50 ms and supports cancellation. State reflects the latest completed poll and may be null if the render thread is unavailable; message-only timeouts attempt a final snapshot with up to 250 ms grace. Keep timeout_ms below the MCP request timeout with headroom.",
     "inputSchema": {
       "properties": {
         "message": {
@@ -234,7 +234,7 @@
             "all"
           ],
           "default": "any",
-          "description": "any succeeds on the first matching condition in message, screen, inventory, entity, health order; all requires every condition in the same poll"
+          "description": "any succeeds on the first matching condition in message, screen, inventory, entity, health, widget order; all requires every condition in the same poll"
         },
         "inventory": {
           "type": "object",
@@ -306,6 +306,36 @@
               "type": "number",
               "minimum": 0,
               "description": "Optional inclusive maximum health, finite and nonnegative"
+            }
+          },
+          "additionalProperties": false
+        },
+        "widget": {
+          "type": "object",
+          "description": "Wait for an open-screen widget, selected like mc_click by exactly one of label, index or path, to report the requested active and visible flags. The defaults wait until it can be clicked, such as death screen buttons that enable about a second after the screen opens. Unmet with no screen, no matching widget, or an entry without these flags; does not require a world",
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "Part of the widget label, ignoring case; the first match in mc_list_widgets order is used"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Widget index from mc_list_widgets"
+            },
+            "path": {
+              "type": "string",
+              "description": "Widget inspection.path from mc_list_widgets, such as 0/2/1; valid only while the child structure is unchanged"
+            },
+            "active": {
+              "type": "boolean",
+              "default": true,
+              "description": "Active flag to wait for; false waits for the widget to become disabled"
+            },
+            "visible": {
+              "type": "boolean",
+              "default": true,
+              "description": "Visible flag to wait for"
             }
           },
           "additionalProperties": false
@@ -407,7 +437,7 @@
   },
   {
     "name": "mc_click",
-    "description": "Click an open-screen widget by label (case-insensitive substring), index or path from mc_list_widgets, or an explicit GUI point with x and y. Widget selectors require fresh supported bounds; uncertain custom, transformed, clipped or unrendered widgets need mc_read_screen_text or mc_screenshot and explicit coordinates. Runs through screen click handlers; the real cursor is untouched.",
+    "description": "Click an open-screen widget by label (case-insensitive substring), index or path from mc_list_widgets, or an explicit GUI point with x and y. A disabled or hidden widget returns an error suggesting mc_wait_for with a widget condition; some screens, such as the death screen, enable buttons after a delay. Widget selectors require fresh supported bounds; uncertain custom, transformed, clipped or unrendered widgets need mc_read_screen_text or mc_screenshot and explicit coordinates. Runs through screen click handlers; the real cursor is untouched.",
     "inputSchema": {
       "type": "object",
       "properties": {

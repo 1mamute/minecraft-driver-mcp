@@ -1,6 +1,8 @@
 package io.github.ummamute.driver.client
 
 import io.github.ummamute.driver.mixin.AbstractWidgetAccessor
+import io.github.ummamute.driver.tools.WidgetObservation
+import io.github.ummamute.driver.tools.WidgetPredicate
 import kotlinx.serialization.Serializable
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.components.AbstractWidget
@@ -57,6 +59,7 @@ object ClientScreens {
         val screen = mc.screen ?: error("No screen is open, so there is nothing to click. Use mc_get_state to see what the client shows")
         if (x != null && y != null) return clickAt(screen, x, y, button, clicked = null)
         val target = findTarget(screen, index, label, path)
+        requireClickable(target)
         val observation = boundsOf(screen, target)
         check(observation.reason == null) {
             "Cannot click widget ${target.path}: ${observation.reason}. Use mc_read_screen_text or mc_screenshot, then explicit GUI coordinates"
@@ -66,6 +69,15 @@ object ClientScreens {
         val centerX = rectangle.left() + rectangle.width() / 2.0
         val centerY = rectangle.top() + rectangle.height() / 2.0
         return clickAt(screen, centerX, centerY, button, labelOf(target.listener))
+    }
+
+    /** The widget a wait selects, or null when no screen is open or no widget matches. */
+    fun observe(predicate: WidgetPredicate): WidgetObservation? {
+        val screen = mc.screen ?: return null
+        val children = ClientWidgets.targets(screen)
+        val target = lookup(children, predicate.index, predicate.label, predicate.path) ?: return null
+        val widget = target.listener as? AbstractWidget
+        return WidgetObservation(target.path, labelOf(target.listener), widget?.active, widget?.visible)
     }
 
     /** Closes the open screen the way Escape does, so parents reopen and container screens send the close packet. */
@@ -81,17 +93,35 @@ object ClientScreens {
     }
 
     private fun findTarget(screen: Screen, index: Int?, label: String?, path: String?): WidgetTarget {
+        require(path != null || index != null || label != null) { "Give a label, an index, or both x and y" }
         val children = ClientWidgets.targets(screen)
-        if (path != null) {
-            return children.firstOrNull { it.path == path }
-                ?: error("No widget at path $path. Call mc_list_widgets for the current paths")
+        return lookup(children, index, label, path) ?: error(
+            when {
+                path != null -> "No widget at path $path. Call mc_list_widgets for the current paths"
+                index != null -> "No widget at index $index of ${children.size}. Call mc_list_widgets for the current indexes"
+                else -> "No widget labelled \"$label\". Call mc_list_widgets to see the labels on this screen"
+            },
+        )
+    }
+
+    /** Picks a widget by path, then index, then the first label containing [label]. */
+    private fun lookup(children: List<WidgetTarget>, index: Int?, label: String?, path: String?): WidgetTarget? = when {
+        path != null -> children.firstOrNull { it.path == path }
+        index != null -> children.getOrNull(index)
+        label != null -> children.firstOrNull { labelOf(it.listener)?.contains(label, ignoreCase = true) == true }
+        else -> null
+    }
+
+    /** Screens such as the death screen enable their buttons after a delay; say so instead of clicking a disabled widget. */
+    private fun requireClickable(target: WidgetTarget) {
+        val widget = target.listener as? AbstractWidget ?: return
+        val wait = "mc_wait_for {\"widget\":{\"path\":\"${target.path}\"}}"
+        check(widget.visible) {
+            "Widget ${target.path} (\"${widget.message.string}\") is hidden. Wait for it with $wait, or call mc_list_widgets to pick a visible widget"
         }
-        if (index != null) {
-            return children.getOrNull(index) ?: error("No widget at index $index of ${children.size}. Call mc_list_widgets for the current indexes")
+        check(widget.active) {
+            "Widget ${target.path} (\"${widget.message.string}\") is disabled. The screen may enable it later: wait with $wait, then click again"
         }
-        if (label == null) error("Give a label, an index, or both x and y")
-        val match = children.firstOrNull { labelOf(it.listener)?.contains(label, ignoreCase = true) == true }
-        return match ?: error("No widget labelled \"$label\". Call mc_list_widgets to see the labels on this screen")
     }
 
     private fun summarize(screen: Screen, index: Int, target: WidgetTarget): WidgetSummary {
@@ -131,7 +161,8 @@ object ClientScreens {
     }
 
     private fun unsupportedBounds(screen: Screen, target: WidgetTarget, widget: AbstractWidget): String? {
-        if (!widget.active || !widget.visible) return "The widget is inactive or hidden"
+        if (!widget.visible) return "The widget is hidden"
+        if (!widget.active) return "The widget is disabled"
         val rectangle = widget.rectangle
         val centerX = rectangle.left() + rectangle.width() / 2.0
         val centerY = rectangle.top() + rectangle.height() / 2.0

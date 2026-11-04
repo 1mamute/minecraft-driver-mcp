@@ -28,7 +28,7 @@ when the game is not in the required state, for example when no world is joined.
 | [`mc_read_container`](#mc_read_container) | read | The open container screen |
 | [`mc_read_messages`](#mc_read_messages) | read | Chat and system messages |
 | [`mc_read_log`](#mc_read_log) | read | The game's log lines |
-| [`mc_wait_for`](#mc_wait_for) | read | Wait for any or all message, screen, inventory, entity or health conditions |
+| [`mc_wait_for`](#mc_wait_for) | read | Wait for any or all message, screen, inventory, entity, health or widget conditions |
 | [`mc_list_entities`](#mc_list_entities) | read | Filter nearby entities with eye positions, bounding boxes and truncation metadata |
 | [`mc_screenshot`](#mc_screenshot) | read / optional file write | PNG with optional crop/downscaling, coordinate/capture metadata and evidence saving |
 | [`mc_list_instances`](#mc_list_instances) | read | Running clients with this mod and their gateway status |
@@ -232,8 +232,8 @@ The buffer holds the last 1000 lines and cuts messages at 2000 characters. Captu
 
 ### mc_wait_for
 
-Wait for chat or system message text, an open screen, inventory counts, nearby entity counts or player health.
-Supply at least one condition. This read-only tool observes client state; it does not confirm server acceptance.
+Wait for chat or system message text, an open screen, inventory counts, nearby entity counts, player health or the
+state of a widget. Supply at least one condition. This read-only tool observes client state; it does not confirm server acceptance.
 
 | Argument | Type | Meaning |
 | --- | --- | --- |
@@ -245,6 +245,7 @@ Supply at least one condition. This read-only tool observes client state; it doe
 | `inventory` | object | Required `item`: exact full item registry ID. Optional inclusive `min_count` (integer, default 1) and `max_count` (integer) |
 | `entity` | object | Required `type`: exact full entity registry ID. Optional `radius` (number, default 64; greater than 0, at most 256), inclusive `min_count` (integer, default 1) and `max_count` (integer) |
 | `health` | object | Inclusive `min` and/or `max` health points; at least one is required |
+| `widget` | object | Exactly one of `label` (string), `index` (integer) or `path` (string), selected as in `mc_click`. Optional `active` and `visible` (booleans, default `true`) |
 
 Item and entity IDs match case-sensitively, with no namespace expansion, wildcards or prefixes. Inventory counts
 include all player inventory slots, armor and offhand, excluding the carried stack and container contents. Entity
@@ -253,7 +254,14 @@ counts include all matching client-tracked entities, excluding the local player,
 Set both to zero to wait for absence. Health bounds must be finite and nonnegative, with `min <= max` when both
 are present. Health uses points (two per heart), excludes absorption and has no 20-point cap for modded players.
 
-In `any` mode, the first matching condition wins in this order: message, screen, inventory, entity, health.
+A widget condition picks a widget of the open screen the way `mc_click` does: `path` and `index` come from
+`mc_list_widgets`, and `label` matches the first widget whose label contains it, ignoring case. It holds while that
+widget reports the requested `active` and `visible` flags; the defaults wait until the widget can be clicked. Some
+screens enable their buttons after a delay. The death screen keeps `Respawn` disabled for 20 ticks after it opens,
+so wait for the widget rather than the screen before clicking. A widget condition does not need a world. It is unmet
+while no screen is open, no widget matches, or the entry is not a widget that reports these flags.
+
+In `any` mode, the first matching condition wins in this order: message, screen, inventory, entity, health, widget.
 A matching message returns immediately without game reads, even when other conditions are supplied; `state` is
 `null` and `observations` contains only the matching message observation.
 In `all` mode, every supplied condition must match in the same poll. Messages after `since` remain eligible while
@@ -262,10 +270,11 @@ entity and health conditions remain unmet, including zero-count checks, and thei
 The wait can continue after joining a world.
 
 The result retains `matched`, `reason`, `message`, `latest` and `state`, and adds `observations`, an array of
-`{condition, matched, value}` for each supplied condition, except for the immediate `any` message return above.
-`value` is the observed inventory count, entity count or
-health points, or `null` when unavailable; message and screen values are always `null`. Successful reasons are
-`message`, `screen`, `inventory`, `entity` or `health`; `all` mode with multiple conditions returns `all`, while a
+`{condition, matched, value, widget}` for each supplied condition, except for the immediate `any` message return
+above. `value` is the observed inventory count, entity count or health points, or `null` when unavailable; message,
+screen and widget values are always `null`. `widget` is `{path, label, active, visible}` for the selected widget, or
+`null` when none matches or the condition is not a widget condition. Successful reasons are
+`message`, `screen`, `inventory`, `entity`, `health` or `widget`; `all` mode with multiple conditions returns `all`, while a
 single condition keeps its own reason. A timeout returns `matched:false`, `reason:"timeout"` and an actionable
 `nextStep`, such as joining a world or inspecting current state. Pass `latest` as `since` on a later call.
 
@@ -284,6 +293,12 @@ Wait for no zombies within 32 blocks of the player's feet:
 
 ```json
 {"entity":{"type":"minecraft:zombie","radius":32,"min_count":0,"max_count":0},"timeout_ms":10000}
+```
+
+Wait for the death screen's `Respawn` button to become clickable:
+
+```json
+{"widget":{"label":"Respawn"},"timeout_ms":5000}
 ```
 
 ### mc_list_entities
@@ -434,6 +449,10 @@ Click a widget of the open screen, or a point. Runs through the screen's click h
 
 Give `label`, `index`, `path` or `x` and `y`. A click by point is how to reach elements that are not widgets, such as the tabs
 of the creative inventory.
+
+Clicking a disabled or hidden widget by `label`, `index` or `path` returns an error that names the widget and suggests
+an `mc_wait_for` widget condition. Some screens, such as the death screen, enable their buttons a moment after they
+open; wait for the widget to become active, then click again.
 
 ### mc_click_text
 

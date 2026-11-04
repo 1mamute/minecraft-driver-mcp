@@ -169,15 +169,18 @@ node scripts/check-wait.mjs http://127.0.0.1:25890/mcp <disposable-world-folder>
 ```
 
 Use a dedicated test world. The script clears inventory, changes game mode and player position, disables natural
-regeneration, applies and removes effects, damages and heals the player, and places a platform near
+regeneration, applies and removes effects, damages, kills, respawns and heals the player, and places a platform near
 `(16000, 240, 16000)`. It summons a uniquely tagged armor stand, removes its fixtures and disconnects.
 It does not restore the disposable world's inventory, blocks, game rules or player state. Keep the client running
 without physical game input while the check runs. The endpoint must permit direct calls without authentication.
 
 The check covers `initialize`, `tools/list`, nested schemas and annotations, invalid argument shapes and bounds,
-title-screen matching, and no-world timeouts with null player observations even for zero-count predicates.
+title-screen matching, widget waits by label and path without a world, unmet widget flags and missing widgets, and
+no-world timeouts with null player observations even for zero-count predicates.
 In the world it checks exact registry IDs, inclusive inventory/entity count bounds, absence, exclusive feet-distance
-radius boundaries, health points excluding absorption, and changes while waits are active. Commands use message
+radius boundaries, health points excluding absorption, and changes while waits are active. On the death screen it
+checks that clicking the still-disabled `Respawn` button returns an error pointing to `mc_wait_for`, that a widget
+wait matches once the button is enabled, and that the click then respawns the player. Commands use message
 markers with `since` to synchronize server execution. Combined checks exercise default and explicit `any`, ordered
 success reasons, `all` with buffered messages and current player/screen conditions, and disconnect during a wait.
 Timeouts must include an actionable `nextStep`; disconnect must clear numeric observations to null.
