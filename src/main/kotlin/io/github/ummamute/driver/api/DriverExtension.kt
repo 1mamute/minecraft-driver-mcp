@@ -14,8 +14,10 @@ package io.github.ummamute.driver.api
  */
 fun interface DriverExtension {
     /**
-     * Called once while the driver starts. Register every tool through [registrar].
+     * Called once while the driver starts. Register the tools that are ready now through [registrar].
      * An exception thrown here is logged and does not affect the endpoint or other extensions.
+     *
+     * [registrar] stays valid for the client's lifetime: keep it to register more tools later, from any thread.
      */
     fun registerTools(registrar: ToolRegistrar)
 }

@@ -371,9 +371,11 @@ Rules: name `<modid>_<verb>_<noun>` (lowercase snake case, at most 64 characters
 mod id is rejected); a duplicate name is rejected and the first keeps it; set all four annotations (builder defaults are
 the MCP defaults: not read-only, destructive, not idempotent, open world); handlers run on the render thread unless
 `onRenderThread(false)`; return `ToolResult.text(json)` or `ToolResult.error(message that says what to do next)`;
-exceptions become error results; tools are collected once at startup. `ToolArguments` has `getString/getInt/getDouble/
-getBoolean/get` (null when missing) and `require*` (throws a readable message). The API is 0.x and may change in any minor
-release.
+exceptions become error results. The registrar stays valid for the client's lifetime: keep it to call `register` later,
+from any thread; the tool then appears in the next `tools/list`. Tools cannot be removed, and the stateless endpoint sends
+no list-changed notification, so list tools again (for example by reconnecting the server) to see a late tool.
+`ToolArguments` has `getString/getInt/getDouble/getBoolean/get` (null when missing) and `require*` (throws a readable
+message). The API is 0.x and may change in any minor release.
 
 ## Further reading
 

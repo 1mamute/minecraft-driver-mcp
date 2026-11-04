@@ -1,7 +1,6 @@
 package io.github.ummamute.driver
 
 import io.github.ummamute.driver.api.DriverExtension
-import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.tools.ExtensionRegistry
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer
@@ -12,8 +11,11 @@ internal object ExtensionLoader {
     const val ENTRYPOINT_KEY = "minecraft-driver-mcp"
     private val logger = LoggerFactory.getLogger(ExtensionLoader::class.java)
 
-    /** Calls every extension once. A failing extension is logged and skipped; it never stops the others or the endpoint. */
-    fun load(): List<ToolDefinition> {
+    /**
+     * Calls every extension once. A failing extension is logged and skipped; it never stops the others or the endpoint.
+     * The returned registry keeps accepting tools from the registrars the extensions were given.
+     */
+    fun load(): ExtensionRegistry {
         val registry = ExtensionRegistry()
         val containers = runCatching { FabricLoader.getInstance().getEntrypointContainers(ENTRYPOINT_KEY, DriverExtension::class.java) }
             .getOrElse { failure ->
@@ -21,7 +23,7 @@ internal object ExtensionLoader {
                 emptyList()
             }
         containers.forEach { container -> loadOne(container, registry) }
-        return registry.tools
+        return registry
     }
 
     private fun loadOne(container: EntrypointContainer<DriverExtension>, registry: ExtensionRegistry) {

@@ -75,12 +75,48 @@ Kotlin works the same way; `DriverExtension` and `ToolHandler` are `fun interfac
 
 `registerTools` runs once, while the driver starts. `register` returns `false` and logs a warning when it rejects a tool.
 
+## Register tools later
+
+The registrar stays valid for the client's lifetime. Keep it to register a tool once your mod is ready, for example after its own client initializer ran, its data loaded or a world was joined:
+
+```java
+public class MyDriverExtension implements DriverExtension {
+    private static volatile ToolRegistrar registrar;
+
+    @Override
+    public void registerTools(ToolRegistrar registrar) {
+        MyDriverExtension.registrar = registrar;
+    }
+
+    // Called by your mod when its state is ready. Without the driver, registerTools never runs and this does nothing.
+    public static void onReady() {
+        ToolRegistrar current = registrar;
+        if (current != null) {
+            current.register(ToolDefinition.builder("mymod_read_level", "Reads the loaded level data. Returns JSON {\"levels\": n}.")
+                .readOnly(true).destructive(false).idempotent(true).openWorld(false)
+                .handler(args -> ToolResult.text("{\"levels\": " + MyMod.levelCount() + "}"))
+                .build());
+        }
+    }
+}
+```
+
+| Behavior | Detail |
+| --- | --- |
+| Thread | `register` can be called from any thread. The handler still runs where `onRenderThread` says. |
+| Visibility | When `register` returns `true`, every `tools/list` that starts afterwards lists the tool, and it can be called. |
+| Names | The same rules apply at startup and later. A name already taken, at startup or later, is rejected and the first tool keeps it. |
+| Removal | A registered tool stays until the client stops. To retire one, return `ToolResult.error` from its handler with what to use instead. |
+| Notifications | None. The endpoint is stateless HTTP, so it cannot push `notifications/tools/list_changed` and advertises `listChanged: false`. An assistant that read the tool list before the registration sees the new tool only after it lists tools again; how to trigger that depends on the MCP client, for example by reconnecting the server. |
+
+Register tools in `registerTools` when you can, so the first `tools/list` already contains them.
+
 ## Rules
 
 | Rule | Why |
 | --- | --- |
 | The name is `<modid>_<verb>_<noun>`: lowercase snake case, at most 64 characters, starting with your mod id (dashes become underscores). | The `mc_` prefix belongs to the built-in tools, and the mod id keeps two mods from claiming the same name. A mod called `mc` is rejected. |
-| A name already registered is rejected and the first tool keeps it. | Registration order is the order Fabric loads the entrypoints; the winner must not depend on a guess. |
+| A name already registered is rejected and the first tool keeps it. | Registration order is the order Fabric loads the entrypoints, then the order of later calls; the winner must not depend on a guess. |
 | Set all four annotations. The builder defaults to the MCP defaults (not read-only, destructive, not idempotent, open world), so say what is true. | Agents use them to decide which calls need confirmation. |
 | The handler runs on the render thread unless you call `onRenderThread(false)`. | Screens, the player and the level may only be touched there. Keep the handler short; use `false` only for work that does not touch the game, and it then runs on an endpoint worker thread. |
 | Return `ToolResult.text` with a JSON string, or `ToolResult.error` with a message that says what to do next. | Same convention as the built-in tools. |
@@ -90,4 +126,4 @@ Kotlin works the same way; `DriverExtension` and `ToolHandler` are `fun interfac
 
 ## Check it
 
-Start a client with your mod and the driver, then call `tools/list`: your tools appear after the built-in ones, with the annotations you set. The log shows `Mod "mymod" registered MCP tool mymod_read_score`, or the reason a tool was ignored.
+Start a client with your mod and the driver, then call `tools/list`: your tools appear after the built-in ones, with the annotations you set. The log shows `Mod "mymod" registered MCP tool mymod_read_score`, or the reason a tool was ignored. For a tool registered later, trigger the registration, then call `tools/list` again; it appears at the end of the list.

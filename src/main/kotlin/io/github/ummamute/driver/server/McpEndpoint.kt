@@ -1,8 +1,8 @@
 package io.github.ummamute.driver.server
 
-import io.github.ummamute.driver.api.ToolDefinition
 import io.github.ummamute.driver.tools.ActionTools
 import io.github.ummamute.driver.tools.ConnectionTools
+import io.github.ummamute.driver.tools.ExtensionRegistry
 import io.github.ummamute.driver.tools.ExtensionTools
 import io.github.ummamute.driver.tools.InstanceTools
 import io.github.ummamute.driver.tools.ObservationTools
@@ -23,17 +23,25 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import java.nio.file.Path
 
-/** The MCP server on localhost. Stateless Streamable HTTP: every request is independent, so restarting the agent needs no session. */
-class McpEndpoint(
+/**
+ * The MCP server on localhost. Stateless Streamable HTTP: every request is independent, so restarting the agent needs no session.
+ *
+ * Extension tools registered after the server was built are added to it while it runs and appear in the next `tools/list`.
+ * The stateless transport cannot push `notifications/tools/list_changed`, so the server does not announce them.
+ */
+class McpEndpoint internal constructor(
     private val host: String,
     private val port: Int,
     private val version: String,
     private val instanceName: String,
-    private val extensionTools: List<ToolDefinition> = emptyList(),
+    private val extensions: ExtensionRegistry = ExtensionRegistry(),
     private val authenticator: TokenAuthenticator = TokenAuthenticator(null),
     private val screenshotEvidence: ScreenshotEvidence = ScreenshotEvidence(System.getProperty("driver.screenshotDirectory")?.let(Path::of)),
 ) {
     private var engine: EmbeddedServer<*, *>? = null
+
+    @Volatile
+    private var extensionSubscription: AutoCloseable? = null
 
     // One server for every request: the stateless transport opens a session per request and closes it afterwards,
     // so the tool registrations and their schemas are built once instead of on each call.
@@ -57,6 +65,8 @@ class McpEndpoint(
     fun stop() {
         engine?.stop(gracePeriodMillis = 0, timeoutMillis = STOP_TIMEOUT_MILLIS)
         engine = null
+        extensionSubscription?.close()
+        extensionSubscription = null
     }
 
     /** Answers 401 before routing when a token is configured and the request does not carry it, so no tool runs. */
@@ -80,7 +90,8 @@ class McpEndpoint(
         ObservationTools.register(server, instanceName, screenshotEvidence)
         ActionTools.register(server)
         ConnectionTools.register(server)
-        ExtensionTools.register(server, extensionTools)
+        // The subscription hands over the tools registered so far, then each later one, so none is missed or added twice.
+        extensionSubscription = extensions.subscribe { tool -> ExtensionTools.register(server, tool) }
         return server
     }
 
