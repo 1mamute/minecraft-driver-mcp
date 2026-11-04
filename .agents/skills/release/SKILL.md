@@ -43,7 +43,8 @@ git status --short                                  # must be empty
 previous=$(git describe --tags --abbrev=0 --match 'v*')
 git log --oneline --no-merges "$previous"..HEAD     # what this release contains
 gh run list --branch main --workflow Build --limit 1    # latest Build on main must be green
-gh release view unreleased --json body --jq .body       # draft notes kept by the Release workflow
+gh api "repos/{owner}/{repo}/releases" --paginate \
+  --jq '.[] | select(.draft and .name == "Unreleased") | .body'   # draft notes kept by the Release workflow
 ```
 
 Stop and report if the tree is dirty, `main` is behind, the latest Build failed, or there is nothing to release.
@@ -91,7 +92,7 @@ Update every place that names the current release, then search for the previous 
 | `gateway/catalogue.json` | top-level `"version"` |
 | `README.md` | `Version <version> targets Minecraft ...` |
 | `llms.txt` | `The current release version is <version>.` |
-| `docs/release-notes.md` | regenerate with `npm run changelog` after the bump |
+| `docs/release-notes.md` | regenerate with `npm run changelog` after the bump, and again after committing (below) |
 
 ```bash
 git grep -n -F "${previous#v}" -- . ':!docs/release-notes.md' ':!docs/contributing/known-issues.md'
@@ -122,14 +123,25 @@ Then run the smoke check from [docs/contributing/testing.md](../../../docs/contr
 `./gradlew :<minecraft>:runClient`, then `initialize`, `tools/list` and `mc_get_state`. The bump renames the jar,
 so this counts as a packaging change. If the check can't be run, say so in the pull request.
 
-Commit, push and open the pull request:
+Commit, then regenerate the notes so they list the release commit itself under Chores, and fold them into that commit
+before pushing. Stage files by name: on Windows, `git add -A` can pick up a `.claude/skills` junction and commit
+copies of the skills in place of the link.
 
 ```bash
-git add -A
+git add gradle.properties gateway/package.json gateway/package-lock.json gateway/catalogue.json \
+    README.md llms.txt docs/release-notes.md            # plus any other file the search above found
 git commit -m "chore: release $version"
+npm run changelog
+git add docs/release-notes.md
+git commit --amend --no-edit
+node scripts/changelog.mjs --check
+git show --stat HEAD                                    # only the release files
 git push -u origin "chore/release-$version"
 gh pr create --base main --title "chore: release $version" --body-file <body.md>
 ```
+
+Once the branch is pushed, fix mistakes with a follow-up commit instead of rewriting it. Give it the same subject,
+`chore: release <version>`, so the notes still list the release once, then regenerate and check the notes again.
 
 Body: the version and why (breaking/feature/fix), the highlights with links to their pull requests, breaking changes
 and what users must change, and the validation actually run, including what was skipped. Wait for `Build result`.
@@ -160,10 +172,11 @@ gh run watch <id> --exit-status
 ```
 
 The run checks that the tag matches `mod_version`, builds the jar, tests and packs the gateway, creates the release,
-deletes the `unreleased` draft, then `publish-npm` publishes the attached archive. Check the result:
+deletes every draft titled "Unreleased", then `publish-npm` publishes the attached archive. Check the result:
 
 ```bash
-gh release view "v$version" --json isDraft,isLatest,assets --jq '{isDraft, isLatest, assets: [.assets[].name]}'
+gh release view "v$version" --json isDraft,assets --jq '{isDraft, assets: [.assets[].name]}'
+gh api "repos/{owner}/{repo}/releases/latest" --jq .tag_name    # must be v<version>
 npm view "minecraft-driver-mcp@$version" version dist.integrity
 ```
 
@@ -171,8 +184,8 @@ Expect `minecraft-driver-mcp-<version>+<minecraft>.jar` for each `versions/*` di
 `minecraft-driver-mcp-<version>.tgz`. If only `publish-npm` failed, rerun it with `gh run rerun <id> --failed`. The
 publish script skips an archive npm already has, and it fails if npm holds a different one.
 
-`gh release list` can show older drafts titled "Unreleased" besides the live `unreleased` draft. Report them and
-delete them only with the user's agreement.
+If `gh release list` still shows a draft titled "Unreleased" afterwards, report it and delete it only with the user's
+agreement.
 
 ## 6. Maven Central
 

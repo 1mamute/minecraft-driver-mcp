@@ -106,7 +106,8 @@ replaced, so the intro and known limits stay hand-written.
   Complete the release by publishing the validated deployment in Central Portal. Staging does not automatically
   publish it or change the GitHub/npm release process.
 - Release pull requests align `mod_version`, `gateway/package.json`, its lockfile and `gateway/catalogue.json`,
-  and include generated release notes. Gateway builds reject a package/catalogue version mismatch.
+  and include generated release notes. Gateway builds reject a package/catalogue version mismatch. Regenerate the
+  notes after committing the version bump and amend that commit, so the notes list the release commit itself.
 
 ### Verify Maven publication
 
